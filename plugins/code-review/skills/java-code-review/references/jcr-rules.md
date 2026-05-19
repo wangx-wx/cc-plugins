@@ -20,6 +20,12 @@
 - 描述：引入安全漏洞
 - 修复建议：保持安全默认值或补充访问控制措施
 
+### JCR-00004 Spring Bean 覆盖开关被开启
+- 级别：Critical
+- 描述：`spring.main.allow-bean-definition-overriding=true` 被显式开启。该开关允许后注册的同名 Bean 静默覆盖先注册的 Bean，多数据源/多 Redis 场景下极易导致 `StringRedisTemplate`、`DataSource` 等基础设施 Bean 被错误覆盖而无任何报错，事故难以排查。Spring Boot 2.1+ 已将默认值改为 false 正是出于此考量
+- 检查范围：`application.yml`/`application.yaml`/`application*.properties`/`bootstrap*.yml` 等启动配置文件
+- 修复建议：删除该开关，转而通过 `@Primary` + `@Qualifier` + 显式 Bean 名称解决 Bean 冲突（联动参考 JAVA-00012）
+
 ## SQL（.sql/.ddl/.dml）
 
 ### JCR-00010 DML 无 WHERE 条件

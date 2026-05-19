@@ -49,3 +49,37 @@
 - 级别：Major
 - 描述：接口设计不合理影响可维护性。包括：方法参数超过 5 个未封装为对象、Controller 中编写业务逻辑而非委托 Service、返回值直接使用 Map 而非定义明确的 DTO
 - 修复建议：超过 3 个参数封装为 Request DTO；Controller 仅负责参数校验和结果返回，业务逻辑交给 Service 层
+
+## JAVA-00010 @Async 方法字段访问不一致
+- 级别：Critical
+- 描述：标注 `@Async` 的方法中，混用了通过 `@PostConstruct` 赋值的 static 桥接字段与 `@Autowired` 实例字段。由于 `@Async` 方法在不同线程执行，实例字段可能在代理对象未完全初始化时被访问（热部署、Bean 重载、依赖顺序异常等场景），导致 NPE。典型模式：类中既有 `public static XxxService iXxxService`（在 `@PostConstruct` 中赋值），又有 `@Autowired private YyyService yyyService`（未桥接到 static），在 `@Async` 方法中同时使用两者
+- 判定条件：（以下条件全部满足时触发）1) 方法标注了 `@Async` 或被异步调用；2) 同一类中存在 static 桥接模式（`@PostConstruct` 将 `@Autowired` 字段赋值给 static 字段）；3) `@Async` 方法中直接使用了未桥接到 static 的 `@Autowired` 实例字段
+- 修复建议：新增的依赖也应遵循既有 static 桥接模式（在 `@PostConstruct` 中赋值给 static 字段，方法内使用 static 引用）；或统一改为构造器注入 + 实例字段访问，彻底消除 static 桥接反模式
+
+## JAVA-00011 @PostConstruct static 桥接遗漏
+- 级别：Critical
+- 描述：类使用 `@Autowired` + `@PostConstruct` static 桥接模式时，新增了 `@Autowired` 依赖但未在 `@PostConstruct init()` 方法中同步添加 static 赋值。如果该依赖会在非 Spring 管理的线程（如 `@Async`、`@Scheduled`、消息监听器）中使用，将导致 NPE
+- 修复建议：每个新增的 `@Autowired` 字段，如果对应的类存在 static 桥接模式，必须在 `@PostConstruct` 中同步添加赋值；或重构为构造器注入消除 static 模式
+
+## JAVA-00012 多实例基础设施 Bean 未显式区分
+- 级别：Critical（满足全部三个条件时）/ Minor（仅条件 1+2 满足，注入点已用 `@Qualifier`）
+- 描述：项目存在多个同类型的基础设施 Bean，但既未通过 `@Primary` 指定默认 Bean，也未在所有注入点使用 `@Qualifier` 显式区分。会导致 Spring 在容器中按 Bean 名称匹配，新人新增 Bean 时容易覆盖既有 Bean（如多 Redis 场景下 `StringRedisTemplate` 被覆盖），或注入到非预期实例，引发数据写入错误数据源、缓存串库等线上故障
+- 适用类型清单：`RedisTemplate`、`StringRedisTemplate`、`RedisConnectionFactory`、`LettuceConnectionFactory`、`JedisConnectionFactory`、`DataSource`、`SqlSessionFactory`、`SqlSessionTemplate`、`PlatformTransactionManager`、`RestTemplate`、`WebClient`、`KafkaTemplate`、`RabbitTemplate`、`MongoTemplate`、`ObjectMapper`
+- 触发条件：本次 diff 中出现"适用类型清单"中任一类型的 `@Bean` 方法、`@Configuration` 类中相关字段、或对其的 `@Autowired`/`@Resource`/构造器注入
+- 检查步骤（触发后执行，缺一不可）：
+  1. 使用 Grep 在整个仓库（`{repo-path}` 范围）扫描所有 `@Bean` 方法返回类型为该类型的定义，统计总数 N。模式示例：`@Bean[^)]*\)[\s\S]{0,200}(StringRedisTemplate|RedisTemplate)\s+\w+\s*\(`
+  2. 若 N < 2，**不报违规**（单实例不需要 `@Primary`）
+  3. 若 N ≥ 2，使用 Grep 检查这些 Bean 定义中是否有任意一个标注了 `@Primary`
+  4. 使用 Grep 扫描所有对该类型的注入点（`@Autowired`、`@Resource`、构造器参数、`@Qualifier`），统计裸类型注入（未带 `@Qualifier` 且未通过字段名/参数名匹配特定 Bean 名）的数量
+- 判定逻辑：
+  - **Critical**：N ≥ 2 且无 `@Primary` 且存在裸类型注入点 —— 直接触发 Bean 覆盖/注入歧义风险
+  - **Minor**：N ≥ 2 且无 `@Primary`，但所有注入点都使用了 `@Qualifier` —— 当前安全，但新人新增注入时极易踩坑
+  - 不报：N < 2，或已有 `@Primary` 显式指定默认 Bean
+- 排除场景：
+  - Bean 通过 `@ConditionalOnProperty`/`@Profile` 互斥激活（同一时刻容器内只有 1 个）
+  - 测试目录 `src/test/` 下的 Bean 定义
+- 修复建议：
+  1. 给业务最常用的那个 Bean 加 `@Primary`，使裸注入有明确默认值
+  2. 所有 Bean 方法显式指定 `@Bean(name = "xxxRedisTemplate")`，避免依赖方法名隐式命名
+  3. 所有注入点使用 `@Qualifier("xxxRedisTemplate")` 或 `@Resource(name = "xxxRedisTemplate")` 显式指定
+  4. 切忌依赖 `spring.main.allow-bean-definition-overriding=true` 兜底（见 JCR-00004）
