@@ -1,0 +1,26 @@
+{
+  "skill_name": "wechat-article-writer",
+  "evals": [
+    {
+      "id": 1,
+      "name": "scattered-notes-to-article",
+      "prompt": "我准备写一篇公众号,素材都在 .claude/skills/wechat-article-writer/evals/materials/material-1-scattered-notes.md 里。这是我用 Claude Code 三个月的一些零散感受和数据点,还有我希望表达的核心方向。\n\n帮我写一篇公众号文章。\n\n注意:这次是一次性产出场景,没有真人交互的机会。请你独立完成 skill 里定义的所有四个步骤(消化素材并回放理解、提 2-3 个选题角度并自己选一个、出带血肉的大纲、写完整正文),每一步的产出都贴出来——这样我可以一次性看完所有过程。",
+      "expected_output": "包含四个步骤的完整产出:1) 对素材的理解回放;2) 至少 2 个选题角度并明确选了哪一个;3) 一个含小标题、要点、细节的大纲;4) 完整的公众号文章正文(开头有钩子、有小标题、有配图建议、有结尾收束),全文避免反模式中列出的烂俗写法",
+      "files": ["evals/materials/material-1-scattered-notes.md"]
+    },
+    {
+      "id": 2,
+      "name": "research-notes-to-article",
+      "prompt": "我想写一篇关于 AI Agent 范式演化的公众号文章。素材在 .claude/skills/wechat-article-writer/evals/materials/material-2-research-notes.md 里,是我读论文 + 看开源项目整理的笔记,涉及一些技术概念。\n\n请帮我写成一篇有故事感、不让普通读者掉链子的文章。\n\n注意:这次是一次性产出场景,没有真人交互的机会。请你独立完成 skill 里定义的所有四个步骤(消化素材并回放理解、提 2-3 个选题角度并自己选一个、出带血肉的大纲、写完整正文),每一步的产出都贴出来。",
+      "expected_output": "包含四个步骤的完整产出。技术概念(ReAct、MCP、Multi-Agent 等)有读者友好的类比或场景化解释,不是纯术语堆砌。正文有具体场景、人物动作或类比;有小标题分隔;有开头钩子和有锐度的结尾",
+      "files": ["evals/materials/material-2-research-notes.md"]
+    },
+    {
+      "id": 3,
+      "name": "interview-to-article",
+      "prompt": "我跟一个做 AI 投资的朋友聊了 Cursor 估值 99 亿这件事,聊得挺有意思的。整理在 .claude/skills/wechat-article-writer/evals/materials/material-3-interview-data.md 里,带录音整理 + 数据点 + 个人判断。\n\n帮我写成一篇公众号文章。\n\n注意:这次是一次性产出场景,没有真人交互的机会。请你独立完成 skill 里定义的所有四个步骤(消化素材并回放理解、提 2-3 个选题角度并自己选一个、出带血肉的大纲、写完整正文),每一步的产出都贴出来。",
+      "expected_output": "包含四个步骤的完整产出。文章很好地利用了对话素材(可能保留部分对话原文或转化为叙述),给出了明确的行业判断而不是模糊不痛不痒,长度根据素材丰富度合理决定",
+      "files": ["evals/materials/material-3-interview-data.md"]
+    }
+  ]
+}
