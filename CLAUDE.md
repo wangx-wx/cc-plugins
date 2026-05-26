@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-wx-cc-plugins 是一个 Claude Code 插件平台，支持通过 agents、skills、commands 和 MCP servers 扩展 Claude 的能力。项目不包含传统构建系统（无 package.json、tsconfig 等），所有内容以 Markdown 文档 + JSON 配置 + Python 脚本为核心。
+cc-plugins 是一个 Claude Code 插件平台，支持通过 agents、skills、commands 和 MCP servers 扩展 Claude 的能力。项目不包含传统构建系统（无 package.json、tsconfig 等），所有内容以 Markdown 文档 + JSON 配置 + Python 脚本为核心。
 
 ## 架构
 

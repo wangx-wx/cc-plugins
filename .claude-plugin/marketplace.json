@@ -1,9 +1,9 @@
 {
-  "name": "wx-cc-plugins",
+  "name": "cc-plugins",
   "owner": {
     "name": "wangx",
     "email": "",
-    "url": "https://github.com/wangx-wx/wx-cc-plugins.git"
+    "url": "https://github.com/wangx-wx/cc-plugins.git"
   },
   "metadata": {
     "description": "测试claude工具",
@@ -18,8 +18,8 @@
       "version": "1.0.0",
       "keywords": ["map", "weather"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "lyy-dev-plugin",
@@ -29,8 +29,8 @@
       "version": "1.0.0",
       "keywords": ["dev", "常用插件"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "code-review",
@@ -40,8 +40,8 @@
       "version": "1.0.0",
       "keywords": ["dev", "code-review"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "office-plugin",
@@ -51,8 +51,8 @@
       "version": "1.0.0",
       "keywords": ["office", "pdf", "xlsx", "docx", "pptx"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "perfect-plugin",
@@ -62,8 +62,8 @@
       "version": "1.0.0",
       "keywords": ["office", "pdf", "xlsx", "docx", "pptx"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "adp-plugin",
@@ -73,8 +73,8 @@
       "version": "1.0.0",
       "keywords": ["adp", "knowledge-search"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     },
     {
       "name": "article-writer",
@@ -84,8 +84,8 @@
       "version": "1.0.0",
       "keywords": ["article-writer", "article-writing", "writing-assistant"],
       "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/wx-cc-plugins",
-      "repository": "https://github.com/wangx-wx/wx-cc-plugins.git"
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     }
   ]
 }

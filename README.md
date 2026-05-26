@@ -1,2 +1,2 @@
-# wx-cc-plugins
+# cc-plugins
 claude code test plugin
