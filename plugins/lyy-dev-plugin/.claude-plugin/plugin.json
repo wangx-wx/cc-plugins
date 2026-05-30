@@ -17,7 +17,8 @@
     "skills": [
         "./skills/md-check",
         "./skills/pua",
-        "./skills/web-access"
+        "./skills/web-access",
+        "./skills/linuxdo-trust-level"
     ],
     "commands":[
     ]

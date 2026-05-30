@@ -75,17 +75,6 @@
       "license": "MIT",
       "homepage": "https://github.com/wangx-wx/cc-plugins",
       "repository": "https://github.com/wangx-wx/cc-plugins.git"
-    },
-    {
-      "name": "article-writer",
-      "source": "./plugins/article-writer",
-      "strict": true,
-      "description": "文章写作插件",
-      "version": "1.0.0",
-      "keywords": ["article-writer", "article-writing", "writing-assistant"],
-      "license": "MIT",
-      "homepage": "https://github.com/wangx-wx/cc-plugins",
-      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     }
   ]
 }
