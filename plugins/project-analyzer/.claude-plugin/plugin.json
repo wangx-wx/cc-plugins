@@ -21,8 +21,8 @@
     ],
     "agents": [
         "./agents/scanner.md",
-        "./agents/analyzer.md",
-        "./agents/rule-writer.md"
+        "./agents/project-analyzer-analyst.md",
+        "./agents/project-analyzer-analyst.md"
     ],
     "skills": [
         "./skills/project-analyzer"
