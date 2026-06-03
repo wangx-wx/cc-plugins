@@ -86,6 +86,16 @@
       "license": "MIT",
       "homepage": "https://github.com/wangx-wx/cc-plugins",
       "repository": "https://github.com/wangx-wx/cc-plugins.git"
+    },
+    {
+      "name": "ai-testings",
+      "source": "./plugins/ai-testings",
+      "strict": true,
+      "description": "AI 测试相关插件集合",
+      "version": "1.0.0",
+      "license": "MIT",
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     }
   ]
 }
