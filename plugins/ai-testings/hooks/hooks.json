@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/stop-test-reminder.sh",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/stop-test-reminder.mjs",
             "timeout": 15
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/pre-commit-test-check.sh",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/scripts/pre-commit-test-check.mjs",
             "timeout": 15
           }
         ]
