@@ -17,7 +17,7 @@
     ],
     "category": "development",
     "commands": [
-        "./commands/project-analyzer.md"
+        "./commands/project-analyzer1.md"
     ],
     "agents": [
         "./agents/scanner.md",
