@@ -22,7 +22,7 @@
     "agents": [
         "./agents/scanner.md",
         "./agents/project-analyzer-analyst.md",
-        "./agents/project-analyzer-analyst.md"
+        "./agents/project-analyzer-rule-writer.md"
     ],
     "skills": [
         "./skills/project-analyzer"
