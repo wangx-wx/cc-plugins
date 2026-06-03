@@ -1,5 +1,5 @@
 ---
-name: project-analyzer
+name: project-analyzer1
 description: Java 微服务项目规则分析器。路由 analyze/confirm/consolidate 子命令，调度 agents。
 arguments:
   - {name: subcommand, required: true, type: string}

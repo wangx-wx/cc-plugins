@@ -1,6 +1,7 @@
 ---
 name: project-analyzer
 description: 分析 Java 微服务项目，提取编码约束，生成 AI 可消费的规则文件（.claude/rules/generated/）。与 project-readme 不同：本插件输出约束规则，不是项目简介。
+argument-hint: "[分析类型 analyze|confirm|consolidate]"
 triggers:
   - "分析.*项目规则"
   - "生成.*编码规则"
