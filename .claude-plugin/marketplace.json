@@ -75,6 +75,17 @@
       "license": "MIT",
       "homepage": "https://github.com/wangx-wx/cc-plugins",
       "repository": "https://github.com/wangx-wx/cc-plugins.git"
+    },
+    {
+      "name": "project-analyzer",
+      "source": "./plugins/project-analyzer",
+      "strict": true,
+      "description": "Java 微服务项目 AI 编码规则生成器",
+      "version": "1.0.0",
+      "keywords": ["project-rules", "ai-coding", "java", "spring-cloud", "architecture", "feign", "code-analysis", "robustness"],
+      "license": "MIT",
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     }
   ]
 }

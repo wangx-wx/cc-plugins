@@ -1,0 +1,31 @@
+{
+    "name": "project-analyzer",
+    "description": "Java 微服务项目 AI 编码规则生成器。与 project-readme 互补：project-readme 浅层扫描 → 人类可读文档；本插件深度追踪决策链 → AI 编码规则。追踪十四条编码决策链，覆盖架构/API/安全/健壮性/DB/Cache/MQ 七个维度，生成项目特有规则。含反模式清单（追踪中发现的危险写法）。两阶段工作流：analyze → 人工确认 → confirm。支持 consolidate 将已有 CLAUDE.md 规则迁移到 .claude/rules/ 统一管理。",
+    "version": "1.0.0",
+    "author": {
+        "name": "AIOps Team"
+    },
+    "keywords": [
+        "project-rules",
+        "ai-coding",
+        "java",
+        "spring-cloud",
+        "architecture",
+        "feign",
+        "code-analysis",
+        "robustness"
+    ],
+    "category": "development",
+    "commands": [
+        "./commands/project-analyzer.md"
+    ],
+    "agents": [
+        "./agents/scanner.md",
+        "./agents/analyzer.md",
+        "./agents/rule-writer.md"
+    ],
+    "skills": [
+        "./skills/project-analyzer"
+    ],
+    "strict": true
+}
