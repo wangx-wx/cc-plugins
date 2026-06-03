@@ -30,7 +30,7 @@ tools:
 - 每个业务模块各取 1-2 个代表性文件
 - 选能体现该 focus 模式的文件
 
-**3. 读取文件，按 `references/focus-guide.md` 中本 focus 的维度逐一检查**。
+**3. 读取文件，按 `${CLAUDE_PLUGIN_ROOT}/skills/project-analyzer/references/focus-guide.md` 中本 focus 的维度逐一检查**。
 
 **4. 对每个发现，判断证据强度**：
 
@@ -54,7 +54,7 @@ tools:
 - **约束是处方性的**：写"SHALL xxx"或"SHALL NOT xxx"，不写诊断性描述（"缺少xxx"）
 - **参考实现引用项目内真实代码**：不写通用 Java 示例
 
-详细格式要求见 `references/rule-format.md`。
+详细格式要求见 `${CLAUDE_PLUGIN_ROOT}/skills/project-analyzer/references/rule-format.md`。
 
 ## 输出格式
 
