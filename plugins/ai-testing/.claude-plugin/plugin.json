@@ -1,5 +1,5 @@
 {
-    "name": "ai-testing",
+    "name": "ai-testings",
     "description": "Java 后端测试规范助手：审查变更的测试需求(test-review)、按团队规范生成单测/集成测试(test-writer)、提交关口软提醒(hooks)。技术栈 MyBatis-Plus + PostgreSQL，JDK8/17 双栈。规则见 references/testing-rules.md，决策过程见 java-testing-design.md。",
     "version": "0.1.0",
     "author": {
