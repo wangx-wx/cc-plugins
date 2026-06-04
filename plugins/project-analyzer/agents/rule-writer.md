@@ -52,7 +52,7 @@ tools:
 
 ## 项目特有规则
 
-{五段结构规则，参见 references/rule-format.md}
+五段结构规则，参见 ${CLAUDE_PLUGIN_ROOT}/skills/project-analyzer/references/rule-format.md
 
 ## 反模式清单
 
@@ -71,7 +71,7 @@ tools:
 {confidence=medium/low 且未在 confirmation-required.md 中 keep/skip 的规则}
 ```
 
-每条规则的五段结构见 `references/rule-format.md`。
+每条规则的五段结构见 `${CLAUDE_PLUGIN_ROOT}/references/rule-format.md`。
 
 **写入前的质量检查**（不达标则移到"待确认"段，不阻止其他规则生成）：
 - 约束是否是行为规范（"SHALL xxx"）而非诊断描述（"缺少xxx"）

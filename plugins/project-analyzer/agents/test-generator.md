@@ -90,4 +90,8 @@ src/main/java/com/example/service/UserService.java
 
 ## 约束
 
-需要严格遵循`${CLAUDE_PLUGIN_ROOT}/skills/project-analyzer/references/testing-rules.md`
+- 不修改被测类（`changed_file`）本身
+- 测试方法命名严格跟随 testing-observations.md 中的命名约定
+- 测试执行失败时只报告，不自动修改业务代码
+- 无 testing-observations.md 时用通用 JUnit 5 + Mockito 规范兜底，不报错退出
+- 不处理抽象类、接口、枚举（跳过并说明原因）
