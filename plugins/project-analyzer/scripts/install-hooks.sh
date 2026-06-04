@@ -31,7 +31,7 @@ cp "$PLUGIN_ROOT/references/testkit-gen.md" "$AGENTS_DIR/testkit-gen.md"
 
 # ─── 1b. Install skill files ──────────────────────────────────────────────────
 mkdir -p "$SKILLS_DIR/testkit-review"
-cp "$PLUGIN_ROOT/references/testkit-review.md" "$SKILLS_DIR/testkit-review/testkit-review.md"
+cp "$PLUGIN_ROOT/references/testkit-review.md" "$SKILLS_DIR/testkit-review/SKILL.md"
 
 # ─── 1c. Install reference files ──────────────────────────────────────────────
 mkdir -p "$REFS_DIR"
