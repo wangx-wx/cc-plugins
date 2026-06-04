@@ -11,6 +11,7 @@ PROJECT_PATH="${1:?Usage: install-hooks.sh <project_path>}"
 CLAUDE_DIR="$PROJECT_PATH/.claude"
 SCRIPTS_DIR="$CLAUDE_DIR/scripts"
 AGENTS_DIR="$CLAUDE_DIR/agents"
+SKILLS_DIR="$CLAUDE_DIR/skills"
 REFS_DIR="$CLAUDE_DIR/references"
 SETTINGS="$CLAUDE_DIR/settings.json"
 PLUGIN_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -24,9 +25,13 @@ cp "$SCRIPT_DIR/stop-test-reminder.mjs"  "$SCRIPTS_DIR/stop-test-reminder.mjs"
 chmod +x "$SCRIPTS_DIR/post-edit-rule-check.sh"
 chmod +x "$SCRIPTS_DIR/post-edit-test.sh"
 
-# ─── 1b. Install agent files ──────────────────────────────────────────────────
+# ─── 1a. Install agent files ──────────────────────────────────────────────────
 mkdir -p "$AGENTS_DIR"
-cp "$PLUGIN_ROOT/agents/testkit-gen.md" "$AGENTS_DIR/testkit-gen.md"
+cp "$PLUGIN_ROOT/references/testkit-gen.md" "$AGENTS_DIR/testkit-gen.md"
+
+# ─── 1b. Install skill files ──────────────────────────────────────────────────
+mkdir -p "$SKILLS_DIR/testkit-review"
+cp "$PLUGIN_ROOT/references/testkit-review.md" "$SKILLS_DIR/testkit-review/testkit-review.md"
 
 # ─── 1c. Install reference files ──────────────────────────────────────────────
 mkdir -p "$REFS_DIR"
