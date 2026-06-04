@@ -86,7 +86,7 @@ if (missing.length === 0) process.exit(0);
 
 const listed = missing.slice(0, 2).join("\n");
 const more = missing.length > 2 ? `\n  ...等共 ${missing.length} 个文件` : "";
-const msg = `测试提醒（仅提示，不阻断）：以下 src/main 改动疑似缺对应测试，请按团队规范确认是否需补，或运行 /test-review 精确判断：\n${listed}${more}`;
+const msg = `测试提醒（仅提示，不阻断）：以下 src/main 改动疑似缺对应测试，请按团队规范确认是否需补，或输入使用 testkit-gen 生成单元测试 精确判断：\n${listed}${more}`;
 
 process.stdout.write(JSON.stringify({ systemMessage: msg }) + "\n");
 process.exit(0);

@@ -1,6 +1,9 @@
 ---
 name: testkit-gen
-description: 为指定 Java 变更生成符合团队规范的单测或集成测试，并运行 mvn 验证通过。可由 test-review agent 调用（传入结构化上下文），也可独立使用（自行读取 git diff）。
+description: |
+  当需要为 Java 类或方法生成单元测试、集成测试时调用。
+  适用场景：git diff 变更后补测试、新增 Service/Controller 需要覆盖、
+  CI 覆盖率不足需要补全。生成符合团队 JUnit5+Mockito 规范，并用 mvn test 验证通过。
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
