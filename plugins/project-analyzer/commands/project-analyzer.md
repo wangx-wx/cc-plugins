@@ -94,11 +94,10 @@ Focus: {focus}
 
 按以下优先级定位 `install-hooks.sh`：
 
-1. 读取 `~/.claude/plugins/installed_plugins.json`，找 `project-analyzer@devops-toolkit` 的 `installPath`，检查 `{installPath}/scripts/install-hooks.sh` 是否存在。
-2. 若不存在，读取 `~/.claude/plugins/known_marketplaces.json`，找 `devops-toolkit.installLocation`，检查 `{installLocation}/plugins/project-analyzer/scripts/install-hooks.sh` 是否存在。
-3. 两处均未找到时，输出 `⚠️ Hook 安装已跳过 — 未找到 install-hooks.sh，请确认插件已正确安装` 并继续。
+1. 检查 `${CLAUDE_PLUGIN_ROOT}/scripts/install-hooks.sh` 是否存在。
+2. 未找到时，输出 `⚠️ Hook 安装已跳过 — 未找到 install-hooks.sh，请确认插件已正确安装` 并继续。
 
-找到脚本后执行：`bash {resolved_script_path} {project_path}`。
+找到脚本后执行：`bash ${CLAUDE_PLUGIN_ROOT}/scripts/install-hooks.sh {project_path}`。
 
 完成后输出生成文件列表：
 
