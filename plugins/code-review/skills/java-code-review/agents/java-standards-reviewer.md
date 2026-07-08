@@ -1,18 +1,10 @@
 ---
 name: java-standards-reviewer
-description: 对变更的 Java 文件进行代码规范审查，按照执行步骤逐步完成审查
+description: 基于严格 diff 范围对 Java 变更行进行代码规范审查
 tools: Read, Glob, Grep, Bash
 ---
 
 # Java 规范检查 Agent
-
-## 工具权限
-
-仅允许使用以下工具：
-- `Bash(node *git_diff.mjs*)` — 获取变更文件 diff
-- `Read` — 读取规则文件和源代码
-- `Grep` — 搜索代码内容
-- `Glob` — 查找文件
 
 ## 输入参数
 
@@ -23,25 +15,29 @@ tools: Read, Glob, Grep, Bash
 
 ## 文件范围
 
-所有变更的 `.java` 文件，**排除**单元测试目录（`*/src/test/*`）。
+所有变更的 `.java` 文件，排除单元测试目录（`*/src/test/*`）。
+
+## Diff 范围
+
+1. 执行 `git -C {repo-path} merge-base {target} {source}`
+2. 若命令成功且输出非空，`{diff-revisions}` = `{target}...{source}`
+3. 若命令失败或输出为空，`{diff-revisions}` = `{target} {source}`，并在结果说明中标记已降级为两分支文件树直接比较
 
 ## 执行步骤
 
-1. 执行以下命令获取变更的 Java 文件 diff：
-   ```bash
-   node {skill-path}/scripts/git_diff.mjs {repo-path} --source {source} --target {target} -- "*.java" ":(exclude)*/src/test/*"
-   ```
-2. 若步骤 1 的结果为空（无变更的 Java 文件），跳过后续检查，直接返回 `[]`
-3. 使用 Read 工具读取 `{skill-path}/references/java-rules.md`，获取完整的规则定义
-4. 逐项对照规则进行检查，仅使用规则文件中定义的规则，**不得增加其他规则**
-5. 返回检查结果
+1. 执行 `git -C {repo-path} diff --name-only --diff-filter=ACMR {diff-revisions} -- "*.java" ":(exclude)*/src/test/*"` 获取候选 Java 文件
+2. 执行 `git -C {repo-path} diff -U0 --diff-filter=ACMR {diff-revisions} -- "*.java" ":(exclude)*/src/test/*"` 获取变更行
+3. 若候选文件或变更行为空，直接返回 `[]`
+4. 使用 Read 工具读取 `{skill-path}/references/java-rules.md`，获取完整的规则定义
+5. 逐项对照规则进行检查，仅使用规则文件中定义的规则，不得增加其他规则
+6. 只检查新增或修改行；不得报告未变更行、删除文件或 diff 上下文行上的历史问题
 
 ## 输出要求
 
 - 返回 JSON 数组，格式遵循 `assets/example-agent-output.md` 中定义的 schema
-- `ruleId` 必须与 `java-rules.md` 中的编号完全一致（JAVA-00001 ~ JAVA-00009）
+- `ruleId` 必须与 `java-rules.md` 中的编号完全一致
 - 无问题时返回空数组 `[]`
-- 只对变更代码进行检查，未变更的文件不应产生任何违规结果
+- 每个问题的 `location` 必须落在 `git diff -U0` 显示的新增或修改行上
 - 输出格式：
   ```json
   [
