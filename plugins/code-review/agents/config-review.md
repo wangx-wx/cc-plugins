@@ -14,6 +14,7 @@ tools: Read, Glob, Grep, Bash
 
 ## 文件范围
 
+排除 `pom.xml`。
 变更的配置文件：`.yml`、`.yaml`、`.properties`、`.sql`、`.sh`、`.conf`、`.ini`、`.env`。
 
 ## Diff 范围
