@@ -49,3 +49,4 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
    - 清单覆盖情况
    - 建议
    - 是否可合并的评估结论
+4. 将报告输出给用户

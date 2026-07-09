@@ -54,3 +54,9 @@
 - 级别：Major
 - 描述：脚本未设置 `set -euo pipefail`，错误被忽略导致不可预期行为
 - 修复建议：增加严格模式并处理错误分支
+
+### JCR-00022 Redis 全量 Key 查询或批量删除
+- 级别：Critical
+- 描述：配置、SQL 或脚本中禁止出现 Redis 全量 Key 查询或无边界批量删除。典型高危模式包括：`keys *`、`redis-cli keys '*'`、`flushdb`、`flushall`、通过 `del`/`unlink` 删除全部 key 或大范围通配符 key
+- 判定条件：本次 diff 新增或修改行中出现 Redis 全量查询、清库、全量删除或按通配符大范围删除 key 的命令、脚本片段、配置值时触发
+- 修复建议：禁止使用 `KEYS`、`FLUSHDB`、`FLUSHALL` 和无边界通配符删除；改用精确 key、小批量 `SCAN` + 限速处理，或通过业务白名单和审批流程控制清理范围

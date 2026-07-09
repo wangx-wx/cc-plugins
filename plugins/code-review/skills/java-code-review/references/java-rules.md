@@ -83,3 +83,21 @@
   2. 所有 Bean 方法显式指定 `@Bean(name = "xxxRedisTemplate")`，避免依赖方法名隐式命名
   3. 所有注入点使用 `@Qualifier("xxxRedisTemplate")` 或 `@Resource(name = "xxxRedisTemplate")` 显式指定
   4. 切忌依赖 `spring.main.allow-bean-definition-overriding=true` 兜底（见 JCR-00004）
+
+## JAVA-00013 Redis 全量 Key 查询或批量删除
+- 级别：Critical
+- 描述：禁止在生产代码中执行 Redis 全量 Key 查询或无边界批量删除。典型高危模式包括：`keys *`、`RedisTemplate.keys("*")`、通过 `delete`/`unlink` 删除匹配全部或大范围 pattern 的 key、删除全部 key，以及 `@CacheEvict(value = "multilevel:wash:**", allEntries = true)` 等对整类缓存执行全量清理的写法。此类操作可能阻塞 Redis、误删业务缓存或触发大面积缓存击穿
+- 判定条件：本次 diff 中新增或修改的代码、注解、脚本字符串、常量或配置包含全量 key 查询、全量删除、按通配符大范围删除 Redis key 的逻辑时触发；若仅为测试目录 `src/test/` 下代码，不触发
+- 修复建议：禁止使用 `KEYS` 和无边界通配符删除；改用精确 key、业务维度白名单、小批量 `SCAN` + 限速处理，或通过版本号/命名空间切换实现缓存失效；缓存清理必须明确影响范围并评估峰值流量
+
+## JAVA-00014 消息消费者 info 日志输出消息体
+- 级别：Critical
+- 描述：Kafka、RocketMQ、RabbitMQ 等消息消费者禁止在 info 级别日志中输出完整消息体内容。消息体可能包含敏感信息，且高吞吐消费场景下会造成日志爆量、磁盘压力和检索成本上升
+- 判定条件：本次 diff 中新增或修改的消息消费方法、监听器、Handler 或 Consumer 逻辑内，存在 `log.info(...)`、`LOGGER.info(...)` 等 info 级日志直接输出消息体对象、原始 payload、反序列化后的完整 DTO/JSON/XML/body/content/value 时触发
+- 修复建议：info 日志只保留 traceId、messageId、topic、partition、offset、业务主键等可定位字段；完整消息体如确需排查，应降为 debug 并受日志采样、脱敏和开关控制
+
+## JAVA-00015 消息消费者 info 日志输出消息体基本信息
+- 级别：Minor
+- 描述：Kafka、RocketMQ、RabbitMQ 等消息消费者在 info 级别输出消息体大小、编码、摘要、schema、字段数量等基本信息时，需要提醒评估消息量。若消费量较大，持续 info 日志仍可能造成日志噪声和存储成本
+- 判定条件：本次 diff 中新增或修改的消息消费逻辑内，`log.info(...)` 输出的是消息体元信息而非完整内容，如 body size、payload length、encoding、charset、schema、摘要 hash、字段数量等时触发；若已明确使用采样、限频或仅异常/低频路径输出，可不触发
+- 修复建议：评估 topic/consumer 的日均与峰值消息量；高频消费者建议降为 debug、采样输出、按异常场景输出，或仅保留关键链路定位字段
