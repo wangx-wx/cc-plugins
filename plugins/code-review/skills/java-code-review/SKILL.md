@@ -27,16 +27,6 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 使用 Agent tool 在一条消息中同时启动 4 个Agent（`subagent_type: "general-purpose"`），每个代理独立完成各自的检查任务并返回结果，主 Agent 不参与具体的检查过程，仅负责收集结果。
 
-主 Agent 不执行代码检查、不执行 P3C 扫描、不自行运行 `git merge-base` 或 `git diff` 来确定审查内容。严格 diff 范围、无共同祖先时失败退出、只审查新增或修改行等限制，必须写在各子 Agent 指令中并由子 Agent 执行。
-
-启动每个子 Agent 前，主 Agent 必须读取对应的 `agents/*.md` 文件，并将文件完整内容作为该子 Agent 的任务指令，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
-
-每个子代理返回的结果是 JSON 数组。除 P3C 检查外，格式遵循 [assets/example-agent-output.md](assets/example-agent-output.md) 中定义的 schema；P3C 检查直接透传 `diff_scan.mjs` 输出的 JSON 数组。无问题时返回空数组 `[]`。
-
-> **规则约束**：
-> 1. 除 Agent 1 外，每个子代理必须先读取对应的参考规则文件，仅使用文件中定义的规则进行检查，返回结果中的 ruleId 必须与参考文件中的编号完全一致。
-> 2. 只对严格 diff 范围内的新增或修改行进行检查，未变更的文件和未变更行不应产生任何违规结果。
-
 并行启动以下 4 个子 Agent：
 
 1. **P3C 规范检查**：派发Agent `p3c-analyzer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
