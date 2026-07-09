@@ -8,7 +8,6 @@ tools: Read, Glob, Grep, Bash
 
 ## 输入参数
 
-- `{skill-path}`: skill 目录的绝对路径
 - `{repo-path}`: 待审查仓库的根目录路径
 - `{source}`: source 分支名
 - `{target}`: target 分支名
@@ -17,15 +16,11 @@ tools: Read, Glob, Grep, Bash
 
 由 P3C 扫描脚本内部确定：所有变更的 `.java` 文件，排除单元测试目录（`*/src/test/*`）。
 
-## Diff 范围
-
-由 P3C 扫描脚本内部使用 `{target}...{source}` 执行标准 code-review 三点 diff。若 `{target}` 与 `{source}` 没有共同祖先，脚本应失败退出；不得改用 `{target} {source}` 或其他 diff 范围重试。
-
 ## 执行步骤
 
 1. 执行 P3C 扫描脚本：
    ```bash
-   node {skill-path}/scripts/diff_scan.mjs {repo-path} --source {source} --target {target}
+   node ${CLAUDE_PLUGIN_ROOT}/skills/java-code-review/scripts/diff_scan.mjs {repo-path} --source {source} --target {target}
    ```
 2. 若脚本退出码非 0，返回失败并保留脚本错误信息；不得自动降级 diff 范围。
 3. 若脚本成功，直接返回脚本 stdout 中的 JSON 数组。

@@ -23,26 +23,11 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 > 后续阶段中，`{source}` 代表最终确定的 source 分支，`{target}` 代表最终确定的 target 分支，`{repo-path}` 代表仓库路径。
 > `{skill-path}` = ${CLAUDE_SKILL_DIR}
 
-## 阶段2：确定严格 Diff 范围
-
-主 Agent 不执行检查，但必须把以下 diff 规则完整传递给每个子 Agent。P3C 检查由 `{skill-path}/scripts/diff_scan.mjs` 执行；其他子 Agent 自行使用 Git 命令获取 diff。
-
-除 P3C 检查外，每个子 Agent 必须独立执行以下步骤来确定 `{diff-revisions}`；P3C 检查由 `diff_scan.mjs` 在脚本内部使用同样的 `{target}...{source}` 语义确定 diff 范围：
-
-1. 执行 `git -C {repo-path} merge-base {target} {source}`
-2. 若命令成功且输出非空，`{diff-revisions}` = `{target}...{source}`
-3. 若命令失败或输出为空，终止审查并返回失败：`{target}` 与 `{source}` 没有共同祖先，无法执行标准 code-review 三点 diff；不得自动降级为两分支文件树直接比较
-
-除 P3C 检查外，每个子 Agent 获取文件和变更内容时必须遵守：
-
-1. 只使用 `git -C {repo-path} diff --name-only --diff-filter=ACMR {diff-revisions} -- <pathspec...>` 获取候选文件
-2. 只使用 `git -C {repo-path} diff -U0 --diff-filter=ACMR {diff-revisions} -- <pathspec...>` 获取变更行
-3. 只审查候选文件中的新增或修改行；不得因为同一文件被修改就报告未变更行上的历史问题
-4. 删除文件、未变更文件、diff 上下文行不得产生违规结果
-
-## 阶段3：并行启动 4 个 Review Agents
+## 阶段2：并行启动 4 个 Review Agents
 
 使用 Agent tool 在一条消息中同时启动 4 个Agent（`subagent_type: "general-purpose"`），每个代理独立完成各自的检查任务并返回结果，主 Agent 不参与具体的检查过程，仅负责收集结果。
+
+主 Agent 不执行代码检查、不执行 P3C 扫描、不自行运行 `git merge-base` 或 `git diff` 来确定审查内容。严格 diff 范围、无共同祖先时失败退出、只审查新增或修改行等限制，必须写在各子 Agent 指令中并由子 Agent 执行。
 
 启动每个子 Agent 前，主 Agent 必须读取对应的 `agents/*.md` 文件，并将文件完整内容作为该子 Agent 的任务指令，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
 
@@ -51,17 +36,15 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 > **规则约束**：
 > 1. 除 Agent 1 外，每个子代理必须先读取对应的参考规则文件，仅使用文件中定义的规则进行检查，返回结果中的 ruleId 必须与参考文件中的编号完全一致。
 > 2. 只对严格 diff 范围内的新增或修改行进行检查，未变更的文件和未变更行不应产生任何违规结果。
-> 3. Agent 1 必须执行 P3C 扫描脚本并直接透传脚本 JSON 结果，不得对脚本结果进行增删或补充其他违规项。
-> 4. 除 Agent 1 外，每个子代理自行使用 Git 命令获取 diff，不依赖 `scripts/*.mjs`。
 
 并行启动以下 4 个子 Agent：
 
-1. **P3C 规范检查**：读取并使用 `{skill-path}/agents/p3c-analyzer.md`
-2. **Java 规范检查**：读取并使用 `{skill-path}/agents/java-standards-reviewer.md`
-3. **配置文件检查**：读取并使用 `{skill-path}/agents/config-review.md`
-4. **数据库 XML 检查**：读取并使用 `{skill-path}/agents/db-xml-reviewer.md`
+1. **P3C 规范检查**：派发Agent `p3c-analyzer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
+2. **Java 规范检查**：派发Agent `java-standards-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
+3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
+4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
 
-## 阶段4：汇总输出并保存审查报告
+## 阶段3：汇总输出并保存审查报告
 
 收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告：
 
