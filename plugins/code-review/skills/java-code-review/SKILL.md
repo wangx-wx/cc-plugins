@@ -29,14 +29,14 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 并行启动以下 4 个子 Agent：
 
-1. **P3C 规范检查**：派发Agent `p3c-analyzer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
-2. **Java 规范检查**：派发Agent `java-standards-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
-3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
-4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
+1. **P3C 规范检查**：派发Agent `p3c-analyzer`，同时传入 `{source}`、`{target}`、`{repo-path}`
+2. **Java 规范检查**：派发Agent `java-standards-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
+3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
+4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 
 ## 阶段3：汇总输出并保存审查报告
 
-收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告：
+收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告:
 
 1. **合并结果**：将 4 个 Agent 的 JSON 数组合并为一个结果报告
 2. **分级排列**：按 `blockLevel` 严重程度排序：Blocker → Critical → Major → Minor

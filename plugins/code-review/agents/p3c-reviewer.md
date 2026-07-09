@@ -1,5 +1,5 @@
 ---
-name: p3c-analyzer
+name: p3c-reviewer
 description: 基于严格 diff 范围对 Java 变更行进行 P3C 规范检查
 tools: Read, Glob, Grep, Bash
 ---

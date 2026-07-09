@@ -12,8 +12,8 @@
         "code-review"
     ],
     "agents": [
-        "./agents/config-review.md",
-        "./agents/p3c-analyzer.md",
+        "./agents/config-reviewer.md",
+        "./agents/p3c-reviewer.md",
         "./agents/java-standards-reviewer.md",
         "./agents/db-xml-reviewer.md"
     ],
