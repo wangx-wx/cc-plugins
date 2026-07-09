@@ -34,7 +34,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 
-## 阶段3：汇总输出并保存审查报告
+## 阶段3：汇总输出审查报告
 
 收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告:
 
