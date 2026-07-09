@@ -513,9 +513,5 @@ VERBOSE = args.verbose;
 
 const results = diffScan(args.repo, args.source, args.target, args.priority);
 
-if (results.length === 0) {
-  console.log("未发现违规项。");
-} else {
-  console.log(JSON.stringify(results, null, 2));
-  log(`总违规数：${results.length}`);
-}
+console.log(JSON.stringify(results, null, 2));
+log(`总违规数：${results.length}`);

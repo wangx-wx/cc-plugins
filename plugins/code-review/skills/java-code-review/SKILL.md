@@ -25,15 +25,15 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 ## 阶段2：确定严格 Diff 范围
 
-主 Agent 不执行检查，但必须把以下 diff 规则完整传递给每个子 Agent。旧版 `scripts/*.mjs` 脚本保留在仓库中作为历史工具，不作为本流程的必需依赖。
+主 Agent 不执行检查，但必须把以下 diff 规则完整传递给每个子 Agent。P3C 检查由 `{skill-path}/scripts/diff_scan.mjs` 执行；其他子 Agent 自行使用 Git 命令获取 diff。
 
-每个子 Agent 必须独立执行以下步骤来确定 `{diff-revisions}`：
+除 P3C 检查外，每个子 Agent 必须独立执行以下步骤来确定 `{diff-revisions}`；P3C 检查由 `diff_scan.mjs` 在脚本内部使用同样的 `{target}...{source}` 语义确定 diff 范围：
 
 1. 执行 `git -C {repo-path} merge-base {target} {source}`
 2. 若命令成功且输出非空，`{diff-revisions}` = `{target}...{source}`
 3. 若命令失败或输出为空，终止审查并返回失败：`{target}` 与 `{source}` 没有共同祖先，无法执行标准 code-review 三点 diff；不得自动降级为两分支文件树直接比较
 
-每个子 Agent 获取文件和变更内容时必须遵守：
+除 P3C 检查外，每个子 Agent 获取文件和变更内容时必须遵守：
 
 1. 只使用 `git -C {repo-path} diff --name-only --diff-filter=ACMR {diff-revisions} -- <pathspec...>` 获取候选文件
 2. 只使用 `git -C {repo-path} diff -U0 --diff-filter=ACMR {diff-revisions} -- <pathspec...>` 获取变更行
@@ -46,12 +46,13 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 启动每个子 Agent 前，主 Agent 必须读取对应的 `agents/*.md` 文件，并将文件完整内容作为该子 Agent 的任务指令，同时传入 `{source}`、`{target}`、`{repo-path}`、`{skill-path}`。
 
-每个子代理返回的结果是 JSON 数组，格式遵循 [assets/example-agent-output.md](assets/example-agent-output.md) 中定义的 schema。无问题时返回空数组 `[]`。
+每个子代理返回的结果是 JSON 数组。除 P3C 检查外，格式遵循 [assets/example-agent-output.md](assets/example-agent-output.md) 中定义的 schema；P3C 检查直接透传 `diff_scan.mjs` 输出的 JSON 数组。无问题时返回空数组 `[]`。
 
 > **规则约束**：
 > 1. 除 Agent 1 外，每个子代理必须先读取对应的参考规则文件，仅使用文件中定义的规则进行检查，返回结果中的 ruleId 必须与参考文件中的编号完全一致。
 > 2. 只对严格 diff 范围内的新增或修改行进行检查，未变更的文件和未变更行不应产生任何违规结果。
-> 3. 每个子代理自行使用 Git 命令获取 diff，不依赖 `scripts/*.mjs`。
+> 3. Agent 1 必须执行 P3C 扫描脚本并直接透传脚本 JSON 结果，不得对脚本结果进行增删或补充其他违规项。
+> 4. 除 Agent 1 外，每个子代理自行使用 Git 命令获取 diff，不依赖 `scripts/*.mjs`。
 
 并行启动以下 4 个子 Agent：
 
