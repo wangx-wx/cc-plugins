@@ -31,7 +31,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 1. 执行 `git -C {repo-path} merge-base {target} {source}`
 2. 若命令成功且输出非空，`{diff-revisions}` = `{target}...{source}`
-3. 若命令失败或输出为空，说明两个分支没有共同祖先，`{diff-revisions}` = `{target} {source}`，并在 Agent 结果说明中标记已降级为两分支文件树直接比较
+3. 若命令失败或输出为空，终止审查并返回失败：`{target}` 与 `{source}` 没有共同祖先，无法执行标准 code-review 三点 diff；不得自动降级为两分支文件树直接比较
 
 每个子 Agent 获取文件和变更内容时必须遵守：
 
@@ -75,8 +75,3 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
    - 清单覆盖情况
    - 建议
    - 是否可合并的评估结论
-4. **保存报告到文件**：
-   - 执行 `date +%Y%m%d%H%M%S` 获取当前时间戳（格式：年月日时分秒，如 `20260312143025`）
-   - 在 `{repo-path}` 下创建目录：`mkdir -p {repo-path}/data/ai-code-review/{timestamp}`
-   - 使用 Write 工具将报告保存到：`{repo-path}/data/ai-code-review/{timestamp}/代码审查报告.md`
-   - 告知用户报告已保存的完整路径

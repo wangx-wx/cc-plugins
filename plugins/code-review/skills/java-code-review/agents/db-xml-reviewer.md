@@ -21,7 +21,7 @@ tools: Read, Glob, Grep, Bash
 
 1. 执行 `git -C {repo-path} merge-base {target} {source}`
 2. 若命令成功且输出非空，`{diff-revisions}` = `{target}...{source}`
-3. 若命令失败或输出为空，`{diff-revisions}` = `{target} {source}`，并在结果说明中标记已降级为两分支文件树直接比较
+3. 若命令失败或输出为空，终止审查并返回失败：`{target}` 与 `{source}` 没有共同祖先，无法执行标准 code-review 三点 diff；不得自动降级为两分支文件树直接比较
 
 ## 执行步骤
 
