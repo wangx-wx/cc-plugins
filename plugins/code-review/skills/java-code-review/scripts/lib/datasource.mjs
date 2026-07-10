@@ -87,3 +87,13 @@ export function resolveServiceDataSource(javaFiles, mapperSimpleName, methodName
   if (found.size === 1) return { name: [...found][0], evidence: "service-@DS" };
   return null; // 0（无）或 >1（多义）都降级
 }
+
+export function resolveDataSource(orderedCandidates, context) {
+  for (const c of orderedCandidates) {
+    if (c && context.dataSources.includes(c.name)) {
+      return { dataSource: c.name, evidence: c.evidence };
+    }
+  }
+  const evidence = context.dataSources.length === 1 ? "single-ds" : "default-fallback";
+  return { dataSource: context.defaultDataSource, evidence };
+}
