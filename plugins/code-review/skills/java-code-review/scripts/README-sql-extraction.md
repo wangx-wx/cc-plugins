@@ -31,4 +31,4 @@
 
 ## 测试
 
-    node --test plugins/code-review/skills/java-code-review/scripts/test/
+    node --test "plugins/code-review/skills/java-code-review/scripts/test/**/*.test.mjs"
