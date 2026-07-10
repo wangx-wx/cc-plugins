@@ -31,6 +31,7 @@ function statementsForChanges(parsed, changedLines) {
 
 export function buildItems({ changed, repo, source, context }) {
   const items = [];
+  let cachedJavaFiles = null; // collectJavaFiles 结果只依赖 (repo, source)，整次运行不变
   for (const { file, changedLines } of changed) {
     const xml = readSourceAtRevision(repo, source, file);
     const parsed = parseMapperXml(xml);
@@ -41,13 +42,13 @@ export function buildItems({ changed, repo, source, context }) {
       if (!templateSql) continue; // 边界不确定则跳过
 
       const candidates = [];
-      if (mapperJava) candidates.push(resolveMapperDataSource(mapperJava, stmt.id)); // method/interface
+      if (mapperJava) candidates.push(...resolveMapperDataSource(mapperJava, stmt.id)); // method/interface 候选数组
       // 仅多数据源、且 mapper 级未取到有效候选时，尝试 Service 层
       const mapperHit = candidates.find((c) => c && context.dataSources.includes(c.name));
       if (!mapperHit && context.dataSources.length > 1) {
-        const javaFiles = collectJavaFiles(repo, source);
+        if (!cachedJavaFiles) cachedJavaFiles = collectJavaFiles(repo, source); // 懒缓存：首次需要时才扫
         const simpleName = parsed.namespace.split(".").pop();
-        candidates.push(resolveServiceDataSource(javaFiles, simpleName, stmt.id));
+        candidates.push(resolveServiceDataSource(cachedJavaFiles, simpleName, stmt.id));
       }
       const { dataSource, evidence } = resolveDataSource(candidates, context);
       items.push({ dataSource, file: `${file}:${stmt.startLine}`, templateSql, evidence });

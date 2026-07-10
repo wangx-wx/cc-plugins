@@ -43,11 +43,12 @@ function findTypeDs(javaSource) {
 }
 
 export function resolveMapperDataSource(javaSource, methodName) {
+  const candidates = [];
   const method = findMethodDs(javaSource, methodName);
-  if (method) return { name: method, evidence: "method-@DS" };
+  if (method) candidates.push({ name: method, evidence: "method-@DS" });
   const iface = findTypeDs(javaSource);
-  if (iface) return { name: iface, evidence: "interface-@DS" };
-  return null;
+  if (iface) candidates.push({ name: iface, evidence: "interface-@DS" });
+  return candidates; // 可能为 []；∈ dataSources 校验交给 resolveDataSource 按序处理
 }
 
 // 从调用点位置向上回溯，找最近的方法头上的 @DS；无则找类级 @DS。近似实现，复杂写法返回 null。
