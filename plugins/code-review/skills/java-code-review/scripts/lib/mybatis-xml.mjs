@@ -101,3 +101,25 @@ export function normalizeXmlSql(statementNode) {
   for (const child of statementNode.children) emit(child, parts);
   return collapseWhitespace(parts.join(""));
 }
+
+const UNRESOLVED_INCLUDE = () => ({ kind: "element", name: "include", attributes: {}, children: [] });
+
+export function resolveIncludes(node, sqlFragments, seen = new Set()) {
+  if (node.kind !== "element") return node;
+  const newChildren = [];
+  for (const child of node.children) {
+    if (child.kind === "element" && child.name === "include") {
+      const refid = child.attributes.refid;
+      if (refid && sqlFragments[refid] && !seen.has(refid)) {
+        const nextSeen = new Set(seen).add(refid);
+        const expanded = resolveIncludes(sqlFragments[refid], sqlFragments, nextSeen);
+        newChildren.push(...expanded.children);
+      } else {
+        newChildren.push(UNRESOLVED_INCLUDE());
+      }
+    } else {
+      newChildren.push(resolveIncludes(child, sqlFragments, seen));
+    }
+  }
+  return { ...node, children: newChildren };
+}
