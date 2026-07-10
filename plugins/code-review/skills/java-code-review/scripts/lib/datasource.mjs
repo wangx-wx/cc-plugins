@@ -49,3 +49,41 @@ export function resolveMapperDataSource(javaSource, methodName) {
   if (iface) return { name: iface, evidence: "interface-@DS" };
   return null;
 }
+
+// 从调用点位置向上回溯，找最近的方法头上的 @DS；无则找类级 @DS。近似实现，复杂写法返回 null。
+function dsAtCallSite(content, callIndex) {
+  const before = content.slice(0, callIndex);
+  // 最近方法头：向前找上一个 '{'（方法体起点）之前的方法签名片段
+  const braceIdx = before.lastIndexOf("{");
+  if (braceIdx >= 0) {
+    const sigCut = Math.max(before.lastIndexOf(";", braceIdx), before.lastIndexOf("}", braceIdx));
+    const methodHead = before.slice(sigCut + 1, braceIdx);
+    const dm = methodHead.match(DS_LITERAL);
+    if (dm) return dm[1];
+  }
+  // 类级：整文件第一个 class/interface 前的 @DS
+  const decl = content.search(/\b(?:public\s+)?(?:interface|class)\s+\w+/);
+  if (decl >= 0) {
+    const dm = content.slice(0, decl).match(DS_LITERAL);
+    if (dm) return dm[1];
+  }
+  return null;
+}
+
+export function resolveServiceDataSource(javaFiles, mapperSimpleName, methodName) {
+  const fieldDecl = new RegExp(`\\b${mapperSimpleName}\\s+(\\w+)\\s*[;=]`);
+  const found = new Set();
+  for (const f of javaFiles) {
+    const fm = f.content.match(fieldDecl);
+    if (!fm) continue; // 该文件未显式声明此 Mapper 类型字段 -> 跳过（保守）
+    const fieldName = fm[1];
+    const callRe = new RegExp(`\\b${fieldName}\\s*\\.\\s*${methodName}\\s*\\(`, "g");
+    let cm;
+    while ((cm = callRe.exec(f.content)) !== null) {
+      const ds = dsAtCallSite(f.content, cm.index);
+      if (ds) found.add(ds);
+    }
+  }
+  if (found.size === 1) return { name: [...found][0], evidence: "service-@DS" };
+  return null; // 0（无）或 >1（多义）都降级
+}
