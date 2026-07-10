@@ -15,7 +15,8 @@
         "./agents/config-reviewer.md",
         "./agents/p3c-reviewer.md",
         "./agents/java-standards-reviewer.md",
-        "./agents/db-xml-reviewer.md"
+        "./agents/db-xml-reviewer.md",
+        "./agents/mybatis-xml-sql-extractor.md"
     ],
     "mcpServers": "./mcp.json",
     "skills": [
