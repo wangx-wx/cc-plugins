@@ -62,3 +62,42 @@ export function parseMapperXml(xml) {
   parser.write(xml).close();
   return { namespace, statements, sqlFragments };
 }
+
+export function collapseWhitespace(sql) {
+  let out = "";
+  let inStr = false;
+  for (let i = 0; i < sql.length; i++) {
+    const ch = sql[i];
+    if (ch === "'") {
+      inStr = !inStr;
+      out += ch;
+      continue;
+    }
+    if (!inStr && /\s/.test(ch)) {
+      if (!out.endsWith(" ")) out += " ";
+    } else {
+      out += ch;
+    }
+  }
+  return out.trim();
+}
+
+function emit(node, parts) {
+  if (node.kind === "text") {
+    parts.push(node.text.replace(/#\{[^}]*\}/g, "?")); // ${...} 不动
+    return;
+  }
+  if (node.name === "include") {
+    parts.push(" <include/> ");
+    return;
+  }
+  parts.push(` <${node.name}> `);
+  for (const child of node.children) emit(child, parts);
+  parts.push(` </${node.name}> `);
+}
+
+export function normalizeXmlSql(statementNode) {
+  const parts = [];
+  for (const child of statementNode.children) emit(child, parts);
+  return collapseWhitespace(parts.join(""));
+}
