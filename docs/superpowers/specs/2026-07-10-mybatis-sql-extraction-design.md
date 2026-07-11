@@ -350,3 +350,118 @@ extract_mybatis_xml_changes.mjs
 ### 8.3 Java 与 MyBatis-Plus wrapper SQL
 
 在 XML 提取稳定后，另建独立的 Java wrapper 提取器，不与本版 XML 提取器混合。演进路径：AST 定位变更方法及调用链 → 识别 `QueryWrapper`/`LambdaQueryWrapper` 构造与调用 → 从 `@TableName`/`@TableField` 解析表名列名 → 归属数据源。无法证明的数据流继续跳过。若需真正运行时 SQL，另行接入受控环境的 MyBatis `BoundSql` 捕获。
+
+## 9. 数据契约补丁（gitlabUrl 寻址 + 别名 + 严格校验）
+
+> 本节是对前文 §2-4 数据源上下文与输出契约的**增量补丁**；实施时以本节为准，原 §3.2/§4.2 保留作历史记录。
+
+### 9.1 变更原因
+
+原 §3.2 的数据源上下文以 `project` 名作为项目身份，由外部适配层生成单对象上下文。实践中发现**项目名不可靠**：
+
+- 同一仓库在不同环境/命名规范下有多个别名，`project` 字段无法稳定对齐；
+- 项目名与代码仓库的映射关系分散在多套配置中，难以作为单一事实来源。
+
+本次变更改用 **gitlabUrl 作为项目唯一身份**：脚本在仓库内执行 `git ls-remote --get-url origin`（或等价命令）拿到远程地址并归一化（去 `.git` 后缀、统一大小写），再与外部映射数组中的 `gitlabUrl` 比对，命中条目即为当前项目的数据源配置。项目身份由代码仓库自身决定，不依赖外部传入的 `project` 名是否准确。
+
+### 9.2 新外部映射格式
+
+外部映射由原来的「适配层生成单对象上下文」改为**直接提供 JSON 数组**，每条描述一个项目，整个数组作为 `--data-source-context` 传入：
+
+```json
+[
+  {
+    "project": "advert",
+    "dataSources": ["advert-master", "advert-read"],
+    "dataSourcesAlias": ["生产库", "只读库"],
+    "gitlabUrl": "https://gitlab.example.com/group/advert.git"
+  },
+  {
+    "project": "order",
+    "dataSources": ["order-master"],
+    "dataSourcesAlias": ["生产库"],
+    "gitlabUrl": "https://gitlab.example.com/group/order.git"
+  }
+]
+```
+
+| 字段 | 含义 |
+|---|---|
+| `project` | 项目展示名（仅供输出，不再作寻址键） |
+| `dataSources` | 该项目允许的数据源逻辑名称列表；**`dataSources[0]` 即主数据源**，替代原 `defaultDataSource` |
+| `dataSourcesAlias` | 与 `dataSources` **按索引一一对应**的别名数组（如「生产库」「只读库」），供下游辨识环境 |
+| `gitlabUrl` | 项目代码仓库地址，作为寻址键；脚本归一化后与当前仓库 `git ls-remote --get-url` 结果匹配 |
+
+### 9.3 新最终 JSON 结构
+
+```json
+{
+  "project": "advert",
+  "gitlabUrl": "https://gitlab.example.com/group/advert.git",
+  "items": [
+    {
+      "dataSource": "advert-read",
+      "dataSourcesAlia": "只读库",
+      "file": "src/main/resources/mapper/ReportMapper.xml:12",
+      "templateSql": "SELECT id, name FROM user <where> <if> AND status = ? </if> </where>"
+    }
+  ]
+}
+```
+
+| 字段 | 含义 |
+|---|---|
+| `project` | 顶层字段，命中的项目展示名 |
+| `gitlabUrl` | **新增**顶层字段，命中的项目仓库地址，供下游确认来源仓库 |
+| `items` | 提取到的 SQL 变更列表 |
+| `items[].dataSource` | 按 2.3 归属链解析出的数据源逻辑名称 |
+| `items[].dataSourcesAlia` | **新增**，`dataSource` 在 `dataSources` 中的索引对应的别名（`dataSourcesAlias[indexOf]`），供下游辨识生产/测试等环境 |
+| `items[].file` | 相对仓库根目录的 XML 路径，后接 `:` 与 statement 起始行 |
+| `items[].templateSql` | 完整 statement 的 SQL；动态标签保留但不带属性 |
+
+没有 XML SQL 变更时，输出 `{ "project": "<命中的项目>", "gitlabUrl": "<命中的地址>", "items": [] }`。
+
+### 9.4 严格校验规则
+
+原 §3.2 采用「失败即退出」的部分校验，本次扩展为**全量严格校验**。以下任一情况脚本**立即报错退出，不输出结果 JSON**：
+
+1. `dataSources` 为空数组或缺失（无可用数据源，无法确定主库）。
+2. `dataSourcesAlias` 存在但长度与 `dataSources` 不等（按索引对应会错位）。
+3. `gitlabUrl` 缺失（无法寻址到项目）。
+4. 当前仓库 `git ls-remote --get-url` 归一化结果与映射数组中**所有**条目的 `gitlabUrl` 都不匹配（无主 SQL 不应继续）。
+
+> **设计理由**：原方案 D4 在归属证明不了时用 `defaultDataSource` 兜底、照常输出。本次变更为避免「把无主/错配的 SQL 喂给下游分析」，对**上下文层面**的错误（项目对不上、数据源缺失）改为严格失败；归属链层面（某条 SQL 的 `@DS` 解析不到）仍按 §2.3 兜底逻辑处理，使用 `dataSources[0]`。
+
+### 9.5 evidence 语义变更
+
+配合 `defaultDataSource` 移除，调试文件中的 `evidence` 字段语义合并：
+
+| 取值 | 含义 |
+|---|---|
+| `method-@DS` / `interface-@DS` / `service-@DS` | 命中候选自带，沿用 §2.3 归属链 |
+| `default-first` | 兜底，使用 `dataSources[0]`（合并原 `single-ds` 与 `default-fallback`） |
+
+### 9.6 error.log 机制
+
+脚本报错退出时，在 **`<output-dir>/error.log`** 追加一行，格式为 `ISO 时间戳 + 错误描述`，例如：
+
+```text
+2026-07-11T08:30:12.345Z [FATAL] gitlabUrl not matched: git@gitlab.example.com:group/unknown.git does not match any entry
+```
+
+`<output-dir>` 为 `--output` 参数所在目录。正常执行时不写该文件。
+
+### 9.7 与原 §3.2 / §4.2 的差异
+
+| 维度 | 原 §3.2 / §4.2 | 本节补丁 |
+|---|---|---|
+| 外部输入 | 适配层生成的单对象上下文 | 直接传入 JSON 数组，脚本内部寻址 |
+| 项目身份键 | `project` 名 | `gitlabUrl`（归一化匹配） |
+| `defaultDataSource` | 顶层独立字段 | **移除**，主数据源 = `dataSources[0]` |
+| `dataSourcesAlias` | 无 | **新增**，与 dataSources 按索引对应 |
+| 顶层 `gitlabUrl` | 无 | **新增**，供下游确认来源 |
+| `items[].dataSourcesAlia` | 无 | **新增**，取自 `dataSourcesAlias[indexOf]` |
+| 校验强度 | project 空 / defaultDataSource 非法才失败 | **全量严格校验**（见 9.4） |
+| evidence 兜底值 | `single-ds` / `default-fallback` | 合并为 `default-first` |
+
+> **本节是对前文 §2-4 的增量补丁，实施以本节为准；原 §3.2/§4.2 保留作历史记录。**
