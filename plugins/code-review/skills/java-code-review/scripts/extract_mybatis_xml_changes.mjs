@@ -13,7 +13,7 @@ export function parseArguments(argv) {
     const key = map[argv[i]];
     if (key && i + 1 < argv.length) o[key] = argv[++i];
   }
-  o.output = o.output || ".codex/sql-extraction/sql-extraction-result.json";
+  o.output = o.output || ".code-review/sql-extraction/sql-extraction-result.json";
   return o;
 }
 

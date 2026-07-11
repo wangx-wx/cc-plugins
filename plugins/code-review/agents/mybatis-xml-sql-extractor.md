@@ -12,7 +12,7 @@ tools: Read, Bash
 - `{source}` / `{target}`：source / target 分支或提交
 - `{project-mapping}`：项目映射 JSON 数组文件路径，数组每项为 `{ project, dataSources, dataSourcesAlias, gitlabUrl }`；脚本以 `git ls-remote --get-url` 取仓库 remote URL，并与各条目的 `gitlabUrl` 匹配来确定当前项目归属
 - `{project}`：可选，已无实际作用（脚本仍接受此参数以保持向后兼容，但不再用于匹配或校验）
-- `{output}`：最终 JSON 保存路径（默认 `.codex/sql-extraction/sql-extraction-result.json`）
+- `{output}`：最终 JSON 保存路径（默认 `.code-review/sql-extraction/sql-extraction-result.json`）
 
 ## 执行步骤（薄编排，不改写脚本结果）
 
