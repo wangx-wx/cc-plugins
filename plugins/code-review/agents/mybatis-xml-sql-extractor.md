@@ -10,24 +10,42 @@ tools: Read, Bash
 
 - `{repo-path}`：仓库根目录
 - `{source}` / `{target}`：source / target 分支或提交
-- `{project}`：项目 ID
-- `{data-source-context}`：规范化数据源上下文 JSON 文件路径
+- `{project-mapping}`：项目映射 JSON 数组文件路径，数组每项为 `{ project, dataSources, dataSourcesAlias, gitlabUrl }`；脚本以 `git ls-remote --get-url` 取仓库 remote URL，并与各条目的 `gitlabUrl` 匹配来确定当前项目归属
+- `{project}`：可选，已无实际作用（脚本仍接受此参数以保持向后兼容，但不再用于匹配或校验）
 - `{output}`：最终 JSON 保存路径（默认 `.codex/sql-extraction/sql-extraction-result.json`）
 
 ## 执行步骤（薄编排，不改写脚本结果）
 
-1. 读取 `{data-source-context}`，确认其 `project` 与入参 `{project}` 一致；不一致则终止并返回错误。
-2. 调用提取脚本：
+1. 调用提取脚本：
    ```bash
    node ${CLAUDE_PLUGIN_ROOT}/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
      --repo-path {repo-path} --source {source} --target {target} \
-     --project {project} --data-source-context {data-source-context} --output {output}
+     --project-mapping {project-mapping} --output {output}
    ```
-3. 确认脚本退出码为 0、`{output}` 存在且为合法 JSON。
-4. 将 `{output}` 的 JSON 内容原样作为最终回复返回。
+   脚本内部完成 remote URL 匹配、数据源解析与 SQL 提取。任一映射条目缺少非空 `gitlabUrl`、仓库 remote 无命中、命中条目的 `dataSources` 为空或 `dataSourcesAlias` 长度与 `dataSources` 不一致时，脚本将以非零码退出，并把错误（含时间戳）追加写入与 `{output}` 同目录的 `error.log`。
+2. 确认脚本退出码为 0、`{output}` 存在且为合法 JSON。
+3. 将 `{output}` 的 JSON 内容原样作为最终回复返回。
+
+## 输出契约
+
+脚本产出的 JSON 结构：
+```json
+{
+  "project": "<匹配条目的 project>",
+  "gitlabUrl": "<匹配到的仓库 remote URL>",
+  "items": [
+    {
+      "dataSource": "<数据源名>",
+      "dataSourcesAlia": "<数据源别名，映射中存在对应别名时填入>",
+      "file": "<Mapper XML 相对路径:起始行号>",
+      "templateSql": "<完整 statement 的模板 SQL>"
+    }
+  ]
+}
+```
 
 ## 约束
 
 - 不逐项复核、不改写、不补写脚本产出；不猜测数据源。
-- 最终回复只含脚本产出的 `{ project, items }` JSON，不附加统计或审核信息。
-- 脚本失败时返回脚本的错误信息，不伪造结果。
+- 最终回复只含脚本产出的 `{ project, gitlabUrl, items }` JSON，不附加统计或审核信息。
+- 脚本失败时返回脚本的错误信息（可指向 `<output-dir>/error.log`），不伪造结果。
