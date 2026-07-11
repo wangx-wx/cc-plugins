@@ -1,14 +1,14 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { parseMapperXml, resolveIncludes, normalizeXmlSql } from "./lib/mybatis-xml.mjs";
-import { loadDataSourceContext, resolveMapperDataSource, resolveServiceDataSource, resolveDataSource } from "./lib/datasource.mjs";
+import { loadProjectMapping, resolveMapperDataSource, resolveServiceDataSource, resolveDataSource } from "./lib/datasource.mjs";
 import { resolveDiff, readSourceAtRevision } from "./lib/git-diff.mjs";
 
 export function parseArguments(argv) {
   const o = {};
   const map = { "--repo-path": "repoPath", "--source": "source", "--target": "target",
-    "--project": "project", "--data-source-context": "dataSourceContextPath", "--output": "output" };
+    "--project": "project", "--project-mapping": "projectMappingPath", "--output": "output" };
   for (let i = 0; i < argv.length; i++) {
     const key = map[argv[i]];
     if (key && i + 1 < argv.length) o[key] = argv[++i];
@@ -51,7 +51,12 @@ export function buildItems({ changed, repo, source, context }) {
         candidates.push(resolveServiceDataSource(cachedJavaFiles, simpleName, stmt.id));
       }
       const { dataSource, evidence } = resolveDataSource(candidates, context);
-      items.push({ dataSource, file: `${file}:${stmt.startLine}`, templateSql, evidence });
+      const item = { dataSource, file: `${file}:${stmt.startLine}`, templateSql, evidence };
+      const aliasIdx = context.dataSources.indexOf(dataSource);
+      if (aliasIdx >= 0 && context.dataSourcesAlias && context.dataSourcesAlias[aliasIdx]) {
+        item.dataSourcesAlia = context.dataSourcesAlias[aliasIdx];
+      }
+      items.push(item);
     }
   }
   return items;
@@ -81,19 +86,33 @@ function collectJavaFiles(repo, source) {
 
 export function main(argv) {
   const opts = parseArguments(argv);
-  const context = loadDataSourceContext(readFileSync(opts.dataSourceContextPath, "utf-8"));
-  if (context.project !== opts.project) {
-    throw new Error(`--project (${opts.project}) 与上下文 project (${context.project}) 不一致`);
-  }
-  const changed = resolveDiff(opts.repoPath, opts.source, opts.target);
-  const withEvidence = buildItems({ changed, repo: opts.repoPath, source: opts.source, context });
   const outAbs = isAbsolute(opts.output) ? opts.output : resolve(opts.repoPath, opts.output);
-  mkdirSync(dirname(outAbs), { recursive: true });
-  const finalJson = { project: context.project, items: withEvidence.map(({ evidence, ...rest }) => rest) };
-  writeFileSync(outAbs, JSON.stringify(finalJson, null, 2));
-  writeFileSync(join(dirname(outAbs), ".debug-candidates.json"), JSON.stringify({ project: context.project, items: withEvidence }, null, 2));
-  console.log(JSON.stringify(finalJson));
-  return finalJson;
+  try {
+    const context = loadProjectMapping(readFileSync(opts.projectMappingPath, "utf-8"), opts.repoPath);
+    const changed = resolveDiff(opts.repoPath, opts.source, opts.target);
+    const withEvidence = buildItems({ changed, repo: opts.repoPath, source: opts.source, context });
+    mkdirSync(dirname(outAbs), { recursive: true });
+    const finalJson = {
+      project: context.project,
+      gitlabUrl: context.gitlabUrl,
+      items: withEvidence.map(({ evidence, ...rest }) => rest),
+    };
+    writeFileSync(outAbs, JSON.stringify(finalJson, null, 2));
+    writeFileSync(join(dirname(outAbs), ".debug-candidates.json"),
+      JSON.stringify({ project: context.project, gitlabUrl: context.gitlabUrl, items: withEvidence }, null, 2));
+    console.log(JSON.stringify(finalJson));
+    return finalJson;
+  } catch (e) {
+    try {
+      mkdirSync(dirname(outAbs), { recursive: true });
+      const ts = new Date().toISOString();
+      appendFileSync(join(dirname(outAbs), "error.log"), `[${ts}] ${e.message}\n`);
+    } catch (logErr) {
+      // 连 error.log 都写不了，只能打到 stderr
+      console.error(`无法写入 error.log: ${logErr.message}`);
+    }
+    throw e;
+  }
 }
 
 // CLI 入口
