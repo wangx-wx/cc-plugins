@@ -366,7 +366,7 @@ extract_mybatis_xml_changes.mjs
 
 ### 9.2 新外部映射格式
 
-外部映射由原来的「适配层生成单对象上下文」改为**直接提供 JSON 数组**，每条描述一个项目，整个数组作为 `--data-source-context` 传入：
+外部映射由原来的「适配层生成单对象上下文」改为**直接提供 JSON 数组**，每条描述一个项目，整个数组作为 `--project-mapping` 传入：
 
 ```json
 [
@@ -426,7 +426,7 @@ extract_mybatis_xml_changes.mjs
 原 §3.2 采用「失败即退出」的部分校验，本次扩展为**全量严格校验**。以下任一情况脚本**立即报错退出，不输出结果 JSON**：
 
 1. `dataSources` 为空数组或缺失（无可用数据源，无法确定主库）。
-2. `dataSourcesAlias` 存在但长度与 `dataSources` 不等（按索引对应会错位）。
+2. `dataSourcesAlias` 缺失或长度与 `dataSources` 不等（按索引对应会错位）。
 3. `gitlabUrl` 缺失（无法寻址到项目）。
 4. 当前仓库 `git ls-remote --get-url` 归一化结果与映射数组中**所有**条目的 `gitlabUrl` 都不匹配（无主 SQL 不应继续）。
 
@@ -446,7 +446,7 @@ extract_mybatis_xml_changes.mjs
 脚本报错退出时，在 **`<output-dir>/error.log`** 追加一行，格式为 `ISO 时间戳 + 错误描述`，例如：
 
 ```text
-2026-07-11T08:30:12.345Z [FATAL] gitlabUrl not matched: git@gitlab.example.com:group/unknown.git does not match any entry
+[2026-07-11T08:30:12.345Z] gitlabUrl 未在项目映射中找到
 ```
 
 `<output-dir>` 为 `--output` 参数所在目录。正常执行时不写该文件。

@@ -1,6 +1,6 @@
 ---
 name: mybatis-xml-sql-extractor
-description: 从 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL 与数据源归属，输出 { project, items } JSON
+description: 从 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL 与数据源归属，输出 { project, gitlabUrl, items } JSON
 tools: Read, Bash
 ---
 
