@@ -121,6 +121,5 @@ export function resolveDataSource(orderedCandidates, context) {
       return { dataSource: c.name, evidence: c.evidence };
     }
   }
-  const evidence = context.dataSources.length === 1 ? "single-ds" : "default-fallback";
-  return { dataSource: context.defaultDataSource, evidence };
+  return { dataSource: context.defaultDataSource, evidence: "default-first" };
 }

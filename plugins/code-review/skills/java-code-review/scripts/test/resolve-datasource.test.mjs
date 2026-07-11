@@ -14,13 +14,13 @@ test("跳过 null 与不在 dataSources 的候选", () => {
   assert.deepEqual(out, { dataSource: "r", evidence: "interface-@DS" });
 });
 
-test("多数据源无有效候选 -> default-fallback", () => {
-  assert.deepEqual(resolveDataSource([null], CTX), { dataSource: "m", evidence: "default-fallback" });
+test("多数据源无有效候选 -> default-first", () => {
+  assert.deepEqual(resolveDataSource([null], CTX), { dataSource: "m", evidence: "default-first" });
 });
 
-test("单数据源无候选 -> single-ds", () => {
+test("单数据源无候选 -> default-first", () => {
   const ctx1 = { project: "p", defaultDataSource: "only", dataSources: ["only"] };
-  assert.deepEqual(resolveDataSource([null], ctx1), { dataSource: "only", evidence: "single-ds" });
+  assert.deepEqual(resolveDataSource([null], ctx1), { dataSource: "only", evidence: "default-first" });
 });
 
 test("I2: 方法级 @DS 无效时沿链采用接口级 @DS", () => {
