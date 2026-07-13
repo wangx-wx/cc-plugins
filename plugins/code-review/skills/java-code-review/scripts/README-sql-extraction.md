@@ -45,13 +45,13 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 - 去 alias：仅取首个 token（如 `user u` → `user`）；
 - 去引号：去掉 `" ` `[ ]` 包裹（如 `"user"` → `user`、`[user]` → `user`）；
 - 大小写保留原样（`User` 不归一化为 `user`）；
-- 去重并保持首次出现顺序。
+- 去重并保持首次出现顺序；
+- **CTE 名不算表**：`WITH name AS (...)` 的 CTE 名（临时视图名）被过滤掉，只保留 CTE body 内引用的实表与外层查询的实表。
 
 已知限制（本版）：
 
 - 字符串字面量中出现的 `FROM xxx` / `JOIN xxx` 等可能被误识别为表名；
 - `FROM a, b` 逗号分隔多表写法只取首个表名 `a`（正则只捕首个 token）；
-- CTE (`WITH name AS (...)`) 的 CTE 名会被当作表名收录；
 - 跨文件 `<include/>` 已在模板 SQL 中展开，但表名提取基于展开后的文本。
 
 ## 输出结构

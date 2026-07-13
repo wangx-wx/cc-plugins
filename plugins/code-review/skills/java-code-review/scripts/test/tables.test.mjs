@@ -61,17 +61,30 @@ test("9. 去重（同一表多次出现）", () => {
   );
 });
 
-test("10. CTE：内部实表 + 外层 CTE 名（首次出现顺序）", () => {
+test("10. CTE：CTE 名不算表，CTE 内部实表算", () => {
   const sql = `
 WITH user_today AS (
   SELECT COUNT(*) AS cnt FROM ai_customer_operation_log WHERE user_id = ?
 )
 SELECT * FROM user_today
 `;
-  assert.deepEqual(extractTables(sql), [
-    "ai_customer_operation_log",
-    "user_today",
-  ]);
+  // user_today 是 CTE 名（临时视图），不算表；ai_customer_operation_log 是实表
+  assert.deepEqual(extractTables(sql), ["ai_customer_operation_log"]);
+});
+
+test("10b. 多个 CTE：所有 CTE 名都过滤，实表保留去重", () => {
+  const sql = `
+WITH user_today AS (
+  SELECT COUNT(*) AS cnt FROM ai_customer_operation_log WHERE user_id = ?
+), user_30days AS (
+  SELECT COUNT(*) AS cnt FROM ai_customer_operation_log WHERE user_id = ?
+), merchant_today AS (
+  SELECT COUNT(*) AS cnt FROM merchant WHERE id = ?
+)
+SELECT * FROM user_today, user_30days, merchant_today
+`;
+  // 三个 CTE 名都过滤；ai_customer_operation_log 去重；merchant 保留
+  assert.deepEqual(extractTables(sql), ["ai_customer_operation_log", "merchant"]);
 });
 
 test("11. 标识符含数字/下划线", () => {
