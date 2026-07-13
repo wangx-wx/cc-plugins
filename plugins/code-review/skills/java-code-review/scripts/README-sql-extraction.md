@@ -1,7 +1,8 @@
 # MyBatis XML 变更 SQL 提取器
 
-从 `{target}...{source}` 的 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL，
-附数据源归属，产出 `{ project, gitlabUrl, items }` JSON 供下游 LLM SQL 分析消费。
+从 `{target}...{source}` 的 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL 与
+SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitlabUrl, items }` JSON
+供下游 LLM SQL 分析消费。
 
 ## 调用
 
@@ -10,47 +11,73 @@
       --project-mapping <mapping.json> \
       --output <out.json>
 
-`--project-mapping` 指向一个 JSON 数组文件，每条描述一个项目：
+- `--output` 默认 `.code-review/sql-extraction/sql-extraction-result.json`（相对路径基于 `--repo-path`）。
+- `--project-mapping` 指向一个 JSON 数组文件，每条描述一个项目：
 
-    [
-      {
-        "project": "advert",
-        "gitlabUrl": "https://gitlab.example.com/advert.git",
-        "dataSources": ["advert-master", "advert-read"],
-        "dataSourcesAlias": ["广告主库", "只读库"]
-      }
-    ]
+      [
+        {
+          "project": "advert",
+          "gitlabUrl": "https://gitlab.example.com/advert.git",
+          "dataSources": ["advert-master", "advert-read"],
+          "dataSourcesAlias": ["广告主库", "只读库"]
+        }
+      ]
 
-匹配规则：脚本执行 `git ls-remote --get-url` 取仓库 remote url，归一化（去 `.git` 后缀、小写）
-后与每条 `gitlabUrl` 同样归一化后比对，命中第一个相等的条目。任一条缺非空 `gitlabUrl`、
-无任何条目命中、命中条目 `dataSources` 为空、或 `dataSourcesAlias` 长度与 `dataSources` 不一致，
-脚本报错退出，错误信息追加写入 `<output目录>/error.log`。
+## 数据源映射与匹配
 
-## 归属优先级
+脚本执行 `git ls-remote --get-url` 取仓库 remote url，归一化（去 `.git` 后缀、小写）后
+与每条 `gitlabUrl` 同样归一化后比对，命中第一个相等的条目。匹配条目的 `project` /
+`dataSources` / `dataSourcesAlias` / `gitlabUrl` 原样透传到顶层输出。
 
-`dataSources[0]` 为默认主数据源。归属优先级：
+任一以下情况脚本报错退出，错误信息追加写入 `<output目录>/error.log`：
 
-方法级 @DS > 接口级 @DS > Service 唯一调用方 @DS > default-first（取 dataSources[0]）。
+- 任一条目缺非空 `gitlabUrl`；
+- 无任何条目命中（仓库 remote url 未在映射中找到）；
+- 命中条目 `project` 为空；
+- 命中条目 `dataSources` 为空或缺失；
+- 命中条目 `dataSourcesAlias` 长度与 `dataSources` 不一致。
 
-候选项需 ∈ `dataSources`，否则按下一优先级继续判定；全部不命中则降级 default-first。
-调试文件 `<output目录>/.debug-candidates.json` 记录每条 `evidence` 来源。
+## 表提取
 
-最终输出结构：
+每条 item 的 `tables` 为该 statement 模板 SQL 涉及的实表名数组，提取规则：
 
-    { "project": "advert", "gitlabUrl": "https://gitlab.example.com/advert.git",
-      "items": [ { "dataSource": "advert-master", "dataSourcesAlia": "广告主库",
-                   "file": ".../AdvertMapper.xml", "templateSql": "SELECT ..." } ] }
+- 覆盖 `FROM` / `JOIN` / `UPDATE` / `INSERT INTO` / `DELETE FROM` 后的表名；
+- 去 alias：仅取首个 token（如 `user u` → `user`）；
+- 去引号：去掉 `" ` `[ ]` 包裹（如 `"user"` → `user`、`[user]` → `user`）；
+- 大小写保留原样（`User` 不归一化为 `user`）；
+- 去重并保持首次出现顺序。
 
-## 已知限制（本版）
+已知限制（本版）：
 
-- 多数据源 + @DS 在 Service 的复杂写法（构造注入、lombok、跨方法转发）识别不出，
-  降级 default-first，归属可能不准。
-- 一个 Mapper 方法被多个不同 @DS 调用（多义）时降级 default-first。
-- 跨文件 include 不展开，输出 `<include/>`。
+- 字符串字面量中出现的 `FROM xxx` / `JOIN xxx` 等可能被误识别为表名；
+- `FROM a, b` 逗号分隔多表写法只取首个表名 `a`（正则只捕首个 token）；
+- CTE (`WITH name AS (...)`) 的 CTE 名会被当作表名收录；
+- 跨文件 `<include/>` 已在模板 SQL 中展开，但表名提取基于展开后的文本。
+
+## 输出结构
+
+    {
+      "project": "advert",
+      "gitlabUrl": "https://gitlab.example.com/advert.git",
+      "dataSources": ["advert-master", "advert-read"],
+      "dataSourcesAlias": ["广告主库", "只读库"],
+      "items": [
+        {
+          "tables": ["user", "order"],
+          "file": ".../AdvertMapper.xml:12",
+          "templateSql": "SELECT * FROM user u JOIN order o ON u.id = o.user_id"
+        }
+      ]
+    }
+
+注：本版不再提取数据源归属（每条 item 不再有 `dataSource` / `dataSourcesAlia` /
+`evidence` 字段），数据源信息仅在顶层以数组形式提供。亦不再写 `.debug-candidates.json`。
+
+## 其他已知限制（本版）
+
+- 跨文件 include 在模板 SQL 中已展开；无法解析的 include 保留原标签。
 - 完整删除的 statement 不输出历史 SQL。
-- 不还原运行时最终 SQL。
-- `gitlabUrl` 不匹配 / `dataSources` 缺失或空 / `dataSourcesAlias` 长度不等时脚本报错退出，
-  错误追加写入 `<output目录>/error.log`。
+- 不还原运行时最终 SQL（`?` 占位符、动态 `<if>` 等保留模板形态）。
 
 ## 测试
 
