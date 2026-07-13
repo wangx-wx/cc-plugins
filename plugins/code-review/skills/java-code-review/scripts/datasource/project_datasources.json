@@ -1,0 +1,12 @@
+[
+    {
+        "project": "starsmith",
+        "dataSources": [
+            "starsmith"
+        ],
+        "dataSourcesAlias": [
+            "starsmith-prod"
+        ],
+        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/observability/starsmith.git"
+    }
+]

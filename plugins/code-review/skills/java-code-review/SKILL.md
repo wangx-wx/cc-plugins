@@ -34,7 +34,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 
-## 阶段3：汇总输出审查报告
+## 阶段3：汇总输出并保存审查报告
 
 收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告:
 
@@ -48,5 +48,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
       - P3C 违规问题展示时，需要标记是P3C检查结果
    - 清单覆盖情况
    - 建议
-   - 是否可合并的评估结论
-4. 将报告输出给用户
+   - 是否可合并的评估结论（只能输出“是”或“否”）：
+     - 存在任意 `Blocker` 或 `Critical` 级问题时输出“否”，必须全部修复并复审通过后才能合并
+     - 不存在 `Blocker` 和 `Critical` 级问题时输出“是”；`Major` 和 `Minor` 级问题不自动阻断合并
+4. 将完整报告保存到 `{repo-path}/.code-review/code-review-report.md`
