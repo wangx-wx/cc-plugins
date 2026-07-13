@@ -1,6 +1,6 @@
 ---
 name: mybatis-xml-sql-extractor
-description: 从 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL 与数据源归属，输出 { project, gitlabUrl, items } JSON
+description: 从 MyBatis Mapper XML 变更提取所属完整 statement 的模板 SQL 与 SQL 涉及的实表名，输出 { project, dataSources, dataSourcesAlias, gitlabUrl, items } JSON
 tools: Read, Bash
 ---
 
@@ -32,11 +32,12 @@ tools: Read, Bash
 ```json
 {
   "project": "<匹配条目的 project>",
+  "dataSources": ["<匹配条目的数据源名数组>"],
+  "dataSourcesAlias": ["<对应的数据源别名数组>"],
   "gitlabUrl": "<匹配到的仓库 remote URL>",
   "items": [
     {
-      "dataSource": "<数据源名>",
-      "dataSourcesAlia": "<数据源别名，映射中存在对应别名时填入>",
+      "tables": ["<SQL 涉及的实表名数组>"],
       "file": "<Mapper XML 相对路径:起始行号>",
       "templateSql": "<完整 statement 的模板 SQL>"
     }
@@ -46,6 +47,6 @@ tools: Read, Bash
 
 ## 约束
 
-- 不逐项复核、不改写、不补写脚本产出；不猜测数据源。
-- 最终回复只含脚本产出的 `{ project, gitlabUrl, items }` JSON，不附加统计或审核信息。
+- 不逐项复核、不改写、不补写脚本产出。
+- 最终回复只含脚本产出的 `{ project, dataSources, dataSourcesAlias, gitlabUrl, items }` JSON，不附加统计或审核信息。
 - 脚本失败时返回脚本的错误信息（可指向 `<output-dir>/error.log`），不伪造结果。
