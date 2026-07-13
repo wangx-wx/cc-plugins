@@ -4,12 +4,30 @@ function git(repo, args) {
   return execFileSync("git", ["-C", repo, ...args], { maxBuffer: 50 * 1024 * 1024 }).toString("utf-8");
 }
 
+function mergeBase(repo, source, target) {
+  let base;
+  try {
+    base = git(repo, ["merge-base", target, source]).trim();
+  } catch {
+    base = "";
+  }
+  if (!base) throw new Error(`${target} 与 ${source} 无共同祖先，无法执行三点 diff`);
+  return base;
+}
+
 export function isMapperXml(content) {
   return /<mapper\b/.test(content) && /namespace\s*=/.test(content);
 }
 
 export function readSourceAtRevision(repo, rev, file) {
   return git(repo, ["show", `${rev}:${file}`]);
+}
+
+export function listXmlFilesAtRevision(repo, rev) {
+  return git(repo, [
+    "ls-tree", "-r", "--name-only", rev,
+  ]).split("\n").map((s) => s.trim())
+    .filter((file) => file.endsWith(".xml") && !(file === "pom.xml" || file.endsWith("/pom.xml")));
 }
 
 // 解析 git diff -U0 的 source 侧新增/修改行号（@@ -a,b +c,d @@ 中的 c..c+d-1）
@@ -26,18 +44,10 @@ function parseChangedLines(diffText) {
   return lines;
 }
 
-export function resolveDiff(repo, source, target) {
-  let base;
-  try {
-    base = git(repo, ["merge-base", target, source]).trim();
-  } catch {
-    base = "";
-  }
-  if (!base) throw new Error(`${target} 与 ${source} 无共同祖先，无法执行三点 diff`);
-
+function resolveChangedStatements(repo, source, target) {
   const nameOnly = git(repo, [
     "diff", "--name-only", "--diff-filter=ACMR", `${target}...${source}`,
-    "--", "*.xml", ":(exclude)*pom.xml",
+    "--", "*.xml", ":(exclude)pom.xml",
   ]).split("\n").map((s) => s.trim()).filter(Boolean);
 
   const result = [];
@@ -56,4 +66,35 @@ export function resolveDiff(repo, source, target) {
     if (changedLines.length > 0) result.push({ file, changedLines });
   }
   return result;
+}
+
+function resolveFileChanges(repo, source, target) {
+  const fields = git(repo, [
+    "diff", "--name-status", "-z", "--find-renames", "--diff-filter=ACMRD",
+    `${target}...${source}`, "--", "*.xml", ":(exclude)pom.xml",
+  ]).split("\0");
+  const changes = [];
+  for (let i = 0; i < fields.length;) {
+    const status = fields[i++];
+    if (!status) continue;
+    if (status.startsWith("R") || status.startsWith("C")) {
+      changes.push({ status: status[0], oldFile: fields[i++], file: fields[i++] });
+    } else {
+      const file = fields[i++];
+      changes.push({ status: status[0], oldFile: status[0] === "A" ? null : file, file: status[0] === "D" ? null : file });
+    }
+  }
+  return changes;
+}
+
+export function resolveDiffContext(repo, source, target) {
+  return {
+    base: mergeBase(repo, source, target),
+    changed: resolveChangedStatements(repo, source, target),
+    fileChanges: resolveFileChanges(repo, source, target),
+  };
+}
+
+export function resolveDiff(repo, source, target) {
+  return resolveDiffContext(repo, source, target).changed;
 }

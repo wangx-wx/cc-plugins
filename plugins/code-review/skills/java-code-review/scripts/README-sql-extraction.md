@@ -41,7 +41,7 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 
 每条 item 的 `tables` 为该 statement 模板 SQL 涉及的实表名数组，提取规则：
 
-- 覆盖 `FROM` / `JOIN` / `UPDATE` / `INSERT INTO` / `DELETE FROM` 后的表名；
+- 覆盖 `FROM` / `JOIN` / `UPDATE` / `INSERT INTO` / `DELETE FROM` 后的表名，支持 `schema.table`；
 - 去 alias：仅取首个 token（如 `user u` → `user`）；
 - 去引号：去掉 `" ` `[ ]` 包裹（如 `"user"` → `user`、`[user]` → `user`）；
 - 大小写保留原样（`User` 不归一化为 `user`）；
@@ -50,9 +50,9 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 
 已知限制（本版）：
 
-- 字符串字面量中出现的 `FROM xxx` / `JOIN xxx` 等可能被误识别为表名；
 - `FROM a, b` 逗号分隔多表写法只取首个表名 `a`（正则只捕首个 token）；
-- 跨文件 `<include/>` 已在模板 SQL 中展开，但表名提取基于展开后的文本。
+- `FROM <choose>...</choose>` 会提取各 `when` / `otherwise` 分支的候选表；其他复杂动态拼表无法可靠枚举所有运行时分支；
+- 字符串字面量与 SQL 注释中的关键字会被忽略。
 
 ## 输出结构
 
@@ -75,7 +75,7 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 
 ## 其他已知限制（本版）
 
-- 跨文件 include 在模板 SQL 中已展开；无法解析的 include 保留原标签。
+- 当前项目内跨 Mapper include 会展开；找不到、动态 refid 或循环引用的 include 保留完整标签及属性。
 - 完整删除的 statement 不输出历史 SQL。
 - 不还原运行时最终 SQL（`?` 占位符、动态 `<if>` 等保留模板形态）。
 

@@ -58,3 +58,15 @@ test("纯删除条件但 statement 仍在 -> 命中 source 锚点行（spec §5.
     fx.cleanup();
   }
 });
+
+test("custom-pom.xml Mapper 不会被 pom.xml 排除规则误过滤", () => {
+  const fx = createGitFixture(
+    { "m/custom-pom.xml": MAPPER_V1 },
+    { "m/custom-pom.xml": MAPPER_V2 },
+  );
+  try {
+    const changed = resolveDiff(fx.repo, fx.source, fx.target);
+    assert.equal(changed.length, 1);
+    assert.equal(changed[0].file, "m/custom-pom.xml");
+  } finally { fx.cleanup(); }
+});

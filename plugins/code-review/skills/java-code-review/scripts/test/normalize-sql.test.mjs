@@ -24,9 +24,9 @@ test("${} 原样保留", () => {
   assert.equal(normalizeXmlSql(stmt), "ORDER BY ${orderBy}");
 });
 
-test("未展开 include 输出 <include/>", () => {
+test("未展开 include 保留 refid", () => {
   const stmt = el("select", {}, [tx("SELECT "), el("include", { refid: "x" }, []), tx(" FROM t")]);
-  assert.equal(normalizeXmlSql(stmt), "SELECT <include/> FROM t");
+  assert.equal(normalizeXmlSql(stmt), 'SELECT <include refid="x"/> FROM t');
 });
 
 test("collapseWhitespace 保留字符串字面量内空白", () => {

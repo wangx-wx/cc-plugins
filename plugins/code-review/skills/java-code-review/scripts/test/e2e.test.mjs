@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildItems, main } from "../extract_mybatis_xml_changes.mjs";
 import { createGitFixture } from "./helpers/git-fixture.mjs";
-import { resolveDiff } from "../lib/git-diff.mjs";
+import { resolveDiff, resolveDiffContext } from "../lib/git-diff.mjs";
 
 const V1 = `<mapper namespace="cn.demo.ReportMapper">
   <select id="list">SELECT id, name FROM user</select>
@@ -124,4 +124,158 @@ test("main() 端到端：输出含 project/gitlabUrl/dataSources/dataSourcesAlia
     fx.cleanup();
     rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+function buildProjectItems(fx) {
+  const diff = resolveDiffContext(fx.repo, fx.source, fx.target);
+  return buildItems({ ...diff, repo: fx.repo, source: fx.source });
+}
+
+test("只修改同文件共享 sql fragment 时输出依赖 statement", () => {
+  const before = `<mapper namespace="demo.M">
+  <sql id="cols">id</sql>
+  <select id="list">SELECT <include refid="cols"/> FROM users</select>
+</mapper>`;
+  const after = before.replace("id</sql>", "id, name</sql>");
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.equal(items[0].templateSql, "SELECT id, name FROM users");
+  } finally { fx.cleanup(); }
+});
+
+test("跨 Mapper fragment 变化时输出未直接修改的依赖 statement", () => {
+  const baseBefore = `<mapper namespace="common.Base">
+  <sql id="cols">id</sql>
+</mapper>`;
+  const baseAfter = baseBefore.replace("id</sql>", "id, name</sql>");
+  const query = `<mapper namespace="demo.Query">
+  <select id="list">SELECT <include refid="common.Base.cols"/> FROM users</select>
+</mapper>`;
+  const fx = createGitFixture(
+    { "m/Base.xml": baseBefore, "m/Query.xml": query },
+    { "m/Base.xml": baseAfter, "m/Query.xml": query },
+  );
+  try {
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.match(items[0].file, /^m\/Query\.xml:2$/);
+    assert.equal(items[0].templateSql, "SELECT id, name FROM users");
+  } finally { fx.cleanup(); }
+});
+
+test("多层 fragment 依赖向上传播", () => {
+  const before = `<mapper namespace="demo.M">
+  <sql id="table">users</sql>
+  <sql id="from">FROM <include refid="table"/></sql>
+  <select id="list">SELECT id <include refid="from"/></select>
+</mapper>`;
+  const after = before.replace("users</sql>", "active_users</sql>");
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.equal(items[0].templateSql, "SELECT id FROM active_users");
+  } finally { fx.cleanup(); }
+});
+
+test("修改未被引用的 fragment 不输出 item", () => {
+  const before = `<mapper namespace="demo.M">
+  <sql id="unused">old_value</sql>
+  <select id="list">SELECT id FROM users</select>
+</mapper>`;
+  const after = before.replace("old_value", "new_value");
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    assert.deepEqual(buildProjectItems(fx), []);
+  } finally { fx.cleanup(); }
+});
+
+test("删除 fragment 后输出依赖 statement，并保留找不到的 include", () => {
+  const before = `<mapper namespace="demo.M">
+  <sql id="cols">id, name</sql>
+  <select id="list">SELECT <include refid="cols"/> FROM users</select>
+</mapper>`;
+  const after = `<mapper namespace="demo.M">
+  <select id="list">SELECT <include refid="cols"/> FROM users</select>
+</mapper>`;
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.equal(items[0].templateSql, 'SELECT <include refid="cols"/> FROM users');
+  } finally { fx.cleanup(); }
+});
+
+test("statement 与依赖 fragment 同时变化时只输出一次", () => {
+  const before = `<mapper namespace="demo.M">
+  <sql id="cols">id</sql>
+  <select id="list">SELECT <include refid="cols"/> FROM users</select>
+</mapper>`;
+  const after = `<mapper namespace="demo.M">
+  <sql id="cols">id, name</sql>
+  <select id="list">SELECT <include refid="cols"/> FROM active_users</select>
+</mapper>`;
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.equal(items[0].templateSql, "SELECT id, name FROM active_users");
+  } finally { fx.cleanup(); }
+});
+
+test("删除提供 fragment 的 Mapper 文件后输出其他 Mapper 的未解析依赖", () => {
+  const base = `<mapper namespace="common.Base">
+  <sql id="cols">id, name</sql>
+</mapper>`;
+  const query = `<mapper namespace="demo.Query">
+  <select id="list">SELECT <include refid="common.Base.cols"/> FROM users</select>
+</mapper>`;
+  const fx = createGitFixture(
+    { "README.md": "before", "m/Base.xml": base, "m/Query.xml": query },
+    { "README.md": "after", "m/Base.xml": base, "m/Query.xml": query },
+  );
+  try {
+    execFileSync("git", ["-C", fx.repo, "rm", "-q", "m/Base.xml"], { stdio: ["pipe", "pipe", "pipe"] });
+    execFileSync("git", ["-C", fx.repo, "commit", "-q", "-m", "remove base"], { stdio: ["pipe", "pipe", "pipe"] });
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.match(items[0].file, /^m\/Query\.xml:2$/);
+    assert.equal(items[0].templateSql, 'SELECT <include refid="common.Base.cols"/> FROM users');
+  } finally { fx.cleanup(); }
+});
+
+test("完整删除中间 statement 不误报前一个 statement", () => {
+  const before = `<mapper namespace="demo.M">
+  <select id="before">SELECT * FROM before_table</select>
+  <select id="removed">SELECT * FROM removed_table</select>
+  <select id="after">SELECT * FROM after_table</select>
+</mapper>`;
+  const after = `<mapper namespace="demo.M">
+  <select id="before">SELECT * FROM before_table</select>
+  <select id="after">SELECT * FROM after_table</select>
+</mapper>`;
+  const fx = createGitFixture({ "m/M.xml": before }, { "m/M.xml": after });
+  try {
+    assert.deepEqual(buildProjectItems(fx), []);
+  } finally { fx.cleanup(); }
+});
+
+test("重命名并修改 Mapper 时使用 source 的新路径", () => {
+  const before = `<mapper namespace="demo.M">
+  <select id="list">SELECT id FROM users</select>
+</mapper>`;
+  const after = `<mapper namespace="demo.M">
+  <select id="list">SELECT id, name FROM users</select>
+</mapper>`;
+  const fx = createGitFixture({ "m/Old.xml": before }, { "m/New.xml": after });
+  try {
+    execFileSync("git", ["-C", fx.repo, "rm", "-q", "m/Old.xml"], { stdio: ["pipe", "pipe", "pipe"] });
+    execFileSync("git", ["-C", fx.repo, "commit", "-q", "-m", "remove old mapper"], { stdio: ["pipe", "pipe", "pipe"] });
+    const items = buildProjectItems(fx);
+    assert.equal(items.length, 1);
+    assert.match(items[0].file, /^m\/New\.xml:2$/);
+    assert.equal(items[0].templateSql, "SELECT id, name FROM users");
+  } finally { fx.cleanup(); }
 });

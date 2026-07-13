@@ -52,6 +52,13 @@ test("8. 方括号（SQL Server）", () => {
   assert.deepEqual(extractTables("SELECT * FROM [user]"), ["user"]);
 });
 
+test("8b. 保留 schema 限定名", () => {
+  assert.deepEqual(
+    extractTables("SELECT * FROM app.user u JOIN sales.order_item o ON u.id = o.user_id"),
+    ["app.user", "sales.order_item"],
+  );
+});
+
 test("9. 去重（同一表多次出现）", () => {
   assert.deepEqual(
     extractTables(
@@ -95,6 +102,13 @@ test("10c. CTE 列表中间插 MyBatis 动态标签（<if> 包裹 CTE）", () =>
   assert.deepEqual(extractTables(sql), ["t1", "t2", "t3"]);
 });
 
+test("10d. CTE 名过滤大小写不敏感", () => {
+  assert.deepEqual(
+    extractTables("WITH ActiveUsers AS (SELECT * FROM users) SELECT * FROM activeusers"),
+    ["users"],
+  );
+});
+
 test("11. 标识符含数字/下划线", () => {
   assert.deepEqual(
     extractTables("SELECT * FROM user_profile_2"),
@@ -115,4 +129,18 @@ test("13. 空 SQL", () => {
 
 test("14. 无表 SQL（如 SELECT 1）", () => {
   assert.deepEqual(extractTables("SELECT 1"), []);
+});
+
+test("15. 忽略字符串和注释中的伪表名", () => {
+  assert.deepEqual(
+    extractTables("SELECT 'JOIN string_table' FROM users -- FROM line_comment\n/* JOIN block_comment */"),
+    ["users"],
+  );
+});
+
+test("16. FROM 后 choose 的各分支表均被提取", () => {
+  assert.deepEqual(
+    extractTables("SELECT * FROM <choose><when test=\"old\">old_users</when><otherwise>users</otherwise></choose>"),
+    ["old_users", "users"],
+  );
 });

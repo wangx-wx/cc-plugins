@@ -25,7 +25,7 @@ export function parseMapperXml(xml) {
 
   let namespace = "";
   const statements = [];
-  const sqlFragments = {};
+  const sqlFragments = Object.create(null);
   const stack = []; // ElementNode 栈
   let currentStartLine = 1;
 
@@ -88,12 +88,28 @@ function emit(node, parts) {
     return;
   }
   if (node.name === "include") {
-    parts.push(" <include/> ");
+    parts.push(` ${serializeXmlNode(node)} `);
     return;
   }
   parts.push(` <${node.name}> `);
   for (const child of node.children) emit(child, parts);
   parts.push(` </${node.name}> `);
+}
+
+function escapeXmlAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;");
+}
+
+function serializeXmlNode(node) {
+  if (node.kind === "text") return node.text;
+  const attrs = Object.entries(node.attributes || {})
+    .map(([name, value]) => ` ${name}="${escapeXmlAttribute(value)}"`)
+    .join("");
+  if (!node.children || node.children.length === 0) return `<${node.name}${attrs}/>`;
+  return `<${node.name}${attrs}>${node.children.map(serializeXmlNode).join("")}</${node.name}>`;
 }
 
 export function normalizeXmlSql(statementNode) {
@@ -102,23 +118,34 @@ export function normalizeXmlSql(statementNode) {
   return collapseWhitespace(parts.join(""));
 }
 
-const UNRESOLVED_INCLUDE = () => ({ kind: "element", name: "include", attributes: {}, children: [] });
+function lookupFragment(fragments, refid, namespace) {
+  if (fragments instanceof Map) {
+    const key = refid.includes(".") || !namespace ? refid : `${namespace}.${refid}`;
+    const value = fragments.get(key);
+    if (!value) return null;
+    if (value.node) return { key, node: value.node, namespace: value.namespace || namespace };
+    return { key, node: value, namespace };
+  }
+  if (!Object.prototype.hasOwnProperty.call(fragments, refid)) return null;
+  return { key: refid, node: fragments[refid], namespace };
+}
 
-export function resolveIncludes(node, sqlFragments, seen = new Set()) {
+export function resolveIncludes(node, sqlFragments, seen = new Set(), namespace = "") {
   if (node.kind !== "element") return node;
   const newChildren = [];
   for (const child of node.children) {
     if (child.kind === "element" && child.name === "include") {
       const refid = child.attributes.refid;
-      if (refid && sqlFragments[refid] && !seen.has(refid)) {
-        const nextSeen = new Set(seen).add(refid);
-        const expanded = resolveIncludes(sqlFragments[refid], sqlFragments, nextSeen);
+      const fragment = refid ? lookupFragment(sqlFragments, refid, namespace) : null;
+      if (fragment && !seen.has(fragment.key)) {
+        const nextSeen = new Set(seen).add(fragment.key);
+        const expanded = resolveIncludes(fragment.node, sqlFragments, nextSeen, fragment.namespace);
         newChildren.push(...expanded.children);
       } else {
-        newChildren.push(UNRESOLVED_INCLUDE());
+        newChildren.push(child);
       }
     } else {
-      newChildren.push(resolveIncludes(child, sqlFragments, seen));
+      newChildren.push(resolveIncludes(child, sqlFragments, seen, namespace));
     }
   }
   return { ...node, children: newChildren };
