@@ -465,3 +465,122 @@ extract_mybatis_xml_changes.mjs
 | evidence 兜底值 | `single-ds` / `default-fallback` | 合并为 `default-first` |
 
 > **本节是对前文 §2-4 的增量补丁，实施以本节为准；原 §3.2/§4.2 保留作历史记录。**
+
+---
+
+## 10. 表提取 + 归属链移除（重构）
+
+> 本节是对前文 §2.3、§4.2、§9 的增量补丁；实施时以本节为准，原相关章节保留作历史记录。
+
+### 10.1 变更原因
+
+原设计（§2.3 归属链 + §4.2/§9.3 items 含 `dataSource`）提取每条 SQL 的数据源归属。本次重构移除逐条归属，理由：
+
+- **下游不需要逐条归属**：下游 LLM SQL 分析 agent 关注 SQL 本身的风险/索引/性能，不依赖每条 SQL 的数据源归属；逐条归属对分析无增量价值。
+- **归属链复杂度高、准确率有限**：四级归属链（方法级 @DS → 接口级 @DS → Service grep → default）需读取 Java 源码、做字段注入识别与调用点回溯；多数据源 Service @DS 场景下（构造注入、lombok、跨方法转发）大量降级 default，实际命中率有限。
+- **收益不抵成本**：归属链贡献的代码量与维护成本，远超其给下游带来的信息增益。
+
+同时新增**表名提取**：从 SQL 中抽取涉及的实表名，供下游按表做 SQL 分析，这是下游更实际需要的信息维度。项目级数据源列表提到顶层（每项目输出一次），供下游了解该项目可用数据源全貌，而非逐条 SQL 归属。
+
+### 10.2 新最终 JSON 结构
+
+```json
+{
+  "project": "advert",
+  "gitlabUrl": "https://gitlab.example.com/group/advert.git",
+  "dataSources": ["advert-master", "advert-read"],
+  "dataSourcesAlias": ["生产库", "只读库"],
+  "items": [
+    {
+      "file": "src/main/resources/mapper/ReportMapper.xml:12",
+      "templateSql": "SELECT id, name FROM user <where> <if> AND status = ? </if> </where>",
+      "tables": ["user"]
+    }
+  ]
+}
+```
+
+| 字段 | 含义 |
+|---|---|
+| `project` | 顶层字段，命中的项目展示名 |
+| `gitlabUrl` | 顶层字段，命中的项目仓库地址 |
+| `dataSources` | **提到顶层**，该项目允许的数据源逻辑名称列表（每项目输出一次），供下游了解该项目可用数据源全貌 |
+| `dataSourcesAlias` | **提到顶层**，与 `dataSources` 按索引一一对应的别名数组 |
+| `items` | 提取到的 SQL 变更列表 |
+| `items[].file` | 相对仓库根目录的 XML 路径，后接 `:` 与 statement 起始行 |
+| `items[].templateSql` | 完整 statement 的 SQL；动态标签保留但不带属性 |
+| `items[].tables` | **新增**，该 SQL 涉及的实表名数组（归一化后），供下游按表做分析 |
+
+没有 XML SQL 变更时，输出：
+
+```json
+{ "project": "<命中的项目>", "gitlabUrl": "<命中的地址>", "dataSources": [...], "dataSourcesAlias": [...], "items": [] }
+```
+
+**移除的 items 字段**：`dataSource`、`dataSourcesAlia`、`evidence`。
+
+### 10.3 表提取规则
+
+从 `templateSql` 中提取 SQL 涉及的实表名，覆盖以下关键字后跟随的表名：
+
+| SQL 构造 | 关键字 |
+|---|---|
+| 查询 | `FROM` |
+| 连接 | `JOIN`（含 `INNER JOIN`、`LEFT JOIN`、`RIGHT JOIN`、`FULL JOIN`、`CROSS JOIN`） |
+| 更新 | `UPDATE` |
+| 插入 | `INSERT INTO` |
+| 删除 | `DELETE FROM` |
+
+归一化规则：
+
+1. **去 alias**：`FROM user u` → 取 `user`，丢弃 `u`（含 `AS` 写法 `FROM user AS u`）。
+2. **去引号/反引号/方括号**：`` `user` `` → `user`、`[user]` → `user`、`"user"` → `user`。
+3. **大小写保留原样**：不强制转大写或小写，保留 SQL 中原始大小写。
+4. **去重保序**：同一表名多次出现只保留首次，保持出现顺序。
+5. **仅取首个表名**：逗号分隔的多表写法 `FROM a, b, c` 只取 `a`（已知限制，见 10.6）。
+
+### 10.4 归属链删除清单
+
+归属链整套移除，以下函数/常量/文件全部删除：
+
+| 类别 | 删除项 | 说明 |
+|---|---|---|
+| 函数 | `resolveMapperDataSource` | 方法级/接口级 @DS 解析 |
+| 函数 | `resolveServiceDataSource` | Service grep 保守版调用点扫描 |
+| 函数 | `resolveDataSource` | 归属链总调度 |
+| 函数 | `findMethodDs` | 方法级 @DS 读取 |
+| 函数 | `findTypeDs` | 类级 @DS 读取 |
+| 函数 | `dsAtCallSite` | 调用点 @DS 回溯 |
+| 函数 | `tryReadMapperInterface` | 读取 Mapper 接口 Java 文件 |
+| 函数 | `collectJavaFiles` | 收集 Java 源码文件 |
+| 常量 | `DS_LITERAL` | @DS 注解匹配正则 |
+| 文件 | `.debug-candidates.json` | 归属证据调试文件（evidence 无意义，一并移除） |
+| 模块 | `lib/datasource.mjs` | 仅保留 `loadProjectMapping`，归属相关导出全删 |
+
+**Java 源码不再读取**：除 `git ls-remote --get-url` 寻址（§9.2）外，脚本不再读取任何 Java 文件。
+
+### 10.5 evidence 与调试文件移除
+
+归属链删除后，`evidence` 字段（§2.3、§9.5）不再有意义：
+
+- items 中的 `evidence` 字段移除（原属调试文件，非对外 JSON，但随归属链一并清理）。
+- `.debug-candidates.json` 调试文件不再生成。
+
+### 10.6 已知限制
+
+1. **正则误报**：表提取用正则匹配，字符串字面量中包含 SQL 关键字时会误报。例如 `WHERE name = 'FROM x'` 会将 `x` 误识别为表名。
+2. **逗号分隔表**：`FROM a, b, c` 只取首个表名 `a`，遗漏 `b`、`c`。
+
+### 10.7 与原 §2.3 / §4.2 / §9 的差异
+
+| 维度 | 原 §2.3 / §4.2 / §9 | 本节补丁 |
+|---|---|---|
+| items 数据源归属 | `dataSource` + `dataSourcesAlia` 逐条归属 | **移除**，逐条不再归属 |
+| 顶层数据源列表 | 无（仅在 items 逐条出现） | **新增** `dataSources` / `dataSourcesAlias` 提到顶层 |
+| items 表名 | 无 | **新增** `tables` 数组 |
+| 归属链 | 四级链 + Service grep | **整套删除** |
+| evidence / 调试文件 | `evidence` 字段 + `.debug-candidates.json` | **移除** |
+| Java 源码读取 | 读取接口/Service 文件解析 @DS | **不再读取**（除 git remote 寻址） |
+| 校验规则 | §9.4 严格校验 | 沿用 §9.4（数据源上下文校验不变） |
+
+> **本节是对前文 §2.3、§4.2、§9 的增量补丁，实施以后者为准；原相关章节保留作历史记录。**
