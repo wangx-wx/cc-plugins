@@ -7,8 +7,9 @@
 const TABLE_RE =
   /\b(?:FROM|JOIN|UPDATE|INTO|DELETE\s+FROM)\s+("(?:[^"]+)"|`[^`]+`|\[[^\]]+\]|[A-Za-z_]\w*)/gi;
 
-// CTE 名：WITH name AS ( 或 , name AS (（CTE 列表里的后续项）
-const CTE_RE = /(?:WITH|,)\s+([A-Za-z_]\w*)\s+AS\s*\(/gi;
+// CTE 名：name AS ( —— 不限定前面是 WITH/,，因为 MyBatis 动态标签 <if>/<choose> 可能插在 CTE 列表中间，
+// 导致 CTE 名前是标签而非逗号。AS ( 在 SQL 里几乎只出现在 CTE 定义，故该模式足够精准。
+const CTE_RE = /([A-Za-z_]\w*)\s+AS\s*\(/gi;
 
 function stripQuotes(name) {
   // 去掉首尾的 " ` [ ]

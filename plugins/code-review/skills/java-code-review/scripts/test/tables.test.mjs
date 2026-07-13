@@ -87,6 +87,14 @@ SELECT * FROM user_today, user_30days, merchant_today
   assert.deepEqual(extractTables(sql), ["ai_customer_operation_log", "merchant"]);
 });
 
+test("10c. CTE 列表中间插 MyBatis 动态标签（<if> 包裹 CTE）", () => {
+  // 真实场景：动态标签插在 CTE 列表中间，CTE 名前是 <if>/</if> 而非逗号；
+  // 且每个 CTE 名各自出现在 FROM cte_name 子查询里（被 TABLE_RE 提取）
+  const sql = `WITH a AS (SELECT * FROM t1), <if> b AS (SELECT * FROM t2), </if> c AS (SELECT * FROM t3) SELECT (SELECT * FROM a), (SELECT * FROM b), (SELECT * FROM c)`;
+  // a/b/c 都是 CTE 名（即使被 <if> 包裹），全过滤；t1/t2/t3 是实表
+  assert.deepEqual(extractTables(sql), ["t1", "t2", "t3"]);
+});
+
 test("11. 标识符含数字/下划线", () => {
   assert.deepEqual(
     extractTables("SELECT * FROM user_profile_2"),
