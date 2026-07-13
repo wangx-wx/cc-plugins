@@ -17,40 +17,23 @@ const V2 = `<mapper namespace="cn.demo.ReportMapper">
   </select>
 </mapper>`;
 
-test("单行新增 <if> 输出完整 select 模板 SQL 与数据源", () => {
+test("单行新增 <if> 输出完整 select 模板 SQL 与 tables", () => {
   const fx = createGitFixture({ "m/ReportMapper.xml": V1 }, { "m/ReportMapper.xml": V2 });
   try {
-    const context = { project: "advert", defaultDataSource: "m", dataSources: ["m", "r"], dataSourcesAlias: ["m-alias", "r-alias"] };
     const changed = resolveDiff(fx.repo, fx.source, fx.target);
-    const items = buildItems({ changed, repo: fx.repo, source: fx.source, context });
+    const items = buildItems({ changed, repo: fx.repo, source: fx.source });
     assert.equal(items.length, 1);
     assert.match(items[0].file, /m\/ReportMapper\.xml:2$/);
     assert.equal(items[0].templateSql,
       "SELECT id, name FROM user <where> <if> AND status = ? </if> </where>");
-    assert.equal(items[0].dataSource, "m");        // 无 @DS -> 多数据源 default-first
-    assert.equal(items[0].dataSourcesAlia, "m-alias");
-    assert.equal(items[0].evidence, "default-first");
+    assert.deepEqual(items[0].tables, ["user"]);
+    // 归属链已移除：不再有 dataSource/dataSourcesAlia/evidence
+    assert.equal(items[0].dataSource, undefined);
+    assert.equal(items[0].dataSourcesAlia, undefined);
+    assert.equal(items[0].evidence, undefined);
   } finally {
     fx.cleanup();
   }
-});
-
-test("多数据源 + 唯一 Service @DS 调用方 -> 采用 service-@DS", () => {
-  const V1s = `<mapper namespace="cn.demo.ReportMapper"><select id="list">SELECT id FROM user</select></mapper>`;
-  const V2s = `<mapper namespace="cn.demo.ReportMapper"><select id="list">SELECT id, name FROM user</select></mapper>`;
-  const svc = `class OrderService { private ReportMapper reportMapper; @DS("r") void f(){ reportMapper.list(); } }`;
-  const fx = createGitFixture(
-    { "m/ReportMapper.xml": V1s, "svc/OrderService.java": svc },
-    { "m/ReportMapper.xml": V2s, "svc/OrderService.java": svc }
-  );
-  try {
-    const context = { project: "advert", defaultDataSource: "m", dataSources: ["m", "r"], dataSourcesAlias: ["m-alias", "r-alias"] };
-    const changed = resolveDiff(fx.repo, fx.source, fx.target);
-    const items = buildItems({ changed, repo: fx.repo, source: fx.source, context });
-    assert.equal(items[0].dataSource, "r");
-    assert.equal(items[0].dataSourcesAlia, "r-alias");
-    assert.equal(items[0].evidence, "service-@DS");
-  } finally { fx.cleanup(); }
 });
 
 // 多行 <select>：startLine=2，body 跨 3 行（SELECT/FROM/WHERE），</select> 在第 6 行。
@@ -74,24 +57,24 @@ const V2b = `<mapper namespace="cn.demo.ReportMapper">
 test("变更落在 statement body 中间行（非 startLine）仍正确归属该 statement", () => {
   const fx = createGitFixture({ "m/ReportMapper.xml": V1b }, { "m/ReportMapper.xml": V2b });
   try {
-    const context = { project: "advert", defaultDataSource: "m", dataSources: ["m", "r"], dataSourcesAlias: ["m-alias", "r-alias"] };
     const changed = resolveDiff(fx.repo, fx.source, fx.target);
-    const items = buildItems({ changed, repo: fx.repo, source: fx.source, context });
+    const items = buildItems({ changed, repo: fx.repo, source: fx.source });
     assert.equal(items.length, 1);
     assert.match(items[0].file, /m\/ReportMapper\.xml:2$/); // startLine=2，非变更行 5
     assert.equal(items[0].templateSql,
       "SELECT id, name FROM user WHERE status = ? AND deleted = ?");
-    assert.equal(items[0].dataSource, "m");        // 无 @DS -> 多数据源 default-first
-    assert.equal(items[0].dataSourcesAlia, "m-alias");
-    assert.equal(items[0].evidence, "default-first");
+    assert.deepEqual(items[0].tables, ["user"]);
+    assert.equal(items[0].dataSource, undefined);
+    assert.equal(items[0].dataSourcesAlia, undefined);
+    assert.equal(items[0].evidence, undefined);
   } finally {
     fx.cleanup();
   }
 });
 
 // main() 端到端：临时 git 仓库带 remote + 映射文件，断言输出 JSON 含 project/gitlabUrl/items，
-// items[0] 含 dataSourcesAlia；成功路径不应写 error.log。
-test("main() 端到端：输出含 project/gitlabUrl/items，items[0] 含 dataSourcesAlia", () => {
+// 顶层 dataSources/dataSourcesAlias；items[0] 含 tables；成功路径不应写 error.log。
+test("main() 端到端：输出含 project/gitlabUrl/dataSources/dataSourcesAlias/items，items[0] 含 tables", () => {
   const REMOTE = "git@gitlab.com:team/advert.git";
   const fx = createGitFixture({ "m/ReportMapper.xml": V1 }, { "m/ReportMapper.xml": V2 });
   // createGitFixture 不设 remote；这里补 origin 供 loadProjectMapping 匹配
@@ -117,17 +100,24 @@ test("main() 端到端：输出含 project/gitlabUrl/items，items[0] 含 dataSo
     // 返回值校验
     assert.equal(result.project, "advert");
     assert.equal(result.gitlabUrl, REMOTE);
+    assert.deepEqual(result.dataSources, ["m", "r"]);
+    assert.deepEqual(result.dataSourcesAlias, ["m-alias", "r-alias"]);
     assert.ok(Array.isArray(result.items));
     assert.equal(result.items.length, 1);
-    assert.equal(result.items[0].dataSource, "m");
-    assert.equal(result.items[0].dataSourcesAlia, "m-alias");
-    // 顶层 finalJson 的 item 已剥离 evidence
+    assert.deepEqual(result.items[0].tables, ["user"]);
+    // 归属链已移除：items 不再有 dataSource/dataSourcesAlia/evidence
+    assert.equal(result.items[0].dataSource, undefined);
+    assert.equal(result.items[0].dataSourcesAlia, undefined);
     assert.equal(result.items[0].evidence, undefined);
     // 输出文件落盘且内容一致
     const onDisk = JSON.parse(readFileSync(outputFile, "utf-8"));
     assert.equal(onDisk.project, "advert");
     assert.equal(onDisk.gitlabUrl, REMOTE);
-    assert.equal(onDisk.items[0].dataSourcesAlia, "m-alias");
+    assert.deepEqual(onDisk.dataSources, ["m", "r"]);
+    assert.deepEqual(onDisk.dataSourcesAlias, ["m-alias", "r-alias"]);
+    assert.deepEqual(onDisk.items[0].tables, ["user"]);
+    // .debug-candidates.json 不再写
+    assert.throws(() => readFileSync(join(tmpDir, "out", ".debug-candidates.json"), "utf-8"));
     // 成功路径不应写 error.log
     assert.throws(() => readFileSync(join(tmpDir, "out", "error.log"), "utf-8"));
   } finally {
