@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseMapperXml, resolveIncludes, normalizeXmlSql } from "./lib/mybatis-xml.mjs";
@@ -244,10 +244,9 @@ export function main(argv) {
     return finalJson;
   } catch (e) {
     // 找不到项目对应的数据源（gitlabUrl 不匹配 / dataSources 空 / alias 长度不等 等）：
-    // 跳过后续流程（不写最终 JSON），写 error.log，正常退出。
+    // 跳过后续流程（不写最终 JSON），覆盖写 error.log（每次执行是新的工作空间，无历史、无时间戳），正常退出。
     try {
-      const ts = new Date().toISOString();
-      appendFileSync(join(dirname(outAbs), "error.log"), `[${ts}] 当前项目未配置数据源\n`);
+      writeFileSync(join(dirname(outAbs), "error.log"), "当前项目未配置数据源\n");
     } catch (logErr) {
       console.error(`无法写入 error.log: ${logErr.message}`);
     }

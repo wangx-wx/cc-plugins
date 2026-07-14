@@ -176,9 +176,9 @@ test("main() 端到端：git remote 不在映射中 → 跳过 + 写 error.log�
     assert.equal(result, null);
     // 最终 JSON 不写
     assert.throws(() => readFileSync(outputFile, "utf-8"));
-    // error.log 含 "当前项目未配置数据源"
+    // error.log 含 "当前项目未配置数据源"（无时间戳、覆盖写）
     const log = readFileSync(join(tmpDir, "out", "error.log"), "utf-8");
-    assert.match(log, /\[.+\] 当前项目未配置数据源\n$/);
+    assert.equal(log, "当前项目未配置数据源\n");
   } finally {
     fx.cleanup();
     rmSync(tmpDir, { recursive: true, force: true });
