@@ -226,6 +226,7 @@ export function main(argv) {
     mkdirSync(dirname(outAbs), { recursive: true });
     const finalJson = {
       project: context.project,
+      gitBranch: opts.source,
       dataSources: context.dataSources,
       dataSourcesAlias: context.dataSourcesAlias,
       gitlabUrl: context.gitlabUrl,

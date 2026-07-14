@@ -99,6 +99,7 @@ test("main() 端到端：输出含 project/gitlabUrl/dataSources/dataSourcesAlia
     ]);
     // 返回值校验
     assert.equal(result.project, "advert");
+    assert.equal(result.gitBranch, fx.source);
     assert.equal(result.gitlabUrl, REMOTE);
     assert.deepEqual(result.dataSources, ["m", "r"]);
     assert.deepEqual(result.dataSourcesAlias, ["m-alias", "r-alias"]);
@@ -112,6 +113,7 @@ test("main() 端到端：输出含 project/gitlabUrl/dataSources/dataSourcesAlia
     // 输出文件落盘且内容一致
     const onDisk = JSON.parse(readFileSync(outputFile, "utf-8"));
     assert.equal(onDisk.project, "advert");
+    assert.equal(onDisk.gitBranch, fx.source);
     assert.equal(onDisk.gitlabUrl, REMOTE);
     assert.deepEqual(onDisk.dataSources, ["m", "r"]);
     assert.deepEqual(onDisk.dataSourcesAlias, ["m-alias", "r-alias"]);

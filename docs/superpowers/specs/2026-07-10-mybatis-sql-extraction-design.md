@@ -487,6 +487,7 @@ extract_mybatis_xml_changes.mjs
 ```json
 {
   "project": "advert",
+  "gitBranch": "dev_xxx_20260101",
   "gitlabUrl": "https://gitlab.example.com/group/advert.git",
   "dataSources": ["advert-master", "advert-read"],
   "dataSourcesAlias": ["生产库", "只读库"],

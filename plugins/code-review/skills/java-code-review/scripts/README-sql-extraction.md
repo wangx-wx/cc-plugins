@@ -58,6 +58,7 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 
     {
       "project": "advert",
+      "gitBranch": "dev_xxx_20260101",
       "gitlabUrl": "https://gitlab.example.com/advert.git",
       "dataSources": ["advert-master", "advert-read"],
       "dataSourcesAlias": ["广告主库", "只读库"],
