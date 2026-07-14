@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
 import { dirname, join, isAbsolute, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseMapperXml, resolveIncludes, normalizeXmlSql } from "./lib/mybatis-xml.mjs";
 import { loadProjectMapping } from "./lib/datasource.mjs";
 import { extractTables } from "./lib/tables.mjs";
@@ -9,6 +10,10 @@ import {
   readSourceAtRevision,
   resolveDiffContext,
 } from "./lib/git-diff.mjs";
+
+// 默认映射表：脚本同目录的 datasource/project_datasources.json
+const __scriptDir = dirname(fileURLToPath(import.meta.url));
+const DEFAULT_PROJECT_MAPPING = join(__scriptDir, "datasource", "project_datasources.json");
 
 export function parseArguments(argv) {
   const o = {};
@@ -23,6 +28,7 @@ export function parseArguments(argv) {
     o[key] = value;
     i++;
   }
+  o.projectMappingPath = o.projectMappingPath || DEFAULT_PROJECT_MAPPING;
   o.output = o.output || ".code-review/sql-extraction/sql-extraction-result.json";
   return o;
 }

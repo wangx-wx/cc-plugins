@@ -8,10 +8,10 @@ SQL 涉及的实表名，产出 `{ project, dataSources, dataSourcesAlias, gitla
 
     node extract_mybatis_xml_changes.mjs \
       --repo-path <repo> --source <src> --target <tgt> \
-      --project-mapping <mapping.json> \
       --output <out.json>
 
 - `--output` 默认 `.code-review/sql-extraction/sql-extraction-result.json`（相对路径基于 `--repo-path`）。
+- 脚本默认读取同目录下 `datasource/project_datasources.json` 作为项目映射表。需覆盖时传 `--project-mapping <其他映射.json>`。
 - `--project-mapping` 指向一个 JSON 数组文件，每条描述一个项目：
 
       [
