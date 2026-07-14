@@ -219,17 +219,18 @@ export function main(argv) {
     console.log(usage());
     return null;
   }
-  for (const key of ["repoPath", "source", "target", "projectMappingPath"]) {
+  for (const key of ["repoPath", "source", "target"]) {
     if (!opts[key]) throw new Error(`缺少必填参数 --${{
-      repoPath: "repo-path", source: "source", target: "target", projectMappingPath: "project-mapping",
+      repoPath: "repo-path", source: "source", target: "target",
     }[key]}`);
   }
   const outAbs = isAbsolute(opts.output) ? opts.output : resolve(opts.repoPath, opts.output);
+  // 提前建目录，确保 catch 时 error.log 能写入
+  try { mkdirSync(dirname(outAbs), { recursive: true }); } catch {}
   try {
     const context = loadProjectMapping(readFileSync(opts.projectMappingPath, "utf-8"), opts.repoPath);
     const diff = resolveDiffContext(opts.repoPath, opts.source, opts.target);
     const items = buildItems({ ...diff, repo: opts.repoPath, source: opts.source });
-    mkdirSync(dirname(outAbs), { recursive: true });
     const finalJson = {
       project: context.project,
       gitBranch: opts.source,
@@ -242,15 +243,15 @@ export function main(argv) {
     console.log(JSON.stringify(finalJson));
     return finalJson;
   } catch (e) {
+    // 找不到项目对应的数据源（gitlabUrl 不匹配 / dataSources 空 / alias 长度不等 等）：
+    // 跳过后续流程（不写最终 JSON），写 error.log，正常退出。
     try {
-      mkdirSync(dirname(outAbs), { recursive: true });
       const ts = new Date().toISOString();
-      appendFileSync(join(dirname(outAbs), "error.log"), `[${ts}] ${e.message}\n`);
+      appendFileSync(join(dirname(outAbs), "error.log"), `[${ts}] 当前项目未配置数据源\n`);
     } catch (logErr) {
-      // 连 error.log 都写不了，只能打到 stderr
       console.error(`无法写入 error.log: ${logErr.message}`);
     }
-    throw e;
+    return null;
   }
 }
 

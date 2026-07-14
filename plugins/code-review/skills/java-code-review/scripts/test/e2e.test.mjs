@@ -129,26 +129,56 @@ test("main() 端到端：输出含 project/gitlabUrl/dataSources/dataSourcesAlia
 });
 
 // 不传 --project-mapping：脚本使用相对路径默认文件 <scriptDir>/datasource/project_datasources.json
+// fixture remote 必须与默认映射第一个条目的 gitlabUrl 归一化后相等；
+// 若默认映射改了，需同步更新此 fixture。
 test("main() 端到端：不传 --project-mapping 时使用默认相对路径映射文件", () => {
-  const REMOTE = "http://gitlab.leyaoyao.com/ai/observability/starsmith.git";
+  const REMOTE = "http://gitlab.leyaoyao.com/middleStage/base/component/message_send_server.git";
   const fx = createGitFixture({ "m/ReportMapper.xml": V1 }, { "m/ReportMapper.xml": V2 });
   execFileSync("git", ["-C", fx.repo, "remote", "add", "origin", REMOTE], { stdio: ["pipe", "pipe", "pipe"] });
   const tmpDir = mkdtempSync(join(tmpdir(), "sqlx-default-"));
   try {
     const outputFile = join(tmpDir, "out", "result.json");
-    // 不传 --project-mapping：脚本读默认 <scriptDir>/datasource/project_datasources.json
     const result = main([
       "--repo-path", fx.repo,
       "--source", fx.source,
       "--target", fx.target,
       "--output", outputFile,
     ]);
-    // 默认映射含 starsmith 条目：project=starsmith, dataSources=[starsmith], alias=[starsmith-prod]
+    // 默认映射条目内容（project=starsmith, dataSources=[starsmith], alias=[starsmith-prod]）
     assert.equal(result.project, "starsmith");
     assert.equal(result.gitlabUrl, REMOTE);
     assert.deepEqual(result.dataSources, ["starsmith"]);
     assert.deepEqual(result.dataSourcesAlias, ["starsmith-prod"]);
     assert.ok(Array.isArray(result.items));
+  } finally {
+    fx.cleanup();
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+// gitlabUrl 不匹配默认映射：跳过后续流程，写 error.log "当前项目未配置数据源"，不写最终 JSON，正常退出
+test("main() 端到端：git remote 不在映射中 → 跳过 + 写 error.log，不写最终 JSON", () => {
+  // remote 不在默认 mapping 里（默认只有 starsmith）
+  const REMOTE = "git@gitlab.com:nonexistent/unmapped-project.git";
+  const fx = createGitFixture({ "m/ReportMapper.xml": V1 }, { "m/ReportMapper.xml": V2 });
+  execFileSync("git", ["-C", fx.repo, "remote", "add", "origin", REMOTE], { stdio: ["pipe", "pipe", "pipe"] });
+  const tmpDir = mkdtempSync(join(tmpdir(), "sqlx-unmapped-"));
+  try {
+    const outputFile = join(tmpDir, "out", "result.json");
+    // 不传 --project-mapping：用默认 mapping；fixture remote 不匹配 → 跳过
+    const result = main([
+      "--repo-path", fx.repo,
+      "--source", fx.source,
+      "--target", fx.target,
+      "--output", outputFile,
+    ]);
+    // main 返回 null（不抛、不 exit 1）
+    assert.equal(result, null);
+    // 最终 JSON 不写
+    assert.throws(() => readFileSync(outputFile, "utf-8"));
+    // error.log 含 "当前项目未配置数据源"
+    const log = readFileSync(join(tmpDir, "out", "error.log"), "utf-8");
+    assert.match(log, /\[.+\] 当前项目未配置数据源\n$/);
   } finally {
     fx.cleanup();
     rmSync(tmpDir, { recursive: true, force: true });
