@@ -1,12 +1,2446 @@
 [
     {
-        "project": "starsmith",
-        "dataSources": [
-            "starsmith"
-        ],
+        "project": "brand-data-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/brand-data-sync.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "general-report",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/general-report.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "schedule",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule.git",
         "dataSourcesAlias": [
-            "starsmith-prod"
+            "生产环境(super)——master"
         ],
-        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/observability/starsmith.git"
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "message-send-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/message_send_server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——middle_stage",
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_业务中台middlestage",
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "lyy-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/lyy.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "family-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/family-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "ic-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/ic-card.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "vending-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/retail_business.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "user-member",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/usermember/user-member.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——user_member_1"
+        ],
+        "dataSources": [
+            "生产_rds_会员服务0_31"
+        ]
+    },
+    {
+        "project": "authority-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/authority-admin.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "consumption-query-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/consumption.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_consumption"
+        ],
+        "dataSources": [
+            "生产_rds_设备启动consumption"
+        ]
+    },
+    {
+        "project": "real-time-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/real-time-sync.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "lyy-erp",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/erp.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bikecharging-life-server（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/charging-life-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "advert-redis",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/advert-redis.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "payment-order-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/payment-order-sync.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "coupon-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/coupon.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——cmember"
+        ],
+        "dataSources": [
+            "生产_rds_会员增值cmember"
+        ]
+    },
+    {
+        "project": "advert-plugin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/advert-plugin.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "device-batch-operation",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/management/device-batch-operation.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "cdz-charger-portal",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/cdz-charger-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "coins-statistics-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/coins-statistics.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "open-third-platform",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/open-third-platform.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "netty-mq-consumer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/netty-mq-consumer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "commercial-charges",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/commercial-charges.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "open-platform",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/open-platform.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "merchant-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/merchant/merchant.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "charging-dealer-portal（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/charging-dealer-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "billing-system",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/billing/billing-system.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——pos"
+        ],
+        "dataSources": [
+            "生产_rds_计费规则pos"
+        ]
+    },
+    {
+        "project": "lyyopen2-saas-function",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/back-end.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-mall",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/mall.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——mall_db"
+        ],
+        "dataSources": [
+            "生产_rds_小场地mall_db"
+        ]
+    },
+    {
+        "project": "schedule-coins-statistics",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-coins-statistics.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "analysis-server（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/analysis-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "advert-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/advert-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "allowlist-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/allowlist-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "customer-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/customer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "schedule-order-processing",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-order-processing.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "multi-protocol-iot-gateway",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/multi-protocol-iot-gateway.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "device-metadata",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/base/device-metadata.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "location-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/equipment/location-service.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "merchant",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/merchant.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "lyy-benefit-member",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/lyy-benefit-member.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "netty-schedule",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/cronjob/netty-schedule.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bikecharging-message-consumer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/charging-message-consumer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "middle-third-sdk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/sdk/middle-third-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "openpayment-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/openpayment.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——polardb-payment"
+        ],
+        "dataSources": [
+            "生产_pdb_新支付payment"
+        ]
+    },
+    {
+        "project": "open-payment-callback",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment-callback.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——polardb-payment"
+        ],
+        "dataSources": [
+            "生产_pdb_新支付payment"
+        ]
+    },
+    {
+        "project": "transaction-status-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/transaction-status-sync.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——polardb-payment"
+        ],
+        "dataSources": [
+            "生产_pdb_新支付payment"
+        ]
+    },
+    {
+        "project": "cmember-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/cmember.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——cmember"
+        ],
+        "dataSources": [
+            "生产_rds_会员增值cmember"
+        ]
+    },
+    {
+        "project": "data-delimiter",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/open-platform.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "life-class-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/life-class.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "payment-merchant",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/merchant/payment-merchant",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——payment_merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_支付商户payment_merchant"
+        ]
+    },
+    {
+        "project": "data-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/data-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "base（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/base.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "massage",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/massage/massage.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_business"
+        ],
+        "dataSources": [
+            "生产_rds_按摩massage_business"
+        ]
+    },
+    {
+        "project": "payafter-order-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/order.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "netty-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/equipment/communication.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "mps-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/xingtuo/mps-business.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "websocket-authority",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/websocket.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "dbop",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/dbop.git",
+        "dataSourcesAlias": ["123"],
+        "dataSources": ["123"]
+    },
+    {
+        "project": "schedule-finance",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-finance.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "payment-divide-bff",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment-divide-bff.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "equipment-coins-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/equipment-coins.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——coins_history"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_线下投币coin_history"
+        ]
+    },
+    {
+        "project": "iot-mangement-system",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/management/iot-mangement-system.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "device-hub",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/codec/device-hub.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "outside-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/outside-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "white-list",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/white-list.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "donghai-data-converter",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/donghai.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair",
+            "生产环境(super)——master",
+            "生产环境(super)——equipment",
+            "生产环境(super)——advert",
+            "生产环境(super)——authority",
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life",
+            "生产_rds_主库master",
+            "生产_rds_设备库equipment_新",
+            "生产_rds_广告库advert",
+            "生产_rds_权限库authority",
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "lyy-base-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "commodity-data-transfer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/commodity-data-transfer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair",
+            "生产环境(super)——equipment",
+            "生产环境(super)——cmember",
+            "生产环境(super)——authority",
+            "生产环境(super)——commodity",
+            "生产环境(super)——wash_business",
+            "生产环境(super)——pos"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life",
+            "生产_rds_设备库equipment_新",
+            "生产_rds_会员增值cmember",
+            "生产_rds_权限库authority",
+            "生产_rds_商品库commodity",
+            "生产_rds_洗水wash_business",
+            "生产_rds_计费规则pos"
+        ]
+    },
+    {
+        "project": "micro-bluethoot-lock-new",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/micro-bluetooth-lock-customer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "saas-schedule",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/saas_service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bridge-java-sdk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/sdk/bridge-java-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "dynamic-netty-client",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/package/dynamic_netty_client.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "merchant-backend",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/back-end.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "saas-mq",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/saas_service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "cdc-dbz-job",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/cdc-dbz-job.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "东晙poseidon",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/dongjun/poseidon.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "smartmgr",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/xingtuo/server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "东晙service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/dongjun/service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "东晙web",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/dongjun/web.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bi-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/bi-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bikecharging-master-server（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/charging-master-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "authority-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/authority.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——authority"
+        ],
+        "dataSources": [
+            "生产_rds_权限库authority"
+        ]
+    },
+    {
+        "project": "order-query",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/order/order-query.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——polardb-order"
+        ],
+        "dataSources": [
+            "生产_pdb_新支付payment"
+        ]
+    },
+    {
+        "project": "small-venue-business-message-handler",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-business-message-handler.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "data-warehouse-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/DWH.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "schedule-fans-statistics",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-fans-statistics.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "power-claw-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/power-claw.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "dealer-system",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/dealer/dealer-system.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "equipment-shadows",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/protocol/equipment-shadows.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "risk-client",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/risk-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "mahjong",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/massage/mahjong.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_business"
+        ],
+        "dataSources": [
+            "生产_rds_按摩massage_business"
+        ]
+    },
+    {
+        "project": "third",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/third-callback.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "outside-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/outside-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "saas-merchant",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/saas_service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "risk-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/risk-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "base（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/base.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "water",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/wash/water.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair",
+            "生产环境(super)——wash_business"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life",
+            "生产_rds_洗水wash_business"
+        ]
+    },
+    {
+        "project": "ai-starmind",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/infrastructure/starmind.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "open-data-api",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/open-data-api.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "ad-card-customer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/business_advert.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "charging-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/charging.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "washing-machine",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/wash/washing-machine.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair",
+            "生产环境(super)——wash_business"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life",
+            "生产_rds_洗水wash_business"
+        ]
+    },
+    {
+        "project": "member-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/member-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "consumption-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/consumption.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_consumption"
+        ],
+        "dataSources": [
+            "生产_rds_设备启动consumption"
+        ]
+    },
+    {
+        "project": "switcher-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/switcher-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "regulatory-data-mgr-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/open-platforms/data-interfacing/regulatory/regulatory-data-mgr-service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "charge-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/charge-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "ai-stargateway",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/infrastructure/stargateway.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "member-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/member-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "platform-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/platform-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "wms",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/erp.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "schedule-daily-income-msg",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-daily-income-msg.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "hlht-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/hlht-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "dispatch-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/cronjob/dispatch-center.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "iot",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/protocol/iot.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "coin-exchange",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/coin/coin-exchange.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "advertisement",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/business_advert.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "general-device",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/general-life.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "income-rpc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/income-statistics.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "doll-machine",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/dollmachine/doll-machine.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "ai-starshield",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/infrastructure/starshield.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "ai-starsmith",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/ai/observability/starsmith.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "cloudx-back",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/cloudx-back.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "merchant-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/merchant-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "market-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/market-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "order-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/order-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "equipment-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/equipment.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "tiangong",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/tiangong.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "small-venue-business-message-handler-realtime",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-business-message-handler-realtime.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "schedule-data",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-data.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "hlht-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/hlht-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "open-platform-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/open-platform.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "erp-transfer-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/erp.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "redis",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "i18n",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/i18n-spring-boot-starter.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "del_open-platform-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/open-platform.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "base",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "schedule-merchant",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/job-schedule.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "mq-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "api-gateway",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/gateway/api-gateway.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "schedule-statistics",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-statistics.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——cmember"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_会员增值cmember"
+        ]
+    },
+    {
+        "project": "aidee-code",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/aidee-code.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "multilevel-cache旧版本",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/multilevel-cache.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "comm-collector",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/scaffold/data/comm-collector.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "external-netty",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/netty-external.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "lmq-core",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/base/lmq.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "pangu",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/pangu.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "open-netty",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/open-netty.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "comm-base",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/base/comm-base.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "jdbc2",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "lmq-boot",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/lmq-boot.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "income-statistics-query",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/income-statistics.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——income_statistics"
+        ],
+        "dataSources": [
+            "生产_rds_经营统计incomestat_master"
+        ]
+    },
+    {
+        "project": "barrage-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/barrage.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "lmq-web",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/scaffold/terminal/lmq-web.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "baichuan",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/baichuan.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "dayu",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/message/dayu.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——equipment"
+        ],
+        "dataSources": [
+            "生产_rds_设备库equipment_新"
+        ]
+    },
+    {
+        "project": "voice-caller-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/voice_caller_service.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "log-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "user-members-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/user-members.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "legal",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/legal/legal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——legal"
+        ],
+        "dataSources": [
+            "生产_rds_合规化legal"
+        ]
+    },
+    {
+        "project": "user-statistics-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/user-statistics.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "customer-redis-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/customer-redis.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "ram-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/authorization/ram-service.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——authority"
+        ],
+        "dataSources": [
+            "生产_rds_权限库authority"
+        ]
+    },
+    {
+        "project": "device-event-hub",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/equipment/device-event-hub.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "sdk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "start-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/start.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "lyy-idempotent",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/lyy-idempotent.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "sysrisk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/base-starter.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "sentinel-dashboard",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/open-source/sentinel.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "commodity-cdc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/commodity-cdc.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "application-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/servicisation.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "commodity",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/storage/commodity.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——commodity"
+        ],
+        "dataSources": [
+            "生产_rds_商品库commodity"
+        ]
+    },
+    {
+        "project": "iot-equipment",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/equipment/equipment.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "odlc-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/odlc.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "ram-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/authorization/ram-admin.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——authority"
+        ],
+        "dataSources": [
+            "生产_rds_权限库authority"
+        ]
+    },
+    {
+        "project": "metrics-collector",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/metrics-collector.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "user-payment-query-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/user-payment.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "log-entity",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "log-api",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "enterprise-payment",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/enterprise-payment.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "integral-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/integral.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_integral_mall"
+        ],
+        "dataSources": [
+            "生产_rds_商城mall_品牌商brand"
+        ]
+    },
+    {
+        "project": "payment-lite",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment-lite.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "order-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/order/order-sync.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "account-check",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/settlement/account-check.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——polardb-payment",
+            "生产环境(super)——payment_merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_pdb_新支付payment",
+            "生产_rds_支付商户payment_merchant"
+        ]
+    },
+    {
+        "project": "user-app",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/usermember/user.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——user_app"
+        ],
+        "dataSources": [
+            "生产_rds_用户user_app"
+        ]
+    },
+    {
+        "project": "open-settlement-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/settlement/open-settlement.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "payment-bff",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment-bff.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "one-data",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/bigdata/service/one-data.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "equipment-data-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/equipment-data-sync.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——equipment",
+            "生产环境(super)——merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_设备库equipment_新",
+            "生产_rds_商户merchant"
+        ]
+    },
+    {
+        "project": "small-venue-cashier-svc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-cashier-svc.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "user-behavior-analysis",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/user-behavior-analysis.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "face-pay",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/face.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "merchant-bff",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/merchant/merchant-bff.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-iot-handler-svc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-iot-handler-svc.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "ad-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/business_advert.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "small-venue-diguan-task",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/task/diguan-task.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "vending-business-rpc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/package/vending-business-rpc.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/sop/admin.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "vending-business-common",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/package/vending_business_common.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "micro-infor-customer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/micro_infor_customer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_infor"
+        ],
+        "dataSources": [
+            "生产_rds_信息戳合lyy_infor"
+        ]
+    },
+    {
+        "project": "schedule-batch-add-integral",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/business_advert.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "sms-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/sms.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——middle_stage"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_业务中台middlestage"
+        ]
+    },
+    {
+        "project": "api-gateway-foreign",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/gateway/api-gateway-foreign.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "bigdata-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/bigdata.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "devops-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/servicisation.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "saas-client",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/saas_service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "settlement-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/settlement/settlement.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "log-notification",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "saas-common",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/saas_two/saas_service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "auth-center",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/auth-center.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "sentinel-core",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/open-source/sentinel.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "communal",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/package/communal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "data-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/data-admin.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——data_platform"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_ecs_分析平台data_platform"
+        ]
+    },
+    {
+        "project": "vending-business-page",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/package/vending-business-page.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "log-monitor",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "general-life",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/life/general/general-life.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "lyy-merchant-api",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/rebuild/old_project.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "merchant-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/merchant.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "customer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/customer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "vending-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/vending-admin.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "websocket-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/websocket.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "marketing-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/marketing.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——cmember"
+        ],
+        "dataSources": [
+            "生产_rds_会员增值cmember"
+        ]
+    },
+    {
+        "project": "wawawu",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/wawawu.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "lyy-agent-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/agent.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "distributor",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/sop/distributor.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "flink-job",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/flink-job.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "consistency",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/consistency.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "wechat-sdk-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/wechat-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "payment-gateway",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment-gateway.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "binlog-transfer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/binlog-transfer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "mq-sdk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/package/rocketmq-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "syslog",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/package/syslog.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "dialer-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/dialer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "merchant-applyment",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/merchant/merchant-applyment.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——payment_merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_支付商户payment_merchant"
+        ]
+    },
+    {
+        "project": "api-gateway-merchant",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/gateway/api-gateway.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "netty",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/netty.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-common",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-common.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-business-svc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-business-svc.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "commodity-exchange-job",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/big-data/flink-job.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "multilevel-cache-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/component/multilevel-cache.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "payment-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/payment/payment.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "storage",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/storage/storage.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "equipment-manage",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/scaffold/terminal/equipment-manage.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "httpclient",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/base/package/httpclient.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "user-payment-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/user-payment.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "payment-callback",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/payment-callback.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "/uat/back-end/architecture",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/bigdata/service/one-data.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "center-server（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/center-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "user-member-transfer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/user-member-transfer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "middlestage-data-processing",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/scaffold/data/middlestage-data-processing.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——polardb-order",
+            "生产环境(super)——polardb-payment",
+            "生产环境(super)——equipment",
+            "生产环境(super)——merchant",
+            "生产环境(super)——pos"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_pdb_新支付payment",
+            "生产_pdb_新支付payment",
+            "生产_rds_设备库equipment_新",
+            "生产_rds_商户merchant",
+            "生产_rds_计费规则pos"
+        ]
+    },
+    {
+        "project": "charging-account-customer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/charging-account-customer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "lyy-face-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/face.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "integral-duiba",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/integral-duiba.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "comm2.0-netty",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/gateway/comm-netty2.0.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "scm-data",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/scm-data.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "douyin-video-show",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/douyin-video-show.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "shopping-cart",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/billing/shopping-cart.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "charge-portal（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/charge-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-member",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-member.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "infrastructure-server（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/infrastructure-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "douyin-sdk",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/douyin-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "family-portal（汽充）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/car-charging/backend/family-portal.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——carcharging"
+        ],
+        "dataSources": [
+            "生产_rds_汽充库carcharging"
+        ]
+    },
+    {
+        "project": "sso-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/sso-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "micro-customer-new",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/micro-customer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "risk-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/information/backend/risk-server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "car-charging",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/life/charging_pile/car_charging.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "middle-third-sdk_1.x",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/sdk/middle-third-sdk.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "storage-bff",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/storage/storage-bff.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "order-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/order/order.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——polardb-order"
+        ],
+        "dataSources": [
+            "生产_pdb_新支付payment"
+        ]
+    },
+    {
+        "project": "merchant-portal（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/merchant-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "shared-rental",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/amusement/server/shared-rental.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "codec-forward-protocol",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/codec/codec-forward-protocol.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "order-server（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/order-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "small-venue-mirco-member",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-mirco-member.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "advert-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/advert-business.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "washer-business",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/life/washer/washer.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "regulatory-data-push-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/open-platforms/data-interfacing/regulatory/regulatory-data-push-service.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "comm-collector-golang",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/scaffold/data/comm-collector-golang.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "small-venue-business-common-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-business-common-server.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "device-message-bridge",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/iot/middleware/device-message-bridge.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "clearing-settlement",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/payment/settlement/clearing-settlement.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——payment_merchant"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_支付商户payment_merchant"
+        ]
+    },
+    {
+        "project": "schedule-advert",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/business_advert.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——advert"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_rds_广告库advert"
+        ]
+    },
+    {
+        "project": "crm",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/crm.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_crm"
+        ],
+        "dataSources": [
+            "生产_rds_CRM后台系统lyy_crm"
+        ]
+    },
+    {
+        "project": "schedule-agent",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/cronjob/schedule/schedule-agent.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "small-venue-report-svc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-report-svc.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "small-venue-billing-svc",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/small-venue/small-venue-billing-svc.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——small_venue"
+        ],
+        "dataSources": [
+            "生产_rds_小场地small_venue"
+        ]
+    },
+    {
+        "project": "brand-admin",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/middleStage/bff/brand-admin.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "switch-service",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/switch.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master"
+        ],
+        "dataSources": [
+            "生产_rds_主库master"
+        ]
+    },
+    {
+        "project": "member-portal（二轮桩）",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/charging/back-end/member-portal.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "income-statistics",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/income-statistics.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——income_statistics"
+        ],
+        "dataSources": [
+            "生产_rds_经营统计incomestat_master"
+        ]
+    },
+    {
+        "project": "data-service(data-analysis后端)",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/microsrv/data-analysis.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——master",
+            "生产环境(super)——data_platform"
+        ],
+        "dataSources": [
+            "生产_rds_主库master",
+            "生产_ecs_分析平台data_platform"
+        ]
+    },
+    {
+        "project": "advert-business-bff",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/advert/server/advert-business-bff.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "data-sync",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/back-end/websrv/data-sync.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——lyy_consumption"
+        ],
+        "dataSources": [
+            "生产_rds_设备启动consumption"
+        ]
+    },
+    {
+        "project": "children",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/children/children.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "gashapon",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/play/gashapon/gashapon.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "hair-dryer",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/wash/hair-dryer.git",
+        "dataSourcesAlias": [
+            "生产环境(super)——massage_chair"
+        ],
+        "dataSources": [
+            "生产_rds_生活类库life"
+        ]
+    },
+    {
+        "project": "vending-business-dynamic-json",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/package/vending-business-dynamic-json.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "video-codec",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/vending_video_codec.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
+    },
+    {
+        "project": "vending-business-rpc-server",
+        "gitlabUrl": "http://gitlab.leyaoyao.com/vending/vending_server.git",
+        "dataSourcesAlias": [],
+        "dataSources": []
     }
 ]

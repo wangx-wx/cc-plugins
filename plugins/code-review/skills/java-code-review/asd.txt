@@ -1,0 +1,32 @@
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+  --repo-path /Users/wangx/workspace/lyy-workspace/java/payment/order/order --source dev_middle_advance_phase3_20260622 --target origin/master \
+  --project-mapping /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/data/datasource.json --output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result.json
+
+  dev_middle_income_phase3_20260626
+
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+  --repo-path /Users/wangx/workspace/lyy-workspace/java/bigdata/service/one-data --source dev_middle_income_phase3_20260626 --target origin/master \
+  --project-mapping /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/data/datasource.json --output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result2.json
+
+
+
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+  --repo-path /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith --source dev_middle_advance_phase3_20260622 --target origin/master \
+  --project-mapping /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/data/datasource.json --output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result.json
+
+
+
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+  --repo-path /Users/wangx/workspace/lyy-workspace/java/middleStage/base/component/message_send_server --source dev_test_code-review --target origin/master \
+ --output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result-test.json
+
+/Users/wangx/workspace/lyy-workspace/java/ai/infrastructure/starmind
+
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+  --repo-path /Users/wangx/workspace/lyy-workspace/java/ai/infrastructure/starmind --source dev_middle_advance_phase3_20260622 --target origin/master \
+ --output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result11.json
+
+
+node /Users/wangx/workspace/aaa/vibe-coding/wx-cc-plugins/plugins/code-review/skills/java-code-review/scripts/extract_mybatis_xml_changes.mjs \
+--repo-path /Users/wangx/workspace/lyy-workspace/java/information/backend/dbop --source dev_arch_code_review_0715 --target origin/master \
+--output /Users/wangx/workspace/lyy-workspace/java/ai/observability/starsmith/.code-review/sql-extraction/sql-extraction-result22.json

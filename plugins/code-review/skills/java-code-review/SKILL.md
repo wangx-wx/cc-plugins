@@ -29,7 +29,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 
 并行启动以下 4 个子 Agent：
 
-1. **P3C 规范检查**：派发Agent `p3c-analyzer`，同时传入 `{source}`、`{target}`、`{repo-path}`
+1. **P3C 规范检查**：派发Agent `p3c-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 2. **Java 规范检查**：派发Agent `java-standards-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 3. **配置文件检查**：派发Agent `config-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 4. **数据库 XML 检查**：派发Agent `db-xml-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`

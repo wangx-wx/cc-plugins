@@ -1,6 +1,6 @@
 # 配置检查清单
 
-> 规则编号采用 `JCR-00001` 形式递增，级别枚举：`Critical` > `Major` > `Minor` > `Info`
+> 规则编号采用 `JCR-00001` 形式递增，级别枚举：`Blocker` > `Critical` > `Major` > `Minor`
 > 规则标题格式`规则编号 规则名称`
 
 ## 配置文件（.yml/.yaml/.properties）
