@@ -1,0 +1,17 @@
+{
+  "name": "ai-testings",
+  "version": "0.1.0",
+  "description": "Java 后端测试规范助手：审查变更的测试需求(test-review)、按团队规范生成单测/集成测试(test-writer)。",
+  "author": { "name": "wangx" },
+  "keywords": ["java", "testing", "junit5", "mybatis-plus", "integration-test"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AI Testings",
+    "shortDescription": "Java 测试需求审查与单测生成",
+    "longDescription": "审查变更的测试需求并生成符合团队规范的 JUnit5/集成测试。技术栈 MyBatis-Plus + PostgreSQL，JDK8/17 双栈。",
+    "developerName": "wangx",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": ["审查这次变更需要哪些测试", "为改动的 Service 生成单元测试"]
+  }
+}
