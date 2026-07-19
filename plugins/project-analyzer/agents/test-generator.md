@@ -11,13 +11,15 @@ tools:
 
 # Test Generator
 
+> **宿主适配**：`<RULES_ROOT>` = Claude Code `.claude/rules/` / Codex 其他 `.agent-rules/`。
+
 **触发条件**：收到 `[project-analyzer] Java source modified: <file>` 消息时执行。
 
 ## 执行步骤
 
 **1. 读取测试规范**
 
-读 `{project_path}/.claude/rules/analysis/testing-observations.md`，提取：
+读 `{project_path}/<RULES_ROOT>analysis/testing-observations.md`，提取：
 - 测试框架（JUnit 4 / JUnit 5）
 - Mock 框架（Mockito / PowerMock）
 - 命名约定（方法名格式）

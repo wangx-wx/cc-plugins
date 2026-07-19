@@ -10,6 +10,8 @@ tools:
 
 # Project Analyzer Analyst
 
+> **宿主适配**：下文 `<RULES_ROOT>` 按宿主取值——Claude Code = `.claude/rules/`，Codex / 其他 = `.agent-rules/`。被 workflow 内联执行时以其传入值为准。
+
 **目标**：读取代表性代码文件，识别项目特有的编码模式，写出结构化观察文件。
 
 **核心问题**：哪些写法会让来自其他 Java 项目的开发者感到意外？
@@ -17,9 +19,9 @@ tools:
 ## 输入
 
 - `project_path`
-- `project_map_path`：`{project_path}/.claude/rules/analysis/project-map.md`
+- `project_map_path`：`{project_path}/<RULES_ROOT>analysis/project-map.md`
 - `focus`：arch | api | security | robustness | db | cache | mq | testing
-- `output_path`：`{project_path}/.claude/rules/analysis/{focus}-observations.md`
+- `output_path`：`{project_path}/<RULES_ROOT>analysis/{focus}-observations.md`
 
 ## 分析步骤
 

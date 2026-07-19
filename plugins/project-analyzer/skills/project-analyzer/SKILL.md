@@ -32,6 +32,8 @@ triggers:
 
 ## 执行
 
-识别子命令（`analyze` | `confirm` | `consolidate`）与参数后，按 `${CLAUDE_PLUGIN_ROOT}/references/workflow.md`（三流程唯一真源）执行对应流程。workflow.md 会先按当前宿主确定产物路径（Claude→`.claude/rules/`，Codex→`.agent-rules/`）、入口文件（Claude→`CLAUDE.md`，Codex→`AGENTS.md`）与子 agent 调度方式（支持则派发，否则内联执行 `agents/*.md` 规范）。
+识别子命令（`analyze` | `confirm` | `consolidate`）与参数后，按 `${CLAUDE_PLUGIN_ROOT}/references/workflow.md`（三流程唯一真源）执行对应流程。workflow.md 开头有「宿主适配」表，运行时据此取值：
+> - **Claude Code**：`RULES_ROOT=.claude/rules/`、`ENTRY=CLAUDE.md`、子 agent 用 Task 派发；
+> - **Codex / 其他**：`RULES_ROOT=.agent-rules/`、`ENTRY=AGENTS.md`、子 agent 一律内联执行 `agents/*.md` 正文规范。
 
 > Claude Code 也可用 `/project-analyzer <subcommand> <project_path>` 命令触发同一流程。

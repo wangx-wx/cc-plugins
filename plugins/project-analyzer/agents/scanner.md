@@ -10,6 +10,8 @@ tools:
 
 # Project Analyzer Scanner
 
+> **宿主适配**：下文 `<RULES_ROOT>` 按宿主取值——Claude Code = `.claude/rules/`，Codex / 其他 = `.agent-rules/`。被 workflow 内联执行时以其传入值为准。
+
 **唯一职责**：发现 Java 项目的关键文件和技术栈，写出 `project-map.md`。不做任何模式判断或规则推断。
 
 ## 输入
@@ -41,7 +43,7 @@ tools:
 
 ## 输出格式
 
-写入 `{project_path}/.claude/rules/analysis/project-map.md`：
+写入 `{project_path}/<RULES_ROOT>analysis/project-map.md`：
 
 ```markdown
 # Project Map: {project_name}

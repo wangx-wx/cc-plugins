@@ -9,13 +9,15 @@ tools:
 
 # Rule Checker
 
+> **宿主适配**：`<RULES_ROOT>` = Claude Code `.claude/rules/` / Codex 其他 `.agent-rules/`。
+
 **触发条件**：收到 `[project-analyzer] Rule check: <file>` 消息时执行。
 
 ## 执行步骤
 
 **1. 确定适用规则文件**
 
-读 `{project_path}/.claude/rules/generated/00-index.md`，根据 `changed_file` 的路径特征确定适用规则文件：
+读 `{project_path}/<RULES_ROOT>generated/00-index.md`，根据 `changed_file` 的路径特征确定适用规则文件：
 
 | 文件路径特征 | 适用规则文件 |
 |------------|------------|

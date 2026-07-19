@@ -18,6 +18,7 @@
 - 不支持（如当前 Codex）→ 当前会话**内联执行** `agents/<角色>.md` 的规范；
 - 支持并行子 agent → 可并行；否则**依次**执行。
 - **绝不伪造**宿主不存在的子 agent 调用。
+- 内联执行时只取 agent 文件**正文**的角色规范，忽略其 YAML frontmatter（`name`/`tools` 仅供 Claude 注册用）；agent 正文中的 `<RULES_ROOT>`/`<ENTRY>` 按上表当前宿主取值。
 
 ---
 
@@ -28,7 +29,7 @@
 **步骤 1 — 项目探索**：**执行 scanner 分析**（`agents/scanner.md` 的规范；支持子 agent 则派发 `project-analyzer-scanner`，否则内联执行），传入 `project_path`。
 产出：`<RULES_ROOT>analysis/project-map.md`。
 
-**步骤 2 — 分析**：**对每个 focus 执行 analyst 分析**（`agents/analyzer.md` 的规范；支持并行子 agent 则并行，否则依次内联执行）。`focus=all` 时覆盖 8 个维度：
+**步骤 2 — 分析**：**对每个 focus 执行 analyst 分析**（`agents/analyzer.md` 的规范；支持子 agent 则派发 `project-analyzer-analyst`，否则内联执行；支持并行则并行、否则依次）。`focus=all` 时覆盖 8 个维度：
 
 | focus | 传入参数 |
 |-------|---------|
@@ -94,11 +95,15 @@ Also read `<RULES_ROOT>manual/` when it exists.
 ```
 
 **Hook 安装（仅 Claude Code；且 `apply_entry=true` 且 `skip_hooks=false`）**：
-> ⚠️ **仅 Claude Code 支持**。`install-hooks.sh` 往 `.claude/settings.json` 写 PostToolUse hook（改 .java 后提醒查规则 / 补测试）。**Codex 不支持该自动提醒**（Codex 不读 `.claude/settings.json`，且插件 hook 输出实效待定，见 `docs/claude-to-codex-porting-guide.md`）——Codex 侧**跳过此步**，规则检查 / 测试生成改为**用户主动触发**。
+> ⚠️ **仅 Claude Code 支持**。`install-hooks.sh` 往 `.claude/settings.json` 写 PostToolUse hook（改 .java 后提醒查规则 / 补测试）。**Codex 不支持该自动提醒**（Codex 不读 `.claude/settings.json`，且插件 hook 输出实效待定，见 `docs/claude-code-codex-plugin-compatibility.md`）——Codex 侧**跳过此步**，规则检查 / 测试生成改为**用户主动触发**。
 >
 > Claude 侧执行：按优先级定位 `${CLAUDE_PLUGIN_ROOT}/scripts/install-hooks.sh`，找到则 `bash ${CLAUDE_PLUGIN_ROOT}/scripts/install-hooks.sh {project_path}`；未找到则输出 `⚠️ Hook 安装已跳过 — 未找到 install-hooks.sh` 并继续。
 
-**输出**：列出 `<RULES_ROOT>generated/` 下生成的文件；`apply_entry=true` 时提示 `<ENTRY>` 已更新；Claude 且未 skip_hooks 时提示 hooks 已安装。
+**输出**：列出 `<RULES_ROOT>generated/` 下生成的文件，并按情况给出提示：
+- `apply_entry=true`：`✅ <ENTRY> 已更新（managed block 已写入）`；
+- `apply_entry=true` 且 Claude Code 且 `skip_hooks=false`：`✅ Hooks 已安装（.claude/settings.json PostToolUse）① post-edit-rule-check.sh 检查规则合规 ② post-edit-test.sh 生成并运行单测`；
+- `apply_entry=true` 且 `skip_hooks=true`：`⚠️ Hook 安装已跳过（--skip-hooks）`；
+- `apply_entry=false`：`⚠️ 规则已生成但尚未激活。运行以下命令激活：/project-analyzer confirm {project_path} --apply-entry`。
 
 ---
 

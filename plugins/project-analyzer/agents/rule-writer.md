@@ -1,6 +1,6 @@
 ---
 name: project-analyzer-rule-writer
-description: 读取 observations.md 和用户确认结果，写入 .claude/rules/generated/*.md 规则文件。不做代码分析。
+description: 读取 observations.md 和用户确认结果，写入 <RULES_ROOT>generated/*.md 规则文件。不做代码分析。
 tools:
   - Read
   - Write
@@ -8,13 +8,15 @@ tools:
 
 # Project Analyzer Rule Writer
 
+> **宿主适配**：下文 `<RULES_ROOT>` 按宿主取值——Claude Code = `.claude/rules/`，Codex / 其他 = `.agent-rules/`；`<ENTRY>` = Claude `CLAUDE.md` / Codex `AGENTS.md`。被 workflow 内联执行时以其传入值为准。
+
 **目标**：将分析观察转换为 AI 可消费的规则文件。不做代码分析，不运行 bash 命令。
 
 ## 输入
 
 - `project_path`
-- `observations_path`：`{project_path}/.claude/rules/analysis/observations.md`
-- `confirmation_path`：`{project_path}/.claude/rules/pending/confirmation-required.md`（可选）
+- `observations_path`：`{project_path}/<RULES_ROOT>analysis/observations.md`
+- `confirmation_path`：`{project_path}/<RULES_ROOT>pending/confirmation-required.md`（可选）
 - `apply_entry`：true / false
 
 ## 处理逻辑
@@ -30,14 +32,14 @@ tools:
 
 | focus | 输出文件 |
 |-------|---------|
-| arch | `.claude/rules/generated/01-architecture-rules.md` |
-| api | `.claude/rules/generated/02-api-contract-rules.md` |
-| security | `.claude/rules/generated/03-exception-logging-security-rules.md` |
-| robustness | `.claude/rules/generated/04-robustness-rules.md` |
-| db | `.claude/rules/generated/05-db-rules.md` |
-| cache | `.claude/rules/generated/06-cache-rules.md` |
-| mq | `.claude/rules/generated/07-mq-rules.md` |
-| testing | `.claude/rules/generated/08-testing-rules.md` |
+| arch | `<RULES_ROOT>generated/01-architecture-rules.md` |
+| api | `<RULES_ROOT>generated/02-api-contract-rules.md` |
+| security | `<RULES_ROOT>generated/03-exception-logging-security-rules.md` |
+| robustness | `<RULES_ROOT>generated/04-robustness-rules.md` |
+| db | `<RULES_ROOT>generated/05-db-rules.md` |
+| cache | `<RULES_ROOT>generated/06-cache-rules.md` |
+| mq | `<RULES_ROOT>generated/07-mq-rules.md` |
+| testing | `<RULES_ROOT>generated/08-testing-rules.md` |
 
 只创建有内容的文件（无规则的 focus 不创建对应文件）。
 
@@ -48,11 +50,11 @@ tools:
 ```markdown
 # {分类名} 规则
 
-> 生成时间: {ISO8601} | 基于: .claude/rules/analysis/observations.md
+> 生成时间: {ISO8601} | 基于: <RULES_ROOT>analysis/observations.md
 
 ## 项目特有规则
 
-五段结构规则，参见 ${CLAUDE_PLUGIN_ROOT}/skills/project-analyzer/references/rule-format.md
+五段结构规则，参见 ${CLAUDE_PLUGIN_ROOT}/references/rule-format.md
 
 ## 反模式清单
 
@@ -80,7 +82,7 @@ tools:
 
 ## 00-index.md
 
-写入 `.claude/rules/generated/00-index.md`：
+写入 `<RULES_ROOT>generated/00-index.md`：
 
 ```markdown
 # 规则索引（{项目名}）
@@ -99,19 +101,19 @@ tools:
 | 新增/改 测试类 | 08-testing-rules.md |
 | 异常处理、日志脱敏、事务 | 03-exception-logging-security-rules.md |
 
-如有待确认规则 → 查 `.claude/rules/pending/confirmation-required.md`。
-如有手写规则 → 也读 `.claude/rules/manual/`。
+如有待确认规则 → 查 `<RULES_ROOT>pending/confirmation-required.md`。
+如有手写规则 → 也读 `<RULES_ROOT>manual/`。
 ```
 
 ## 入口文件更新（apply_entry=true）
 
-在 `{project_path}/CLAUDE.md` 或 `AGENTS.md` 中写入 managed block：
+在 `{project_path}/<ENTRY>` 中写入 managed block：
 
 ```
 <!-- project-analyzer:start -->
-Project-specific coding rules: `.claude/rules/generated/00-index.md`
+Project-specific coding rules: `<RULES_ROOT>generated/00-index.md`
 Read the index first, then load only the rule file matching your task.
-Also read `.claude/rules/manual/` when it exists.
+Also read `<RULES_ROOT>manual/` when it exists.
 <!-- project-analyzer:end -->
 ```
 
@@ -123,7 +125,7 @@ Also read `.claude/rules/manual/` when it exists.
 
 ## 不做的事
 
-- 不修改 `.claude/rules/manual/` 目录
+- 不修改 `<RULES_ROOT>manual/` 目录
 - 不修改业务代码
 - 不修改子目录下的 AGENTS.md（只修改 {project_path} 根目录）
 - 不做代码分析或运行 bash 命令
