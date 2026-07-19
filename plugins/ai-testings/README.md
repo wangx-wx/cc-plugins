@@ -48,3 +48,24 @@ tdd-skills/
     ├── pre-commit-test-check.mjs    # hook 脚本（运行中）
     └── pre-commit-test-check.sh     # bash 版本（参考）
 ```
+
+## 在 Codex 中使用（双宿主）
+
+本插件同时兼容 Codex（`.codex-plugin/plugin.json`）。安装：
+
+```bash
+# 注册本仓库 marketplace（一次）
+codex plugin marketplace add /path/to/wx-cc-plugins
+# 安装
+codex plugin add ai-testings --marketplace wx-cc-plugins
+```
+
+Codex 侧能力与差异（探测于 codex-cli 0.144.5，详见 `docs/superpowers/plans/ai-testings-codex-probe-findings.md`）：
+
+| 能力 | Claude Code | Codex |
+|---|---|---|
+| `test-review` skill | ✅ 原生 | ✅ 原生发现并触发（`ai-testings:test-review`） |
+| `test-writer` | 命名子 agent | **内联执行**其规范（Codex 不注册插件命名 agent） |
+| hooks（Stop / PreToolUse 提醒） | ✅ 自动发现 `hooks/hooks.json` | 需 manifest 声明 `hooks`（已配）+ **hook trust**：`codex exec --dangerously-bypass-hook-trust`，或交互会话授信任 |
+
+> Codex 的插件 hooks 由 `.codex-plugin/plugin.json` 的 `hooks` 字段声明（`plugin_hooks` 自动发现已移除）；hook 命令的 `${CLAUDE_PLUGIN_ROOT}` 解析与沙箱执行以实际会话为准。
