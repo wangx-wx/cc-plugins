@@ -30,4 +30,8 @@ triggers:
 
 **consolidate** — 将现有 CLAUDE.md/AGENTS.md 内容迁移到 `.claude/rules/manual/`，精简入口文件。
 
-**执行：将控制权转给 `commands/project-analyzer.md`。**
+## 执行
+
+识别子命令（`analyze` | `confirm` | `consolidate`）与参数后，按 `${CLAUDE_PLUGIN_ROOT}/references/workflow.md`（三流程唯一真源）执行对应流程。workflow.md 会先按当前宿主确定产物路径（Claude→`.claude/rules/`，Codex→`.agent-rules/`）、入口文件（Claude→`CLAUDE.md`，Codex→`AGENTS.md`）与子 agent 调度方式（支持则派发，否则内联执行 `agents/*.md` 规范）。
+
+> Claude Code 也可用 `/project-analyzer <subcommand> <project_path>` 命令触发同一流程。

@@ -1,0 +1,17 @@
+{
+  "name": "project-analyzer",
+  "version": "1.0.0",
+  "description": "分析 Java 微服务项目，提取项目特有编码约束，生成 AI 可消费的规则文件。",
+  "author": { "name": "wangx" },
+  "keywords": ["project-rules", "ai-coding", "java", "spring-cloud", "architecture", "feign", "code-analysis", "robustness"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Project Analyzer",
+    "shortDescription": "Java 项目编码约束提取与规则生成",
+    "longDescription": "从 Java 微服务代码提取项目特有编码约束（模块位置 / API 契约 / 异常日志 / 健壮性），生成 AI 可消费的规则文件。",
+    "developerName": "wangx",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": ["分析这个 Java 项目的编码规则", "为当前项目生成编码约束"]
+  }
+}

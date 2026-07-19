@@ -1,0 +1,3 @@
+interface:
+  display_name: "Project Analyzer"
+  short_description: "分析 Java 项目编码约束，生成 AI 可消费的规则文件"
