@@ -66,6 +66,6 @@ Codex 侧能力与差异（探测于 codex-cli 0.144.5，详见 `docs/superpower
 |---|---|---|
 | `test-review` skill | ✅ 原生 | ✅ 原生发现并触发（`ai-testings:test-review`） |
 | `test-writer` | 命名子 agent | **内联执行**其规范（Codex 不注册插件命名 agent） |
-| hooks（Stop / PreToolUse 提醒） | ✅ 自动发现 `hooks/hooks.json` | 需 manifest 声明 `hooks`（已配）+ **hook trust**：`codex exec --dangerously-bypass-hook-trust`，或交互会话授信任 |
+| hooks（Stop / PreToolUse 提醒） | ✅ 自动发现 `hooks/hooks.json` | ⚠️ 声明就绪、事件能触发（manifest `hooks` + hook trust），但 `codex exec` 下 systemMessage 输出未见效，**实效待交互会话/官方契约确认** |
 
-> Codex 的插件 hooks 由 `.codex-plugin/plugin.json` 的 `hooks` 字段声明（`plugin_hooks` 自动发现已移除）；hook 命令的 `${CLAUDE_PLUGIN_ROOT}` 解析与沙箱执行以实际会话为准。
+> Codex 的插件 hooks 由 `.codex-plugin/plugin.json` 的 `hooks` 字段声明（`plugin_hooks` 自动发现已移除）；实测 `codex exec` 下 hook 触发但输出/副作用不可见（详见 `docs/superpowers/plans/ai-testings-codex-probe-findings.md`）。Claude 侧 hook 不受影响、完全可用。

@@ -20,11 +20,12 @@
   - 正式使用：需持久化信任（首次交互授权，具体方式待确认）。
   - **初版误判正因 `codex exec` 无信任 → hook 被静默跳过。**
 
-## 待 Task 4 落地验证的细节
+## Task 4 hooks 实测结论（已深入验证，8+ 次 codex exec）
 
-1. hook 在**受限沙箱**运行：探针脚本写 `/tmp` 与 workdir 均未见输出 → ai-testings 真实 hook（`node ${...}/scripts/*.mjs` 输出提醒）能否正常执行、其 stdout 能否被 codex 采纳，需用真实脚本专门验证。
-2. `${CLAUDE_PLUGIN_ROOT}` 在 hook 命令里是否解析：未确认（marker 未写成，读不到变量）。插件快照到 `~/.codex/plugins/cache/wx-cc-plugins/ai-testings/0.1.0`，hook 命令定位脚本的方式待解决。
-3. 正式（非 bypass）的 hook trust 建立方式待确认。
+- ✅ manifest 声明 `hooks`（`"./hooks/hooks.json"` 或内联对象）schema 合法、能装载；事件 `PreToolUse`/`Stop` 能触发（codex 输出 `hook: X Completed`），需 hook trust（`--dangerously-bypass-hook-trust` 或交互授信任）。
+- ❌ 但 `codex exec` 下 hook 命令的**副作用/输出均不可见**：脚本写 `/tmp` 与 workdir 都未见文件；直接 `echo '{"systemMessage":...}'` 也未在会话输出显示；`${CLAUDE_PLUGIN_ROOT}` 疑未解析。→ ai-testings 的软提醒 hook 在 `codex exec` 下**不产生可见效果**。
+- ⚠️ 是否在**交互式 codex 会话**下 hook 的 systemMessage 会展示，无法用 `codex exec` 自动验证；Codex 官方 hook 输出契约文档抓取受阻（learn.chatgpt.com SPA + 网络限制），未能确认格式细节。
+- **结论**：Codex 侧 hook **声明就绪、触发机制存在，但实效待定**（需交互会话或官方契约确认）；Claude 侧 hook 完全可用、不受影响。manifest 保留 `"hooks": "./hooks/hooks.json"` 声明。
 
 ## test-writer（命名 agent）
 
