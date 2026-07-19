@@ -5,6 +5,7 @@
   "author": { "name": "wangx" },
   "keywords": ["java", "testing", "junit5", "mybatis-plus", "integration-test"],
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "AI Testings",
     "shortDescription": "Java 测试需求审查与单测生成",
