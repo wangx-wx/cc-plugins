@@ -26,6 +26,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 ## 阶段2：并行启动 4 个 Review Agents
 
 使用 Agent tool 在一条消息中同时启动 4 个Agent（`subagent_type: "general-purpose"`），每个代理独立完成各自的检查任务并返回结果，主 Agent 不参与具体的检查过程，仅负责收集结果。
+忽略 `pom.xml`文件的审查
 
 并行启动以下 4 个子 Agent：
 

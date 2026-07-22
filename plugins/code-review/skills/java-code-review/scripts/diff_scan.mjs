@@ -8,7 +8,7 @@
  * - 支持优先级过滤（默认 2 级）
  *
  * 用法:
- *   node diff_scan.mjs <repo> --source <branch> [--target <branch>] [--priority <1-5>] [-v]
+ *   node diff_scan.mjs <repo> --source <branch> [--target <branch>] [--priority <0-5>] [-v]
  */
 
 import { spawnSync } from "node:child_process";
@@ -63,8 +63,9 @@ const P3C_RULESETS = [
 
 // Priority 到 BlockLevel 的映射
 const PRIORITY_TO_BLOCK_LEVEL = {
-  1: "Critical",
-  2: "Critical",
+  0: "Critical",
+  1: "Major",
+  2: "Major",
   3: "Major",
   4: "Minor",
   5: "Info",
@@ -78,7 +79,7 @@ function parseArgs(argv) {
   let repo = null;
   let source = null;
   let target = "origin/master";
-  let priority = 2;
+  let priority = 0;
   let verbose = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -89,7 +90,7 @@ function parseArgs(argv) {
       target = argv[++i];
     } else if (arg === "--priority" && i + 1 < argv.length) {
       priority = parseInt(argv[++i], 10);
-      if (isNaN(priority) || priority < 1 || priority > 5) {
+      if (isNaN(priority) || priority < 0 || priority > 5) {
         fatal("--priority 必须为 1-5 之间的整数");
       }
     } else if (arg === "--verbose" || arg === "-v") {

@@ -14,6 +14,7 @@ tools: Read, Glob, Grep, Bash
 
 ## 文件范围
 
+忽略 `pom.xml`文件的审查
 所有变更的 `.java` 文件，排除单元测试目录（`*/src/test/*`）。
 
 ## Diff 范围

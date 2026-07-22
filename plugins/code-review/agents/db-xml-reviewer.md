@@ -14,7 +14,7 @@ tools: Read, Glob, Grep, Bash
 
 ## 文件范围
 
-变更的 XML 文件，排除 `pom.xml`。主要针对 MyBatis mapper 等 ORM 配置文件。
+变更的 XML 文件，忽略 `pom.xml`文件的审查。主要针对 MyBatis mapper 等 ORM 配置文件。
 
 ## Diff 范围
 
