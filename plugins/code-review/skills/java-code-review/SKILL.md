@@ -28,7 +28,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 使用 Agent tool 在一条消息中同时启动 4 个Agent（`subagent_type: "general-purpose"`），每个代理独立完成各自的检查任务并返回结果，主 Agent 不参与具体的检查过程，仅负责收集结果。
 忽略 `pom.xml`文件的审查
 
-并行启动以下 4 个子 Agent：
+并行启动以下 4 个子 Agent，不需要指导子Agent怎么审查：
 
 1. **P3C 规范检查**：派发Agent `p3c-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
 2. **Java 规范检查**：派发Agent `java-standards-reviewer`，同时传入 `{source}`、`{target}`、`{repo-path}`
