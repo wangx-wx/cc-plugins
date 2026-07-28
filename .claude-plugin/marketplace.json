@@ -96,6 +96,16 @@
       "license": "MIT",
       "homepage": "https://github.com/wangx-wx/cc-plugins",
       "repository": "https://github.com/wangx-wx/cc-plugins.git"
+    },
+    {
+      "name": "kb",
+      "source": "./plugins/kb-plugin",
+      "strict": true,
+      "description": "知识库检索插件",
+      "version": "1.0.0",
+      "license": "MIT",
+      "homepage": "https://github.com/wangx-wx/cc-plugins",
+      "repository": "https://github.com/wangx-wx/cc-plugins.git"
     }
   ]
 }

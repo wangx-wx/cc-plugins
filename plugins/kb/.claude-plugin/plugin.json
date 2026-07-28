@@ -1,0 +1,20 @@
+{
+    "name": "kb-plugin",
+    "description": "知识库插件",
+    "version": "1.0.0",
+    "author": {
+        "name": "wangx"
+    },
+    "repository": "https://github.com/wangx-wx/cc-plugins",
+    "license": "MIT",
+    "keywords": [
+        "knowledge-search"
+    ],
+    "agents": [
+    ],
+    "skills": [
+        "./skills/kb"
+    ],
+    "commands":[
+    ]
+}
