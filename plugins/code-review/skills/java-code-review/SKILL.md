@@ -40,7 +40,7 @@ allowed-tools: Bash(git:*), Bash(date:*), Bash(mkdir:*), AskUserQuestion, Agent,
 收集所有 Agent 返回的 JSON 数组结果，按以下步骤生成最终报告:
 
 1. **合并结果**：将 4 个 Agent 的 JSON 数组合并为一个结果报告
-2. **分级排列**：按 `blockLevel` 严重程度排序：Blocker → Critical → Major → Minor
+2. **分级排列**：按 `blockLevel` 严重程度排序：Blocker → Critical → Major → Minor，禁止修改子Agent返回的 `blockLevel` 字段值，禁止修改子Agent返回的 `ruleId` 字段值
 3. **生成报告**：按照 [assets/example-output.md](assets/example-output.md) 的格式输出最终 Markdown 报告，包含：
    - 审查范围（分支信息）
    - 统计（每个级别的问题数量）

@@ -101,3 +101,9 @@
 - 描述：Kafka、RocketMQ、RabbitMQ 等消息消费者在 info 级别输出消息体大小、编码、摘要、schema、字段数量等基本信息时，需要提醒评估消息量。若消费量较大，持续 info 日志仍可能造成日志噪声和存储成本
 - 判定条件：本次 diff 中新增或修改的消息消费逻辑内，`log.info(...)` 输出的是消息体元信息而非完整内容，如 body size、payload length、encoding、charset、schema、摘要 hash、字段数量等时触发；若已明确使用采样、限频或仅异常/低频路径输出，可不触发
 - 修复建议：评估 topic/consumer 的日均与峰值消息量；高频消费者建议降为 debug、采样输出、按异常场景输出，或仅保留关键链路定位字段
+
+## JAVA-00016 禁止使用 fastjson
+- 级别：Critical
+- 描述：禁止使用 `com.alibaba.fastjson`（fastjson 1.x）工具包。该库历史反序列化漏洞频发，autoType 多次被绕过导致远程代码执行（RCE），相关 CVE（如 CVE-2022-25845）至今仍有利用风险，且 1.x 已停止维护。注意：`com.alibaba.fastjson2` 是官方推出的安全升级版，不在此规则禁止范围内
+- 判定条件：本次 diff 中新增或修改的代码出现 `com.alibaba.fastjson.` 包下的 import（如 `com.alibaba.fastjson.JSON`、`com.alibaba.fastjson.JSONObject`）或相关 API 调用（`JSON.parseObject`、`JSON.toJSONString`、`JSONObject`、`JSONArray` 等）时触发；`com.alibaba.fastjson2.` 不触发
+- 修复建议：迁移到安全的 JSON 库——优先使用项目已集成的 Jackson（`ObjectMapper`）或 Gson；若需保持 fastjson API 风格，可升级到 `com.alibaba.fastjson2`
