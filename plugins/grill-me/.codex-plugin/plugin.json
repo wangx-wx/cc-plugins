@@ -1,0 +1,27 @@
+{
+  "name": "grill-me",
+  "version": "1.0.0",
+  "description": "追问插件",
+  "author": {
+    "name": "wangx"
+  },
+  "repository": "https://github.com/wangx-wx/cc-plugins",
+  "license": "MIT",
+  "keywords": [
+    "grill"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Grill Me",
+    "shortDescription": "通过追问澄清需求",
+    "longDescription": "通过持续追问帮助澄清需求与补全关键信息。",
+    "developerName": "wangx",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": [
+      "请通过追问帮我澄清这个需求。"
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "name": "grill-me",
+    "description": "追问插件",
+    "version": "1.0.0",
+    "author": {
+        "name": "wangx"
+    },
+    "repository": "https://github.com/wangx-wx/cc-plugins",
+    "license": "MIT",
+    "keywords": [
+        "grill"
+    ],
+    "skills": [
+        "./skills/grilling",
+        "./skills/teach",
+        "./skills/to-questionnaire"
+    ]
+}
