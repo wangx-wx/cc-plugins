@@ -44,8 +44,6 @@ schema_version: 1
 
 domains: []
 
-shared_scopes: []
-
 # domains \u6BCF\u9879\u7ED3\u6784\uFF1A
 # - id: <\u9879\u76EE\u5185\u552F\u4E00\u9886\u57DF ID>
 #   name: <\u9886\u57DF\u540D\u79F0>
@@ -64,11 +62,7 @@ shared_scopes: []
 # \u6216\uFF1A
 # - document_url: <\u8BED\u96C0\u6587\u6863 URL>
 #
-# shared_scopes \u6BCF\u9879\u7ED3\u6784\uFF1A
-# - id: <\u5171\u4EAB\u8303\u56F4 ID>
-#   package: <\u5B8C\u6574\u5305\u540D>
-#   module_ids: []
-#   owners: []
+# \u586B\u5199\u8BF4\u660E\u548C\u5B8C\u6574\u793A\u4F8B\u89C1 Skill \u7684 references/domain-scope.md\u3002
 `;
 async function exists(file) {
   try {

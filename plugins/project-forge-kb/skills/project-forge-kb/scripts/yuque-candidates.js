@@ -22339,7 +22339,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 var execFileAsync = promisify(execFile);
 function stringArray(value, field, errors) {
-  if (value === void 0) return [];
+  if (value === void 0 || value === null) return [];
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
     errors.push(`${field} \u5FC5\u987B\u662F\u975E\u7A7A\u5B57\u7B26\u4E32\u6570\u7EC4`);
     return [];
@@ -22445,7 +22445,7 @@ async function validateScope(repoRoot, raw) {
       return normalized;
     };
     const yuqueSources = [];
-    if (item.yuque_sources !== void 0 && !Array.isArray(item.yuque_sources)) {
+    if (item.yuque_sources !== void 0 && item.yuque_sources !== null && !Array.isArray(item.yuque_sources)) {
       errors.push(`${prefix}.yuque_sources \u5FC5\u987B\u662F\u6570\u7EC4`);
     }
     for (const [sourceIndex, source] of (Array.isArray(item.yuque_sources) ? item.yuque_sources : []).entries()) {

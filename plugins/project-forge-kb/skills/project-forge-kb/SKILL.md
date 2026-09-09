@@ -22,7 +22,8 @@ description: 从人工划定的领域范围构建或重建单仓知识库，归�
 
 ## 选择流程
 
-- 缺少 `docs/kb/domain-scope.yaml` 时，先运行 `node <skill-dir>/scripts/scope-init.js`，再运行 `node <skill-dir>/scripts/yuque-books.js`，向用户列出知识库名称及可填写的 `base_slug`，然后停止并等待人工填写。不得使用空 `domains` 继续。
+- 缺少 `docs/kb/domain-scope.yaml` 时，先运行 `node <skill-dir>/scripts/scope-init.js`，再运行 `node <skill-dir>/scripts/yuque-books.js`，向用户列出知识库名称及可填写的 `base_slug`，并依据 [领域范围配置](references/domain-scope.md) 展示字段说明和完整 Demo，然后停止并等待人工填写。不得使用空 `domains` 继续。
+- 用户询问 `domain-scope.yaml` 的字段、数组写法或校验规则时，读取 [领域范围配置](references/domain-scope.md)。
 - 用户询问可用语雀知识库或不确定 `base_slug` 时，运行 `node <skill-dir>/scripts/yuque-books.js` 并展示返回的 `name` 与 `slug`，不得猜测或改写 slug。
 - 文件存在时，运行 `node <skill-dir>/scripts/scope-check.js`。校验失败立即停止；严格使用输出的 `domain_order`，不得重排、增删、推断或合并领域。
 - 建设仓库时，完整读取并执行 [领域工作流](references/domain-workflow.md)，一次只处理一个领域。
