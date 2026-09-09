@@ -1,0 +1,21 @@
+{
+    "name": "project-forge-kb",
+    "description": "项目知识库",
+    "version": "1.0.0",
+    "author": {
+        "name": "wangx"
+    },
+    "repository": "https://github.com/wangx-wx/cc-plugins",
+    "license": "MIT",
+    "keywords": [
+        "project",
+        "knowledge-base"
+    ],
+    "agents": [
+    ],
+    "skills": [
+        "./skills/project-forge-kb"
+    ],
+    "commands":[
+    ]
+}
