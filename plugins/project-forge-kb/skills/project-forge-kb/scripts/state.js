@@ -27,6 +27,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/artifacts.js
 import { createHash } from "node:crypto";
@@ -119,6 +125,10 @@ function relativePosix(from, to) {
 
 // src/state.js
 var execFileAsync = promisify(execFile);
+var HELP = `Usage: state.js [--repo-root <path>] [--kb-root <path>]
+
+Write docs/kb/.meta/source-state.json for the current repository state.
+Run from the target repository root unless --repo-root is provided.`;
 async function git(repoRoot, args) {
   return (await execFileAsync("git", args, { cwd: repoRoot })).stdout.trim();
 }
@@ -143,7 +153,9 @@ function filesForDomain(files, domain) {
   return included.filter((file) => !(domain.exclude_files || []).includes(file) && !(domain.exclude_packages || []).some((packageName) => packageMatches(file, packageName)));
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
   const scopePath = path2.join(kbRoot, "domain-scope.yaml");

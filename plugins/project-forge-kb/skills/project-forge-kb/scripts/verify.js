@@ -25,6 +25,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/artifacts.js
 import { access, readFile, readdir } from "node:fs/promises";
@@ -123,6 +129,10 @@ var L0_REQUIRED = ["layer", "title", "description"];
 var L1_REQUIRED = ["id", "layer", "title", "description", "status", "owner"];
 var ADR_REQUIRED = ["id", "layer", "domain", "title", "date"];
 var ARCHIVE_REQUIRED = ["type", "docId", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
+var HELP = `Usage: verify.js [--repo-root <path>] [--kb-root <path>]
+
+Validate L0, L1, ADR, archive, metadata, and relative links.
+Run from the target repository root unless --repo-root is provided.`;
 function finding(code, file, message) {
   return { code, path: file, message };
 }
@@ -150,7 +160,9 @@ function markdownDestinations(markdown) {
   return destinations;
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
   const errors = [];

@@ -13564,6 +13564,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // node_modules/zod/v4/core/core.js
 var NEVER = Object.freeze({
@@ -22481,6 +22487,10 @@ async function validateScope(repoRoot, raw) {
 }
 
 // src/yuque-candidates.js
+var HELP = `Usage: yuque-candidates.js --domain <domain_id> [--repo-root <path>]
+
+Search configured Yuque sources and refresh the human review candidate file.
+Run from the target repository root unless --repo-root is provided.`;
 function candidateKey(candidate) {
   const documentUrl = candidate.document_url || candidate.url;
   return documentUrl ? `url:${documentUrl}` : `doc:${candidate.doc_id}`;
@@ -22590,7 +22600,9 @@ async function generateYuqueCandidates({ repoRoot, domainId, search }) {
   };
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
   printJson(await generateYuqueCandidates({
     repoRoot: path2.resolve(args.repoRoot || process.cwd()),

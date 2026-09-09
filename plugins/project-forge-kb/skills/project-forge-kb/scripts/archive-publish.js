@@ -7312,6 +7312,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/archive.js
 import { createHash } from "node:crypto";
@@ -13048,11 +13054,16 @@ function sha256(content) {
 }
 
 // src/archive-publish.js
+var HELP = `Usage: archive-publish.js --staging <path>
+
+Validate a completed staging archive and atomically publish it.`;
 function assertComplete(value, label) {
   if (!value || String(value).includes("TODO")) throw new Error(`${label} \u5C1A\u672A\u5B8C\u6210`);
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   if (!args.staging) throw new Error("\u7F3A\u5C11 --staging");
   const stagingPath = path.resolve(args.staging);
   const manifest = JSON.parse(await readFile(path.join(stagingPath, "manifest.json"), "utf8"));

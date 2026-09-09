@@ -25,6 +25,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/artifacts.js
 import { access, readFile, readdir } from "node:fs/promises";
@@ -112,6 +118,10 @@ function isCurrentStatus(status) {
 // src/index.js
 var START = "<!-- kb-index:start -->";
 var END = "<!-- kb-index:end -->";
+var HELP = `Usage: index.js [--repo-root <path>] [--kb-root <path>]
+
+Rebuild only the generated index section in docs/kb/L0-MAP.md.
+Run from the target repository root unless --repo-root is provided.`;
 function cell(value) {
   return String(value ?? "").replaceAll("|", "\\|").replace(/\r?\n/g, " ");
 }
@@ -198,7 +208,9 @@ function markerPosition(markdown, marker, label) {
   return first;
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
   const l0Path = path2.join(kbRoot, "L0-MAP.md");

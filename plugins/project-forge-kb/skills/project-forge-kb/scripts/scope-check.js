@@ -25,6 +25,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/scope.js
 import { execFile } from "node:child_process";
@@ -6429,8 +6435,14 @@ var DOMAIN_WORKFLOW = [
 ];
 
 // src/scope-check.js
+var HELP = `Usage: scope-check.js [--repo-root <path>] [--scope <path>] [--output <path>]
+
+Validate the human-owned domain scope and write the resolved machine snapshot.
+Run from the target repository root unless --repo-root is provided.`;
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const loaded = await loadScope(repoRoot, args.scope || "docs/kb/domain-scope.yaml");
   const result = await validateScope(repoRoot, loaded.value);

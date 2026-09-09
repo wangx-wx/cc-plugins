@@ -7296,6 +7296,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // node_modules/zod/v4/core/core.js
 var NEVER = Object.freeze({
@@ -16059,6 +16065,10 @@ function structuredToolResult(result) {
 }
 
 // src/yuque-books.js
+var HELP = `Usage: yuque-books.js
+
+List available Yuque knowledge-base names and slugs as JSON.
+No arguments are required.`;
 function normalizeYuqueBooks(result) {
   if (!result || typeof result !== "object" || !Array.isArray(result.books)) {
     throw new Error(`${YUQUE_LIST_BOOKS_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 books`);
@@ -16086,6 +16096,7 @@ async function listYuqueBooks({ list } = {}) {
   return normalizeYuqueBooks(await runList());
 }
 async function main() {
+  if (printHelp(process.argv.slice(2), HELP)) return;
   printJson(await listYuqueBooks());
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

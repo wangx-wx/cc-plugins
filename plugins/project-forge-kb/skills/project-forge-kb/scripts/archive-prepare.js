@@ -7311,6 +7311,12 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/archive.js
 import { createHash } from "node:crypto";
@@ -16401,8 +16407,17 @@ async function nextArchiveId(archiveRoot, baseId) {
 }
 
 // src/archive-prepare.js
+var HELP = `Usage:
+  archive-prepare.js --from-file <repo-relative-md> [--name <name>]
+  archive-prepare.js --from-yuque --document-url <url> [--name <name>]
+  archive-prepare.js --from-yuque --doc-id <id> [--name <name>]
+
+Options: [--repo-root <path>] [--storage-dir <path>]
+Prepare an immutable archive in staging and print its paths as JSON.`;
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const archiveRoot = path2.resolve(repoRoot, args.storageDir || "docs/kb/archive");
   const sourceModes = [Boolean(args.fromFile), Boolean(args.fromYuque)].filter(Boolean).length;

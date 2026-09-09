@@ -6255,8 +6255,18 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/yuque-selection.js
+var HELP = `Usage: yuque-selection.js --domain <domain_id> [--repo-root <path>]
+
+Validate human candidate decisions and output approved Yuque documents.
+Run from the target repository root unless --repo-root is provided.`;
 async function readYuqueSelection(repoRoot, domainId) {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(domainId)) throw new Error("\u9886\u57DF ID \u683C\u5F0F\u65E0\u6548");
   const file = path.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
@@ -6293,7 +6303,9 @@ async function readYuqueSelection(repoRoot, domainId) {
   };
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
   printJson(await readYuqueSelection(path.resolve(args.repoRoot || process.cwd()), args.domain));
 }

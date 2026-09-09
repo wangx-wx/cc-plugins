@@ -25,8 +25,18 @@ function printJson(value) {
   process.stdout.write(`${JSON.stringify(value, null, 2)}
 `);
 }
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
 
 // src/scope-init.js
+var HELP = `Usage: scope-init.js [--repo-root <path>] [--output <path>]
+
+Create docs/kb/domain-scope.yaml as an empty, human-owned skeleton.
+Run from the target repository root unless --repo-root is provided.`;
 var TEMPLATE = `# \u672C\u6587\u4EF6\u7531 scope-init.js \u521B\u5EFA\u9AA8\u67B6\uFF0C\u9886\u57DF\u5185\u5BB9\u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u3002
 # \u811A\u672C\u548C Agent \u4E0D\u5F97\u81EA\u52A8\u65B0\u589E\u3001\u62C6\u5206\u3001\u5408\u5E76\u6216\u4FEE\u6539\u6B63\u5F0F\u9886\u57DF\u3002
 
@@ -70,7 +80,9 @@ async function exists(file) {
   }
 }
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
   const repoRoot = path.resolve(args.repoRoot || process.cwd());
   const output = path.resolve(repoRoot, args.output || "docs/kb/domain-scope.yaml");
   const relative = path.relative(repoRoot, output);
