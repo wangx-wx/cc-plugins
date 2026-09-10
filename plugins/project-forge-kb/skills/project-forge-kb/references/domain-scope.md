@@ -30,7 +30,6 @@ schema_version: 1
 domains:
   - id: payment
     name: 支付
-    owner: payment-team
     status: active
     include_packages:
       - com.example.payment
@@ -51,7 +50,6 @@ domains:
 
   - id: device
     name: 设备
-    owner: device-team
     status: active
     include_packages: []
     include_files:

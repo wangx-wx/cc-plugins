@@ -14,6 +14,8 @@ node <skill-dir>/scripts/archive-domain.js --domain <domain_id>
 
 结果中的 `created_count` 表示新归档，`skipped_count` 表示来源未变化而复用现有归档。只有脚本成功返回后，才继续领域事实调查。
 
+archive 不归属于单个领域，而是按来源和版本全局复用。同一项目文档或语雀文档出现在多个领域时，首次处理创建 archive，后续领域复用同一路径；每个领域的归档回执和 `.meta/domains/<domain_id>.json` 分别记录这条关联。
+
 ## 2. 失败处理
 
 项目文档存在未提交修改、语雀获取失败、摘要服务失败或归档校验失败时，停止当前领域并报告脚本错误。不要手动编辑 archive、机器状态或摘要结果，也不要用旧归档代替失败结果。

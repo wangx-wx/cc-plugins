@@ -47,7 +47,6 @@ domains: []
 # domains \u6BCF\u9879\u7ED3\u6784\uFF1A
 # - id: <\u9879\u76EE\u5185\u552F\u4E00\u9886\u57DF ID>
 #   name: <\u9886\u57DF\u540D\u79F0>
-#   owner: <\u8D1F\u8D23\u4EBA\u6216\u56E2\u961F>
 #   status: active
 #   include_packages: []
 #   include_files: []

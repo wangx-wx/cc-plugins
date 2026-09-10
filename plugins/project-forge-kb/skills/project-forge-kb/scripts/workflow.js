@@ -6463,7 +6463,6 @@ async function validateScope(repoRoot, raw) {
     domains.push({
       id,
       name: typeof item.name === "string" ? item.name.trim() : id,
-      owner: typeof item.owner === "string" ? item.owner.trim() : "",
       status,
       include_packages: includePackages,
       include_files: await normalizePaths(includeFiles, "include_files", true),
@@ -6533,7 +6532,7 @@ async function writeRun(repoRoot, run) {
   await rename(temporary, output);
 }
 async function updateDomainMeta(repoRoot, domainId, update) {
-  const output = path2.join(repoRoot, "docs", "kb", ".meta", "L1", `${domainId}.json`);
+  const output = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
   const value = JSON.parse(await readFile2(output, "utf8"));
   update(value);
   const temporary = `${output}.${process.pid}.tmp`;
@@ -6648,20 +6647,20 @@ async function completeStep(repoRoot, step, domainId) {
   }
   if (step !== expected) throw new Error(`\u5F53\u524D\u5E94\u5B8C\u6210\u6B65\u9AA4 ${expected}\uFF0C\u4E0D\u80FD\u6807\u8BB0 ${step}`);
   if (step === "code-facts") {
-    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", `${domainId}.md`);
-    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}.md`);
+    const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
+    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/domains/${domainId}/README.md`);
     const l1 = parseFrontmatter(await readFile2(l1Path, "utf8"));
     if (l1.data.id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
     const meta = {
       schema_version: 1,
-      l1_id: domainId,
+      domain_id: domainId,
       source_commit: run.source_commit,
       scope: domain,
       observed: {},
       documents: [],
       candidates: []
     };
-    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "L1", `${domainId}.json`);
+    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
     await mkdir(path2.dirname(metaPath), { recursive: true });
     const temporary = `${metaPath}.${process.pid}.tmp`;
     await writeFile(temporary, `${JSON.stringify(meta, null, 2)}
@@ -6698,7 +6697,7 @@ async function completeStep(repoRoot, step, domainId) {
     }
   }
   if (step === "domain-knowledge") {
-    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", `${domainId}.md`);
+    const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
     const l1 = await readFile2(l1Path, "utf8");
     for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
       if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);

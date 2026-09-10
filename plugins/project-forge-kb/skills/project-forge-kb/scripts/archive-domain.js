@@ -13696,7 +13696,6 @@ async function validateScope(repoRoot, raw) {
     domains.push({
       id,
       name: typeof item.name === "string" ? item.name.trim() : id,
-      owner: typeof item.owner === "string" ? item.owner.trim() : "",
       status,
       include_packages: includePackages,
       include_files: await normalizePaths(includeFiles, "include_files", true),
@@ -22951,7 +22950,7 @@ async function archiveDomain({ repoRoot, domainId, summarize }) {
     const staged = await createStaging({
       repoRoot,
       archiveRoot,
-      name: `${domainId}-${source.title}`,
+      name: source.title,
       source,
       summarize
     });

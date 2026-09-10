@@ -126,7 +126,7 @@ function relativePosix(from, to) {
 
 // src/verify.js
 var L0_REQUIRED = ["layer", "title", "description"];
-var L1_REQUIRED = ["id", "layer", "title", "description", "status", "owner"];
+var L1_REQUIRED = ["id", "layer", "title", "description", "status"];
 var ADR_REQUIRED = ["id", "layer", "domain", "title", "date"];
 var ARCHIVE_REQUIRED = ["type", "docId", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
 var HELP = `Usage: verify.js [--repo-root <path>] [--kb-root <path>]
@@ -139,8 +139,8 @@ function finding(code, file, message) {
 function missing(data, fields) {
   return fields.filter((field) => data[field] === void 0 || data[field] === null || data[field] === "" || Array.isArray(data[field]) && data[field].length === 0);
 }
-function validMetaL1(value) {
-  return value && typeof value === "object" && !Array.isArray(value) && value.schema_version === 1 && typeof value.l1_id === "string" && value.l1_id.length > 0 && typeof value.source_commit === "string" && value.source_commit.length > 0 && value.scope && typeof value.scope === "object" && !Array.isArray(value.scope) && value.observed && typeof value.observed === "object" && !Array.isArray(value.observed) && Array.isArray(value.documents) && Array.isArray(value.candidates);
+function validDomainMeta(value) {
+  return value && typeof value === "object" && !Array.isArray(value) && value.schema_version === 1 && typeof value.domain_id === "string" && value.domain_id.length > 0 && typeof value.source_commit === "string" && value.source_commit.length > 0 && value.scope && typeof value.scope === "object" && !Array.isArray(value.scope) && value.observed && typeof value.observed === "object" && !Array.isArray(value.observed) && Array.isArray(value.documents) && Array.isArray(value.candidates);
 }
 function markdownDestinations(markdown) {
   const destinations = [];
@@ -167,7 +167,7 @@ async function main() {
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
   const errors = [];
   const warnings = [];
-  const l0Path = path2.join(kbRoot, "L0-MAP.md");
+  const l0Path = path2.join(kbRoot, "L0.md");
   let l0 = "";
   try {
     l0 = await readFile2(l0Path, "utf8");
@@ -184,31 +184,31 @@ async function main() {
       errors.push(finding("L0_LAYER_INVALID", relativePosix(repoRoot, l0Path), "layer \u5FC5\u987B\u4E3A L0"));
     }
   }
-  const l1Files = await listFiles(path2.join(kbRoot, "L1"), (file) => file.endsWith(".md"));
+  const domainsRoot = path2.join(kbRoot, "domains");
+  const l1Files = await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2);
   const l1Items = await Promise.all(l1Files.map(readMarkdownFrontmatter));
   const ids = /* @__PURE__ */ new Map();
   for (const item of l1Items) {
     const relative = relativePosix(repoRoot, item.file);
-    const fileId = path2.basename(item.file, ".md");
+    const fileId = path2.basename(path2.dirname(item.file));
     const absent = missing(item.data, L1_REQUIRED);
     if (absent.length) errors.push(finding("L1_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
     if (item.data.layer !== void 0 && item.data.layer !== "L1") errors.push(finding("L1_LAYER_INVALID", relative, "layer \u5FC5\u987B\u4E3A L1"));
-    if (item.data.id && item.data.id !== fileId) errors.push(finding("L1_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E Markdown id ${item.data.id} \u4E0D\u4E00\u81F4`));
+    if (item.data.id && item.data.id !== fileId) errors.push(finding("L1_ID_MISMATCH", relative, `\u9886\u57DF\u76EE\u5F55 ${fileId} \u4E0E Markdown id ${item.data.id} \u4E0D\u4E00\u81F4`));
     if (item.data.id) {
       const previous = ids.get(item.data.id);
       if (previous) errors.push(finding("L1_ID_DUPLICATE", relative, `id ${item.data.id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
       else ids.set(item.data.id, relative);
     }
   }
-  const adrRoot = path2.join(kbRoot, "adr");
-  const adrFiles = await listFiles(adrRoot, (file) => file.endsWith(".md"));
+  const adrFiles = await listFiles(domainsRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
   const adrItems = await Promise.all(adrFiles.map(readMarkdownFrontmatter));
   const adrIds = /* @__PURE__ */ new Map();
   for (const item of adrItems) {
     const relative = relativePosix(repoRoot, item.file);
-    const relativeAdr = path2.relative(adrRoot, item.file);
+    const relativeAdr = path2.relative(domainsRoot, item.file);
     const segments = relativeAdr.split(path2.sep);
-    const directoryDomain = segments.length === 2 ? segments[0] : "";
+    const directoryDomain = segments.length === 3 && segments[1] === "adr" ? segments[0] : "";
     const filename = path2.basename(item.file, ".md");
     const absent = missing(item.data, ADR_REQUIRED);
     if (absent.length) errors.push(finding("ADR_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
@@ -217,7 +217,7 @@ async function main() {
     const filenameMatch = filename.match(/^(\d{4})-.+/);
     if (!filenameMatch) errors.push(finding("ADR_FILENAME_INVALID", relative, "ADR \u6587\u4EF6\u540D\u5FC5\u987B\u4F7F\u7528\u56DB\u4F4D\u7F16\u53F7\u548C\u63CF\u8FF0\uFF0C\u4F8B\u5982 0001-use-snapshot.md"));
     if (!directoryDomain || item.data.domain !== directoryDomain) {
-      errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E adr/<domain>/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
+      errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E domains/<domain>/adr/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
     }
     if (filenameMatch && directoryDomain && item.data.id && item.data.id !== `ADR-${directoryDomain}-${filenameMatch[1]}`) {
       errors.push(finding("ADR_ID_MISMATCH", relative, `ADR id \u5FC5\u987B\u4E3A ADR-${directoryDomain}-${filenameMatch[1]}`));
@@ -238,21 +238,38 @@ async function main() {
       errors.push(finding("META_JSON_INVALID", relative, error.message));
     }
   }
-  const metaRoot = path2.join(kbRoot, ".meta", "L1");
+  const metaRoot = path2.join(kbRoot, ".meta", "domains");
   const metaFiles = jsonFiles.filter((file) => path2.dirname(file) === metaRoot);
   for (const file of metaFiles) {
     const relative = relativePosix(repoRoot, file);
     const value = jsonValues.get(file);
     if (!value) continue;
-    if (!validMetaL1(value)) {
-      errors.push(finding("L1_META_SCHEMA_INVALID", relative, "\u5FC5\u987B\u5305\u542B schema_version=1\u3001l1_id\u3001source_commit\u3001scope\u3001observed\u3001documents \u548C candidates"));
+    if (!validDomainMeta(value)) {
+      errors.push(finding("DOMAIN_META_SCHEMA_INVALID", relative, "\u5FC5\u987B\u5305\u542B schema_version=1\u3001domain_id\u3001source_commit\u3001scope\u3001observed\u3001documents \u548C candidates"));
       continue;
     }
     const fileId = path2.basename(file, ".json");
-    if (value.l1_id !== fileId) errors.push(finding("L1_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E l1_id ${value.l1_id} \u4E0D\u4E00\u81F4`));
-    const markdown = l1Items.find((item) => path2.basename(item.file, ".md") === path2.basename(file, ".json"));
-    if (markdown && markdown.data.id !== value.l1_id) {
-      errors.push(finding("L1_ID_MISMATCH", relative, `Markdown id ${markdown.data.id || "(\u7F3A\u5931)"} \u4E0E l1_id ${value.l1_id} \u4E0D\u4E00\u81F4`));
+    if (value.domain_id !== fileId) errors.push(finding("DOMAIN_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
+    const markdown = l1Items.find((item) => path2.basename(path2.dirname(item.file)) === path2.basename(file, ".json"));
+    if (markdown && markdown.data.id !== value.domain_id) {
+      errors.push(finding("DOMAIN_ID_MISMATCH", relative, `Markdown id ${markdown.data.id || "(\u7F3A\u5931)"} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
+    }
+    const linkedArchives = new Set((markdown ? markdownDestinations(markdown.markdown) : []).map((destination) => path2.resolve(path2.dirname(markdown.file), destination)));
+    for (const document of value.documents) {
+      if (!document || typeof document.path !== "string" || !document.path) {
+        errors.push(finding("DOMAIN_ARCHIVE_REFERENCE_INVALID", relative, "documents \u4E2D\u7684\u5F52\u6863\u5FC5\u987B\u5305\u542B path"));
+        continue;
+      }
+      const archiveDirectory = path2.resolve(repoRoot, document.path);
+      const archiveRelative = path2.relative(path2.join(kbRoot, "archive"), archiveDirectory);
+      const summaryPath = path2.join(archiveDirectory, "summary.md");
+      if (!archiveRelative || archiveRelative.startsWith("..") || path2.isAbsolute(archiveRelative) || !await pathExists(summaryPath)) {
+        errors.push(finding("DOMAIN_ARCHIVE_MISSING", relative, `\u9886\u57DF\u5F52\u6863\u4E0D\u5B58\u5728: ${document.path}`));
+        continue;
+      }
+      if (!markdown || !linkedArchives.has(summaryPath)) {
+        errors.push(finding("DOMAIN_ARCHIVE_LINK_MISSING", relative, `\u9886\u57DF README \u672A\u94FE\u63A5\u5F52\u6863: ${document.path}/summary.md`));
+      }
     }
   }
   const summaryFiles = await listFiles(path2.join(kbRoot, "archive"), (file) => path2.basename(file) === "summary.md");
@@ -270,10 +287,10 @@ async function main() {
     const domainIds = new Set(scope.domains.map((domain) => domain.id));
     for (const domain of scope.domains) {
       const metaPath = path2.join(metaRoot, `${domain.id}.json`);
-      if (!await pathExists(metaPath)) warnings.push(finding("DOMAIN_L1_META_MISSING", relativePosix(repoRoot, metaPath), `\u9886\u57DF ${domain.id} \u7F3A\u5C11 L1 meta`));
+      if (!await pathExists(metaPath)) warnings.push(finding("DOMAIN_META_MISSING", relativePosix(repoRoot, metaPath), `\u9886\u57DF ${domain.id} \u7F3A\u5C11 domain meta`));
     }
     for (const item of adrItems) {
-      if (item.data.domain && item.data.domain !== "shared" && !domainIds.has(item.data.domain)) {
+      if (item.data.domain && !domainIds.has(item.data.domain)) {
         errors.push(finding("ADR_DOMAIN_UNKNOWN", relativePosix(repoRoot, item.file), `ADR \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u9886\u57DF: ${item.data.domain}`));
       }
     }

@@ -4,7 +4,7 @@
 
 ## 1. 调查代码事实
 
-把当前领域的代码调查派发给只读子代理，提供人工确认的 include/exclude 范围和 [L1 提取规范](l1-extraction.md)。主 Agent 汇总证据，使用模板生成或更新 `docs/kb/L1/<domain_id>.md` 的代码版草稿；观察和推断不得写成已确认规则。
+把当前领域的代码调查派发给只读子代理，提供人工确认的 include/exclude 范围和 [L1 提取规范](l1-extraction.md)。主 Agent 汇总证据，使用模板生成或更新 `docs/kb/domains/<domain_id>/README.md` 的代码版草稿；观察和推断不得写成已确认规则。
 
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step code-facts --domain <domain_id>
@@ -41,25 +41,17 @@ node <skill-dir>/scripts/workflow.js --complete-step archives --domain <domain_i
 
 ## 4. 调查归档事实
 
-把当前领域的归档调查派发给只读子代理。子代理先读相关摘要，按需读取 chunk，报告对领域上下文、术语、规则、边界和设计候选的支持、补充或冲突。主 Agent 综合代码与归档证据；冲突和推断继续作为候选。
+把当前领域的归档调查派发给只读子代理。子代理先读相关摘要，按需读取 chunk，报告对领域上下文、术语、规则、边界和设计候选的支持、补充或冲突；不提取所属团队或相关领域。主 Agent 综合代码与归档证据；冲突和推断继续作为候选。
 
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step archive-facts --domain <domain_id>
 ```
 
-## 5. 追问并形成领域知识
+## 5. 持续访谈并形成领域知识
 
-完整读取 [领域澄清与 ADR](domain-questioning.md)。可从仓库查明的事实继续交给子代理；需要业务判断、术语含义或原始设计原因时正常向用户追问，不限制轮数。互不依赖的问题尽量同轮提出，回答后重新判断是否仍有必要问题。
+完整执行 [领域建模访谈](domain-questioning.md)。以代码和归档调查得到的术语候选、ADR 问题候选为起点，建立设计树，按 frontier 分轮追问。每轮用户回答后重新计算设计树，并立即把满足准入条件的术语写入 L1 草稿、把满足准入条件的设计写入 ADR；不得根据扫描结果直接生成正式术语或 ADR。
 
-用户确认后：
-
-- 将领域背景、角色、业务阶段和对象关系写入“领域上下文”；
-- 将概念定义写入“术语”；
-- 将约束写入“已确认规则与不变量”；
-- 将具有长期价值且原因已确认的设计写入 `docs/kb/adr/<domain_id>/`；
-- 将无法获得解释的问题写入 `.review/<domain_id>/domain-questions.md`，不阻塞其他内容。
-
-完成 L1、ADR 和 `.review` 后运行：
+同时将人工确认的领域背景、规则和边界写入 L1，并把本领域机器元数据中关联的每个 archive 写入 README 的“归档资料”；同一个 archive 可以被多个领域 README 引用。将无法获得解释的问题写入 `.review/<domain_id>/domain-questions.md`。frontier 为空后，汇总 L1、ADR 和 `.review`；只有用户确认已经达到共同理解，才运行：
 
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step domain-knowledge --domain <domain_id>
@@ -77,7 +69,7 @@ node <skill-dir>/scripts/workflow.js --confirm-domain <domain_id>
 
 ## 7. 完成仓库
 
-所有领域确认后，派发仓库级只读子代理调查服务身份和系统边界。主 Agent 使用 `assets/L0-MAP.md` 创建或更新 L0 人工区，只保留“服务身份”和“系统边界”，并明确请用户 review。
+所有领域确认后，派发仓库级只读子代理调查服务身份和系统边界。主 Agent 使用 `assets/L0.md` 创建或更新 `docs/kb/L0.md` 人工区，只保留“服务身份”和“系统边界”，并明确请用户 review。
 
 用户完成 L0 review 后运行：
 

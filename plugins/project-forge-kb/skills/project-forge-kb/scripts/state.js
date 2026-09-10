@@ -181,14 +181,14 @@ async function main() {
   await ensureCleanForIncremental(repoRoot, output, kbRoot);
   const resolved = JSON.parse(await readFile2(resolvedPath, "utf8"));
   if (!Array.isArray(resolved.domains)) throw new Error("scope-resolved.json \u7F3A\u5C11 domains");
-  const l1MetaRoot = path2.join(kbRoot, ".meta", "L1");
-  const l1MetaFiles = await listFiles(l1MetaRoot, (file) => file.endsWith(".json"));
-  const l1Meta = await Promise.all(l1MetaFiles.map(async (file) => ({
+  const domainMetaRoot = path2.join(kbRoot, ".meta", "domains");
+  const domainMetaFiles = await listFiles(domainMetaRoot, (file) => file.endsWith(".json"));
+  const domainMeta = await Promise.all(domainMetaFiles.map(async (file) => ({
     domain_id: path2.basename(file, ".json"),
     path: relativePosix(repoRoot, file),
     hash: await hashFile(file)
   })));
-  const adrFiles = await listFiles(path2.join(kbRoot, "adr"), (file) => file.endsWith(".md"));
+  const adrFiles = await listFiles(path2.join(kbRoot, "domains"), (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
   const adrs = await Promise.all(adrFiles.map(async (file) => {
     const item = await readMarkdownFrontmatter(file);
     return {
@@ -230,7 +230,7 @@ async function main() {
       domain_scope: { path: relativePosix(repoRoot, scopePath), hash: await hashFile(scopePath) },
       scope_resolved: { path: relativePosix(repoRoot, resolvedPath), hash: await hashFile(resolvedPath) }
     },
-    l1_meta: l1Meta,
+    domain_meta: domainMeta,
     adrs,
     archives,
     code_files: codeFiles
@@ -244,7 +244,7 @@ async function main() {
     action: "baseline_written",
     path: relativePosix(repoRoot, output),
     source_commit: state.source_commit,
-    l1_meta_count: l1Meta.length,
+    domain_meta_count: domainMeta.length,
     adr_count: adrs.length,
     archive_count: archives.length,
     code_file_count: codeFiles.length

@@ -120,21 +120,13 @@ var START = "<!-- kb-index:start -->";
 var END = "<!-- kb-index:end -->";
 var HELP = `Usage: index.js [--repo-root <path>] [--kb-root <path>]
 
-Rebuild only the generated index section in docs/kb/L0-MAP.md.
+Rebuild only the generated index section in docs/kb/L0.md.
 Run from the target repository root unless --repo-root is provided.`;
 function cell(value) {
   return String(value ?? "").replaceAll("|", "\\|").replace(/\r?\n/g, " ");
 }
 function link(label, target) {
   return `[${cell(label)}](${target})`;
-}
-async function markdownFiles(directory) {
-  try {
-    return (await readdir2(directory, { withFileTypes: true })).filter((entry) => entry.isFile() && entry.name.endsWith(".md")).map((entry) => path2.join(directory, entry.name)).sort();
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    throw error;
-  }
 }
 async function archiveSummaries(directory) {
   try {
@@ -153,7 +145,7 @@ function table(headers, rows) {
     ...rows.map((row) => `| ${row.join(" | ")} |`)
   ].join("\n");
 }
-function renderIndex(l1Items, archiveItems, adrItems) {
+function renderIndex(kbRoot, l1Items, archiveItems, adrItems) {
   const groups = /* @__PURE__ */ new Map();
   for (const item of archiveItems) {
     const key = `${item.data.source_type}\0${item.data.source_ref}`;
@@ -177,10 +169,9 @@ function renderIndex(l1Items, archiveItems, adrItems) {
   return [
     "## \u9886\u57DF\u77E5\u8BC6\u7D22\u5F15",
     "",
-    table(["\u9886\u57DF", "\u8BF4\u660E", "\u8D1F\u8D23\u4EBA", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.id).localeCompare(String(b.data.id))).map((item) => [
-      link(item.data.title || item.data.id, `L1/${path2.basename(item.file)}`),
+    table(["\u9886\u57DF", "\u8BF4\u660E", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.id).localeCompare(String(b.data.id))).map((item) => [
+      link(item.data.title || item.data.id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
       cell(item.data.description),
-      cell(item.data.owner),
       cell(item.data.status)
     ])),
     "",
@@ -188,7 +179,7 @@ function renderIndex(l1Items, archiveItems, adrItems) {
     "",
     table(["\u9886\u57DF", "\u51B3\u7B56", "\u65E5\u671F"], adrItems.sort((a, b) => String(a.data.id).localeCompare(String(b.data.id))).map((item) => [
       cell(item.data.domain),
-      link(item.data.title || item.data.id, path2.relative(path2.join(path2.dirname(item.file), "..", ".."), item.file).split(path2.sep).join("/")),
+      link(item.data.title || item.data.id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
       cell(item.data.date)
     ])),
     "",
@@ -203,8 +194,8 @@ function renderIndex(l1Items, archiveItems, adrItems) {
 }
 function markerPosition(markdown, marker, label) {
   const first = markdown.indexOf(marker);
-  if (first < 0) throw new Error(`L0-MAP.md \u7F3A\u5C11 ${label} \u6807\u8BB0`);
-  if (markdown.indexOf(marker, first + marker.length) >= 0) throw new Error(`L0-MAP.md \u5305\u542B\u91CD\u590D\u7684 ${label} \u6807\u8BB0`);
+  if (first < 0) throw new Error(`L0.md \u7F3A\u5C11 ${label} \u6807\u8BB0`);
+  if (markdown.indexOf(marker, first + marker.length) >= 0) throw new Error(`L0.md \u5305\u542B\u91CD\u590D\u7684 ${label} \u6807\u8BB0`);
   return first;
 }
 async function main() {
@@ -213,21 +204,22 @@ async function main() {
   const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
-  const l0Path = path2.join(kbRoot, "L0-MAP.md");
+  const l0Path = path2.join(kbRoot, "L0.md");
   let markdown;
   try {
     markdown = await readFile2(l0Path, "utf8");
   } catch (error) {
-    if (error.code === "ENOENT") throw new Error("L0-MAP.md \u4E0D\u5B58\u5728\uFF1B\u5148\u4F7F\u7528 assets/L0-MAP.md \u521B\u5EFA\u5E76\u586B\u5199\u670D\u52A1\u8EAB\u4EFD\u548C\u7CFB\u7EDF\u8FB9\u754C");
+    if (error.code === "ENOENT") throw new Error("L0.md \u4E0D\u5B58\u5728\uFF1B\u5148\u4F7F\u7528 assets/L0.md \u521B\u5EFA\u5E76\u586B\u5199\u670D\u52A1\u8EAB\u4EFD\u548C\u7CFB\u7EDF\u8FB9\u754C");
     throw error;
   }
   const start = markerPosition(markdown, START, "\u5F00\u59CB");
   const end = markerPosition(markdown, END, "\u7ED3\u675F");
-  if (end < start) throw new Error("L0-MAP.md \u7684 kb-index \u6807\u8BB0\u987A\u5E8F\u9519\u8BEF");
-  const l1Items = await Promise.all((await markdownFiles(path2.join(kbRoot, "L1"))).map(readMarkdownFrontmatter));
+  if (end < start) throw new Error("L0.md \u7684 kb-index \u6807\u8BB0\u987A\u5E8F\u9519\u8BEF");
+  const domainsRoot = path2.join(kbRoot, "domains");
+  const l1Items = await Promise.all((await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2)).map(readMarkdownFrontmatter));
   const archiveItems = await Promise.all((await archiveSummaries(path2.join(kbRoot, "archive"))).map(readMarkdownFrontmatter));
-  const adrItems = await Promise.all((await listFiles(path2.join(kbRoot, "adr"), (file) => file.endsWith(".md"))).map(readMarkdownFrontmatter));
-  const generated = renderIndex(l1Items, archiveItems, adrItems);
+  const adrItems = await Promise.all((await listFiles(domainsRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"))).map(readMarkdownFrontmatter));
+  const generated = renderIndex(kbRoot, l1Items, archiveItems, adrItems);
   const updated = `${markdown.slice(0, start + START.length)}
 ${generated}
 ${markdown.slice(end)}`;
