@@ -1,53 +1,25 @@
 # 归档工作流
 
-对当前人工定义领域的每个项目文档，以及 `yuque-candidates.yaml` 中人工明确批准的每个语雀文档执行本流程。
+归档是领域级动作。Agent 不需要逐个来源管理暂存目录，也不需要手动串联准备与发布。
 
-## 1. 准备归档
+## 1. 执行当前领域归档
 
-不得对 `pending` 或 `rejected` 候选调用 `yuque_get_document`。任何 MCP 错误都必须停止流程并直接报告。
-
-项目文档：
+确认语雀候选已经由用户处理后，运行：
 
 ```bash
-node <skill-dir>/scripts/archive-prepare.js --from-file <仓库相对 Markdown 路径> --name <稳定名称>
+node <skill-dir>/scripts/archive-domain.js --domain <domain_id>
 ```
 
-语雀文档：
+脚本会读取当前领域的项目文档和 `yuque-candidates.yaml` 中 `approved` 的语雀文档，完成来源获取、变化判断、摘要、完整性校验和发布。`pending` 或 `rejected` 文档不会被获取。
 
-```bash
-node <skill-dir>/scripts/archive-prepare.js --from-yuque --document-url <url> --name <稳定名称>
-```
+结果中的 `created_count` 表示新归档，`skipped_count` 表示来源未变化而复用现有归档。只有脚本成功返回后，才继续领域事实调查。
 
-`--doc-id <id>` 只用于过渡兼容。正常知识库建设必须使用已批准的 `document_url`。脚本输出 JSON：
+## 2. 失败处理
 
-- `action: skipped`：来源版本未变化，使用已有 archive。
-- `action: staged`：继续处理返回的 `staging_path`。
+项目文档存在未提交修改、语雀获取失败、摘要服务失败或归档校验失败时，停止当前领域并报告脚本错误。不要手动编辑 archive、机器状态或摘要结果，也不要用旧归档代替失败结果。
 
-不得归档未跟踪或有未提交修改的项目文档，否则无法确定其来源 commit。
+`archive-prepare.js` 和 `archive-publish.js` 仍可用于脚本开发或单来源诊断，但不属于正常知识库建设步骤。
 
-## 2. 完成摘要
+## 3. 增量行为
 
-在 `staging_path` 内：
-
-1. 按顺序读取 `chunks/*.md`。
-2. 将每个 chunk frontmatter 的 `title` 替换为简洁、可搜索的名词短语。
-3. 将每个 chunk 的 `summary` 替换为不超过 50 个中文字符的准确摘要；其他语言使用同等简洁的一句话。
-4. 不得修改 chunk 正文。
-5. 完成 `summary.md`：保留全部来源字段，提供 3 至 7 个 `keyTopics`、简短概述和 `## 涵盖内容` 列表。
-6. 不得修改 `original.md` 或 `manifest.json`。
-
-来源元数据属于权威机器数据。不得推断或修改 `source_commit`、`source_updated_at`、`source_hash`、`source_ref`、`doc_id` 或 `archived_at`。
-
-## 3. 发布归档
-
-```bash
-node <skill-dir>/scripts/archive-publish.js --staging <staging_path>
-```
-
-摘要仍含 `TODO`、chunk 正文变化、必填元数据缺失或最终路径越出 archive 根目录时，发布必须失败。发布成功后，使用返回的不可变 archive 路径提取知识。
-
-## 增量标记
-
-- 项目文档：`git log -1 --format=%H -- <path>` 返回的 commit。
-- 语雀文档：`yuque_get_document` 返回的 `content_updated_at`，缺失时回退到 `updated_at`。
-- `source_hash`：只用于完整性校验和诊断，不作为主要变更标记。
+项目文档按可追溯的代码版本判断，语雀文档按来源更新时间判断。未变化来源跳过并保留现有归档；变化来源生成新的不可变快照，旧快照继续保留为历史记录。

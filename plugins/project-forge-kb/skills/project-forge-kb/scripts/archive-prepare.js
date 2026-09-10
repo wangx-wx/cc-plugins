@@ -16199,6 +16199,7 @@ var StreamableHTTPClientTransport = class {
 
 // src/mcp-client.js
 var YUQUE_GET_TOOL = "yuque_get_document";
+var DOC_SUMMARIZE_TOOL = "doc_extract_and_summarize";
 var MCP_URL = "http://192.168.0.22:3000/mcp";
 async function withMcpClient(callback) {
   const client = new Client({ name: "lyy-kb-scripts", version: "0.1.0" });
@@ -16332,7 +16333,45 @@ function sourceUnchanged(current, source) {
   if (source.sourceType === "repo") return current.data.source_commit === source.sourceCommit;
   return current.data.source_updated_at === source.sourceUpdatedAt;
 }
-async function createStaging({ repoRoot, archiveRoot, name, source }) {
+function normalizeDocumentSummary(result, chunks) {
+  const summary = typeof result.summary === "string" ? result.summary.trim() : "";
+  const topics = Array.isArray(result.topics) && result.topics.length > 0 ? result.topics : result.keywords;
+  if (!summary) throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 summary`);
+  if (!Array.isArray(topics) || topics.length === 0 || topics.some((item) => typeof item !== "string" || !item.trim())) {
+    throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 topics`);
+  }
+  if (!Array.isArray(result.chunks) || result.chunks.length !== chunks.length) {
+    throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u7684 chunks \u6570\u91CF\u4E0E\u672C\u5730\u5207\u5206\u4E0D\u4E00\u81F4`);
+  }
+  const summaries = /* @__PURE__ */ new Map();
+  for (const item of result.chunks) {
+    if (!Number.isInteger(item.index) || item.index < 0 || item.index >= chunks.length) {
+      throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u4E86\u65E0\u6548 chunk index`);
+    }
+    if (summaries.has(item.index)) throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u4E86\u91CD\u590D chunk index`);
+    if (typeof item.title !== "string" || !item.title.trim() || typeof item.summary !== "string" || !item.summary.trim()) {
+      throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u7684 chunk \u6458\u8981\u4E0D\u5B8C\u6574`);
+    }
+    summaries.set(item.index, { title: item.title.trim(), summary: item.summary.trim() });
+  }
+  if (summaries.size !== chunks.length) throw new Error(`${DOC_SUMMARIZE_TOOL} \u672A\u8986\u76D6\u5168\u90E8 chunk`);
+  return {
+    title: typeof result.title === "string" && result.title.trim() ? result.title.trim() : null,
+    keyTopics: topics.map((item) => item.trim()),
+    summary,
+    chunks: chunks.map((_, index) => summaries.get(index))
+  };
+}
+async function summarizeDocument(source, chunks) {
+  const result = structuredToolResult(await callMcpTool(DOC_SUMMARIZE_TOOL, {
+    content: source.content,
+    title: source.title,
+    max_keywords: 7,
+    include_chunk_summaries: true
+  }));
+  return normalizeDocumentSummary(result, chunks);
+}
+async function createStaging({ repoRoot, archiveRoot, name, source, summarize = summarizeDocument }) {
   const now = /* @__PURE__ */ new Date();
   const date4 = now.toISOString().slice(0, 10);
   const baseId = `${date4}-${source.sourceType}-${slugify(name || source.title)}`;
@@ -16342,6 +16381,7 @@ async function createStaging({ repoRoot, archiveRoot, name, source }) {
   const finalPath = path.join(archiveRoot, archiveId);
   const chunks = chunkText(source.content);
   if (chunks.length === 0) throw new Error("\u6765\u6E90\u6587\u6863\u4E3A\u7A7A");
+  const documentSummary = await summarize(source, chunks);
   await mkdir(path.join(stagingPath, "chunks"), { recursive: true });
   await writeFile(path.join(stagingPath, "original.md"), source.content, "utf8");
   const common = {
@@ -16358,11 +16398,15 @@ async function createStaging({ repoRoot, archiveRoot, name, source }) {
     type: "doc-summary",
     docId: archiveId,
     title: source.title,
-    keyTopics: ["TODO"],
+    keyTopics: documentSummary.keyTopics,
     ...common
-  }) + `# ${source.title}
+  }) + `# ${documentSummary.title || source.title}
 
-TODO: \u8BF7\u751F\u6210\u6587\u6863\u6982\u8FF0\u548C\u6DB5\u76D6\u5185\u5BB9\u3002
+${documentSummary.summary}
+
+## \u6DB5\u76D6\u5185\u5BB9
+
+${documentSummary.keyTopics.map((topic) => `- ${topic}`).join("\n")}
 `;
   await writeFile(path.join(stagingPath, "summary.md"), summary, "utf8");
   const chunkHashes = [];
@@ -16373,8 +16417,8 @@ TODO: \u8BF7\u751F\u6210\u6587\u6863\u6982\u8FF0\u548C\u6DB5\u76D6\u5185\u5BB9\u
       type: "chunk",
       docId: archiveId,
       index,
-      title: extractHeading(content, "TODO"),
-      summary: "TODO",
+      title: documentSummary.chunks[index].title || extractHeading(content, source.title),
+      summary: documentSummary.chunks[index].summary,
       prev: index > 0 ? index - 1 : null,
       next: index < chunks.length - 1 ? index + 1 : null
     }) + `${content}
@@ -16413,7 +16457,7 @@ var HELP = `Usage:
   archive-prepare.js --from-yuque --doc-id <id> [--name <name>]
 
 Options: [--repo-root <path>] [--storage-dir <path>]
-Prepare an immutable archive in staging and print its paths as JSON.`;
+Prepare an immutable archive in staging, summarize it through MCP, and print its paths as JSON.`;
 async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;

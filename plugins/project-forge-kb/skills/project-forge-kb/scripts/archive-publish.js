@@ -7287,11 +7287,9 @@ var require_content_type = __commonJS({
   }
 });
 
-// src/archive-publish.js
-import { readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 // src/args.js
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 function parseArgs(argv) {
   const values = {};
   for (let index = 0; index < argv.length; index += 1) {
@@ -7318,6 +7316,14 @@ function printHelp(argv, help) {
 `);
   return true;
 }
+function isMain(moduleUrl) {
+  if (!process.argv[1]) return false;
+  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
+}
+
+// src/archive-publisher.js
+import { readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 // src/archive.js
 import { createHash } from "node:crypto";
@@ -13053,40 +13059,24 @@ function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
 }
 
-// src/archive-publish.js
-var HELP = `Usage: archive-publish.js --staging <path>
-
-Validate a completed staging archive and atomically publish it.`;
+// src/archive-publisher.js
 function assertComplete(value, label) {
   if (!value || String(value).includes("TODO")) throw new Error(`${label} \u5C1A\u672A\u5B8C\u6210`);
 }
-async function main() {
-  const argv = process.argv.slice(2);
-  if (printHelp(argv, HELP)) return;
-  const args = parseArgs(argv);
-  if (!args.staging) throw new Error("\u7F3A\u5C11 --staging");
-  const stagingPath = path.resolve(args.staging);
+async function publishStaging(stagingPath) {
+  stagingPath = path.resolve(stagingPath);
   const manifest = JSON.parse(await readFile(path.join(stagingPath, "manifest.json"), "utf8"));
   const archiveRoot = path.resolve(manifest.archive_root);
   const finalPath = path.resolve(manifest.final_path);
   const relative = path.relative(archiveRoot, finalPath);
-  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("manifest.final_path \u4E0D\u5728 archive \u6839\u76EE\u5F55\u5185");
-  }
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("manifest.final_path \u4E0D\u5728 archive \u6839\u76EE\u5F55\u5185");
   const summaryPath = path.join(stagingPath, "summary.md");
   const summary = parseFrontmatter(await readFile(summaryPath, "utf8"));
   assertComplete(summary.data.title, "summary.title");
-  if (!Array.isArray(summary.data.keyTopics) || summary.data.keyTopics.length === 0) {
-    throw new Error("summary.keyTopics \u5C1A\u672A\u5B8C\u6210");
-  }
+  if (!Array.isArray(summary.data.keyTopics) || summary.data.keyTopics.length === 0) throw new Error("summary.keyTopics \u5C1A\u672A\u5B8C\u6210");
   for (const topic of summary.data.keyTopics) assertComplete(topic, "summary.keyTopics");
   assertComplete(summary.content, "summary \u6B63\u6587");
-  summary.data = {
-    ...summary.data,
-    type: "doc-summary",
-    docId: manifest.archive_id,
-    ...manifest.source
-  };
+  summary.data = { ...summary.data, type: "doc-summary", docId: manifest.archive_id, ...manifest.source };
   await writeFile(summaryPath, `${serializeFrontmatter(summary.data)}${summary.content.trim()}
 `, "utf8");
   const chunkDir = path.join(stagingPath, "chunks");
@@ -13097,29 +13087,34 @@ async function main() {
     const chunk = parseFrontmatter(await readFile(chunkPath, "utf8"));
     assertComplete(chunk.data.title, `chunk ${index} title`);
     assertComplete(chunk.data.summary, `chunk ${index} summary`);
-    if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) {
-      throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
-    }
-    chunk.data = {
-      ...chunk.data,
-      type: "chunk",
-      docId: manifest.archive_id,
-      index,
-      prev: index > 0 ? index - 1 : null,
-      next: index < files.length - 1 ? index + 1 : null
-    };
+    if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
+    chunk.data = { ...chunk.data, type: "chunk", docId: manifest.archive_id, index, prev: index > 0 ? index - 1 : null, next: index < files.length - 1 ? index + 1 : null };
     await writeFile(chunkPath, `${serializeFrontmatter(chunk.data)}${chunk.content.trim()}
 `, "utf8");
   }
   await unlink(path.join(stagingPath, "manifest.json"));
   await rename(stagingPath, finalPath);
-  printJson({ action: "created", path: finalPath, archive_id: manifest.archive_id });
+  return { action: "created", path: finalPath, archive_id: manifest.archive_id };
 }
-main().catch((error2) => {
-  process.stderr.write(`[archive-publish] ${error2.message}
+
+// src/archive-publish.js
+var HELP = `Usage: archive-publish.js --staging <path>
+
+Validate a completed staging archive and atomically publish it.`;
+async function main() {
+  const argv = process.argv.slice(2);
+  if (printHelp(argv, HELP)) return;
+  const args = parseArgs(argv);
+  if (!args.staging) throw new Error("\u7F3A\u5C11 --staging");
+  printJson(await publishStaging(args.staging));
+}
+if (isMain(import.meta.url)) {
+  main().catch((error2) => {
+    process.stderr.write(`[archive-publish] ${error2.message}
 `);
-  process.exitCode = 1;
-});
+    process.exitCode = 1;
+  });
+}
 /*! Bundled license information:
 
 content-type/index.js:

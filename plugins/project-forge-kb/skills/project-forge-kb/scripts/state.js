@@ -132,17 +132,34 @@ Run from the target repository root unless --repo-root is provided.`;
 async function git(repoRoot, args) {
   return (await execFileAsync("git", args, { cwd: repoRoot })).stdout.trim();
 }
-async function ensureCleanForIncremental(repoRoot, baselinePath) {
+async function dirtyFiles(repoRoot) {
+  const { stdout } = await execFileAsync("git", ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { cwd: repoRoot });
+  const records = stdout.split("\0").filter(Boolean);
+  const files = [];
+  for (let index = 0; index < records.length; index += 1) {
+    const record = records[index];
+    files.push(record.slice(3));
+    if ([record[0], record[1]].some((status) => ["R", "C"].includes(status))) files.push(records[++index]);
+  }
+  return files;
+}
+async function ensureCleanForIncremental(repoRoot, baselinePath, kbRoot) {
   try {
     await readFile2(baselinePath, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") return;
     throw error;
   }
-  const changes = await git(repoRoot, ["status", "--porcelain"]);
-  if (changes) {
-    throw new Error("\u589E\u91CF\u66F4\u65B0\u8981\u6C42\u5DE5\u4F5C\u533A\u5E72\u51C0\uFF1B\u8BF7\u5148\u63D0\u4EA4\u3001\u6E05\u7406\u6216\u6682\u5B58\u5F53\u524D\u53D8\u66F4\u540E\u91CD\u8BD5");
+  const changedFiles = await dirtyFiles(repoRoot);
+  if (changedFiles.length === 0) return;
+  let run = null;
+  try {
+    run = JSON.parse(await readFile2(path2.join(kbRoot, ".meta", "workflow-run.json"), "utf8"));
+  } catch {
   }
+  const kbRelative = path2.relative(repoRoot, kbRoot).split(path2.sep).join("/");
+  if (run?.status === "active" && run.mode === "incremental" && changedFiles.every((file) => file === kbRelative || file.startsWith(`${kbRelative}/`))) return;
+  throw new Error("\u589E\u91CF\u66F4\u65B0\u8981\u6C42\u4ECE\u5E72\u51C0\u5DE5\u4F5C\u533A\u5F00\u59CB\uFF0C\u8FD0\u884C\u671F\u95F4\u4E5F\u4E0D\u80FD\u4FEE\u6539\u77E5\u8BC6\u5E93\u76EE\u5F55\u4EE5\u5916\u7684\u6587\u4EF6");
 }
 function packageMatches(file, packageName) {
   const packagePath = packageName.replaceAll(".", "/");
@@ -161,7 +178,7 @@ async function main() {
   const scopePath = path2.join(kbRoot, "domain-scope.yaml");
   const resolvedPath = path2.join(kbRoot, ".meta", "scope-resolved.json");
   const output = path2.join(kbRoot, ".meta", "source-state.json");
-  await ensureCleanForIncremental(repoRoot, output);
+  await ensureCleanForIncremental(repoRoot, output, kbRoot);
   const resolved = JSON.parse(await readFile2(resolvedPath, "utf8"));
   if (!Array.isArray(resolved.domains)) throw new Error("scope-resolved.json \u7F3A\u5C11 domains");
   const l1MetaRoot = path2.join(kbRoot, ".meta", "L1");

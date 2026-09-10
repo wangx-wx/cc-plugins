@@ -1,42 +1,11 @@
 #!/usr/bin/env node
 
-// src/scope-check.js
-import { mkdir, readFile as readFile2, rename, writeFile } from "node:fs/promises";
+// src/workflow.js
+import { createHash } from "node:crypto";
+import { execFile as execFile2 } from "node:child_process";
+import { access as access2, mkdir, readFile as readFile2, rename, writeFile } from "node:fs/promises";
 import path2 from "node:path";
-
-// src/args.js
-function parseArgs(argv) {
-  const values = {};
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
-    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
-    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    const next = argv[index + 1];
-    if (!next || next.startsWith("--")) {
-      values[key] = true;
-    } else {
-      values[key] = next;
-      index += 1;
-    }
-  }
-  return values;
-}
-function printJson(value) {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}
-`);
-}
-function printHelp(argv, help) {
-  if (!argv.includes("--help") && !argv.includes("-h")) return false;
-  process.stdout.write(`${help.trim()}
-`);
-  return true;
-}
-
-// src/scope.js
-import { execFile } from "node:child_process";
-import { access, readFile } from "node:fs/promises";
-import path from "node:path";
-import { promisify } from "node:util";
+import { promisify as promisify2 } from "node:util";
 
 // node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -6267,7 +6236,98 @@ function parse(src, reviver, options) {
   return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
 
+// src/args.js
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+function parseArgs(argv) {
+  const values = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
+    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const next = argv[index + 1];
+    if (!next || next.startsWith("--")) {
+      values[key] = true;
+    } else {
+      values[key] = next;
+      index += 1;
+    }
+  }
+  return values;
+}
+function printJson(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}
+`);
+}
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
+function isMain(moduleUrl) {
+  if (!process.argv[1]) return false;
+  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
+}
+
+// src/frontmatter.js
+function parseFrontmatter(markdown) {
+  const match = String(markdown).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { data: {}, content: String(markdown) };
+  return { data: parseSimpleYaml(match[1]), content: match[2] };
+}
+function parseSimpleYaml(yaml) {
+  const data = {};
+  let listKey = null;
+  for (const rawLine of yaml.split(/\r?\n/)) {
+    if (!rawLine.trim()) continue;
+    const listItem = rawLine.match(/^\s*-\s+(.*)$/);
+    if (listItem && listKey) {
+      data[listKey].push(unquote(listItem[1].trim()));
+      continue;
+    }
+    const pair = rawLine.match(/^([\w-]+)\s*:\s*(.*)$/);
+    if (!pair) continue;
+    const [, key, rawValue] = pair;
+    const value = rawValue.trim();
+    listKey = null;
+    if (value === "") {
+      data[key] = [];
+      listKey = key;
+    } else if (value === "null" || value === "~") {
+      data[key] = null;
+    } else if (value === "true" || value === "false") {
+      data[key] = value === "true";
+    } else if (/^-?\d+(\.\d+)?$/.test(value)) {
+      data[key] = Number(value);
+    } else if (value.startsWith("[") && value.endsWith("]")) {
+      const inner = value.slice(1, -1).trim();
+      data[key] = inner ? inner.split(",").map((item) => unquote(item.trim())) : [];
+    } else {
+      data[key] = unquote(value);
+    }
+  }
+  return data;
+}
+function unquote(value) {
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value.slice(1, -1);
+    }
+  }
+  if (value.startsWith("'") && value.endsWith("'")) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
 // src/scope.js
+import { execFile } from "node:child_process";
+import { access, readFile } from "node:fs/promises";
+import path from "node:path";
+import { promisify } from "node:util";
 var execFileAsync = promisify(execFile);
 function stringArray(value, field, errors) {
   if (value === void 0 || value === null) return [];
@@ -6416,78 +6476,273 @@ async function validateScope(repoRoot, raw) {
   }
   return { errors, warnings, domains };
 }
-var DOMAIN_WORKFLOW = [
-  "capture_source_commit",
-  "delegate_code_fact_investigation",
-  "draft_domain_l1",
-  "search_yuque",
-  "await_yuque_confirmation",
-  "archive_domain_sources",
-  "delegate_archive_fact_investigation",
-  "build_domain_question_frontier",
-  "await_domain_clarification",
-  "write_domain_l1_and_adrs",
-  "record_unresolved_questions",
-  "confirm_domain_output"
-];
 
-// src/scope-check.js
-var HELP = `Usage: scope-check.js [--repo-root <path>] [--scope <path>] [--output <path>]
+// src/workflow.js
+var execFileAsync2 = promisify2(execFile2);
+var STEPS = ["code-facts", "yuque-candidates", "archives", "archive-facts", "domain-knowledge"];
+var HELP = `Usage:
+  workflow.js [--repo-root <path>]
+  workflow.js --start [--repo-root <path>]
+  workflow.js --complete-step <step> [--domain <domain_id>] [--repo-root <path>]
+  workflow.js --confirm-domain <domain_id> [--repo-root <path>]
+  workflow.js --complete-run [--repo-root <path>]
 
-Validate the human-owned domain scope and write the resolved machine snapshot.
-Run from the target repository root unless --repo-root is provided.`;
+Drive one initialization or incremental knowledge-base run.
+Steps: code-facts, yuque-candidates, archives, archive-facts, domain-knowledge, l0-review.`;
+async function exists2(file) {
+  try {
+    await access2(file);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+}
+async function git(repoRoot, args) {
+  return (await execFileAsync2("git", args, { cwd: repoRoot })).stdout.trim();
+}
+function hash(content) {
+  return `sha256:${createHash("sha256").update(content).digest("hex")}`;
+}
+function packageMatches(file, packageName) {
+  const packagePath = packageName.replaceAll(".", "/");
+  return file.startsWith(`${packagePath}/`) || file.includes(`/${packagePath}/`);
+}
+function domainMatches(domain, file) {
+  if (domain.project_docs.includes(file) || domain.include_files.includes(file)) return true;
+  if (domain.exclude_files.includes(file) || domain.exclude_packages.some((name) => packageMatches(file, name))) return false;
+  return domain.include_packages.some((name) => packageMatches(file, name));
+}
+function runPath(repoRoot) {
+  return path2.join(repoRoot, "docs", "kb", ".meta", "workflow-run.json");
+}
+async function readRun(repoRoot) {
+  try {
+    return JSON.parse(await readFile2(runPath(repoRoot), "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw new Error(`\u65E0\u6CD5\u8BFB\u53D6 workflow-run.json: ${error.message}`);
+  }
+}
+async function writeRun(repoRoot, run) {
+  const output = runPath(repoRoot);
+  await mkdir(path2.dirname(output), { recursive: true });
+  const temporary = `${output}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(run, null, 2)}
+`, "utf8");
+  await rename(temporary, output);
+}
+async function updateDomainMeta(repoRoot, domainId, update) {
+  const output = path2.join(repoRoot, "docs", "kb", ".meta", "L1", `${domainId}.json`);
+  const value = JSON.parse(await readFile2(output, "utf8"));
+  update(value);
+  const temporary = `${output}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(value, null, 2)}
+`, "utf8");
+  await rename(temporary, output);
+}
+async function checkedScope(repoRoot) {
+  const scopePath = path2.join(repoRoot, "docs", "kb", "domain-scope.yaml");
+  if (!await exists2(scopePath)) return { missing: true };
+  const loaded = await loadScope(repoRoot);
+  const checked = await validateScope(repoRoot, loaded.value);
+  return { ...checked, scopeHash: hash(await readFile2(scopePath, "utf8")) };
+}
+async function affectedDomains(repoRoot, checked, baseline) {
+  const active = checked.domains.filter((item) => item.status === "active");
+  if (!baseline || baseline.inputs?.domain_scope?.hash !== checked.scopeHash) {
+    return active.map((domain) => ({ domain, localChanges: true }));
+  }
+  const changed = (await git(repoRoot, ["diff", "--name-only", baseline.source_commit, "HEAD"])).split(/\r?\n/).filter(Boolean);
+  return active.map((domain) => ({
+    domain,
+    localChanges: changed.some((file) => domainMatches(domain, file))
+  })).filter((item) => item.localChanges || item.domain.yuque_sources.length > 0);
+}
+async function startRun(repoRoot) {
+  const checked = await checkedScope(repoRoot);
+  if (checked.missing) throw new Error("\u7F3A\u5C11 docs/kb/domain-scope.yaml\uFF1B\u5148\u8FD0\u884C scope-init.js \u5E76\u7531\u4EBA\u5DE5\u586B\u5199");
+  if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
+  if (!await exists2(path2.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) {
+    throw new Error("\u7F3A\u5C11 scope-resolved.json\uFF1B\u5148\u8FD0\u884C scope-check.js");
+  }
+  const existing = await readRun(repoRoot);
+  if (existing && existing.status === "active") throw new Error("\u5DF2\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
+  const baselinePath = path2.join(repoRoot, "docs", "kb", ".meta", "source-state.json");
+  let baseline = null;
+  if (await exists2(baselinePath)) {
+    const changes = await git(repoRoot, ["status", "--porcelain"]);
+    if (changes) throw new Error("\u589E\u91CF\u66F4\u65B0\u5F00\u59CB\u524D\u8981\u6C42\u5DE5\u4F5C\u533A\u5E72\u51C0\uFF1B\u8BF7\u5148\u63D0\u4EA4\u3001\u6E05\u7406\u6216\u6682\u5B58\u5F53\u524D\u53D8\u66F4");
+    baseline = JSON.parse(await readFile2(baselinePath, "utf8"));
+  }
+  const domains = await affectedDomains(repoRoot, checked, baseline);
+  const sourceCommit = await git(repoRoot, ["rev-parse", "HEAD"]);
+  const run = {
+    schema_version: 1,
+    status: "active",
+    mode: baseline ? "incremental" : "initialization",
+    started_at: (/* @__PURE__ */ new Date()).toISOString(),
+    source_commit: sourceCommit,
+    scope_hash: checked.scopeHash,
+    domains: domains.map((item) => ({ id: item.domain.id, local_changes: item.localChanges, completed_steps: [], confirmed: false })),
+    l0_reviewed: Boolean(baseline && domains.length === 0)
+  };
+  await writeRun(repoRoot, run);
+  return { action: "run_started", mode: run.mode, source_commit: sourceCommit, domain_order: run.domains.map((item) => item.id) };
+}
+async function loadCandidates(repoRoot, domainId) {
+  const file = path2.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+  if (!await exists2(file)) return null;
+  const value = parse(await readFile2(file, "utf8"));
+  if (value?.domain_id !== domainId || !Array.isArray(value.candidates)) throw new Error("\u8BED\u96C0\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548");
+  return value.candidates;
+}
+function result(step, domain, nextAction, blockingReason = null) {
+  return { status: nextAction === "complete" ? "complete" : "action_required", domain, step, next_action: nextAction, blocking_reason: blockingReason };
+}
+async function inspectWorkflow(repoRoot) {
+  const checked = await checkedScope(repoRoot);
+  if (checked.missing) return result("SCOPE_MISSING", null, "run_scope_init");
+  if (checked.errors.length > 0) return result("SCOPE_INVALID", null, "fix_domain_scope", checked.errors.join("; "));
+  if (!await exists2(path2.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) return result("SCOPE_CHECK_REQUIRED", null, "run_scope_check");
+  const run = await readRun(repoRoot);
+  if (!run || run.status === "complete") return result(run ? "UPDATE_READY" : "INITIALIZATION_READY", null, "run_workflow_start");
+  const domainState = run.domains.find((item) => !item.confirmed);
+  if (domainState) {
+    const domain = checked.domains.find((item) => item.id === domainState.id);
+    if (!domainState.completed_steps.includes("code-facts")) return result("DOMAIN_CODE_SCAN", domain.id, "delegate_code_fact_investigation");
+    if (domain.yuque_sources.length > 0 && !domainState.completed_steps.includes("yuque-candidates")) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
+    if (domain.yuque_sources.length > 0) {
+      const candidates = await loadCandidates(repoRoot, domain.id);
+      if (!candidates) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
+      const pending = candidates.filter((item) => item.decision === "pending").length;
+      if (pending > 0) return result("YUQUE_REVIEW", domain.id, "ask_user_edit_yaml", `${pending} \u4E2A\u8BED\u96C0\u5019\u9009\u4ECD\u4E3A pending`);
+    }
+    if (!domainState.completed_steps.includes("archives")) return result("DOMAIN_ARCHIVE", domain.id, "run_domain_archive");
+    if (!domainState.completed_steps.includes("archive-facts")) return result("DOMAIN_ARCHIVE_FACTS", domain.id, "delegate_archive_fact_investigation");
+    if (!domainState.completed_steps.includes("domain-knowledge")) return result("DOMAIN_KNOWLEDGE", domain.id, "question_and_write_domain_knowledge");
+    return result("DOMAIN_ARTIFACT_REVIEW", domain.id, "review_and_confirm_domain");
+  }
+  if (run.mode === "incremental" && run.domains.length === 0) return result("NO_CHANGES", null, "complete_workflow_run");
+  if (!run.l0_reviewed) return result("REPO_L0_REVIEW", null, "create_or_review_l0");
+  return result("REPO_FINALIZE", null, "run_index_state_verify");
+}
+async function completeStep(repoRoot, step, domainId) {
+  const run = await readRun(repoRoot);
+  if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
+  if (step === "l0-review") {
+    if (run.domains.some((item) => !item.confirmed)) throw new Error("\u4ECD\u6709\u672A\u786E\u8BA4\u9886\u57DF\uFF0C\u4E0D\u80FD\u786E\u8BA4 L0");
+    run.l0_reviewed = true;
+    await writeRun(repoRoot, run);
+    return { action: "step_completed", step };
+  }
+  if (!STEPS.includes(step)) throw new Error(`\u672A\u77E5\u6B65\u9AA4: ${step}`);
+  const current = run.domains.find((item) => !item.confirmed);
+  if (!current || current.id !== domainId) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u5B8C\u6210\u9886\u57DF ${domainId || "(\u672A\u6307\u5B9A)"}`);
+  const checked = await checkedScope(repoRoot);
+  const domain = checked.domains.find((item) => item.id === domainId);
+  let expected = STEPS.find((item) => !current.completed_steps.includes(item));
+  if (expected === "yuque-candidates" && domain.yuque_sources.length === 0) {
+    current.completed_steps.push("yuque-candidates");
+    expected = "archives";
+  }
+  if (step !== expected) throw new Error(`\u5F53\u524D\u5E94\u5B8C\u6210\u6B65\u9AA4 ${expected}\uFF0C\u4E0D\u80FD\u6807\u8BB0 ${step}`);
+  if (step === "code-facts") {
+    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", `${domainId}.md`);
+    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}.md`);
+    const l1 = parseFrontmatter(await readFile2(l1Path, "utf8"));
+    if (l1.data.id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
+    const meta = {
+      schema_version: 1,
+      l1_id: domainId,
+      source_commit: run.source_commit,
+      scope: domain,
+      observed: {},
+      documents: [],
+      candidates: []
+    };
+    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "L1", `${domainId}.json`);
+    await mkdir(path2.dirname(metaPath), { recursive: true });
+    const temporary = `${metaPath}.${process.pid}.tmp`;
+    await writeFile(temporary, `${JSON.stringify(meta, null, 2)}
+`, "utf8");
+    await rename(temporary, metaPath);
+  }
+  if (step === "yuque-candidates") {
+    const candidates = await loadCandidates(repoRoot, domainId);
+    if (!candidates) throw new Error("\u8BED\u96C0\u5019\u9009\u5C1A\u672A\u751F\u6210");
+    await updateDomainMeta(repoRoot, domainId, (meta) => {
+      meta.candidates = candidates;
+    });
+  }
+  if (step === "archives") {
+    const receiptPath = path2.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
+    if (!await exists2(receiptPath)) throw new Error("\u5F53\u524D\u9886\u57DF\u5C1A\u672A\u6267\u884C\u9886\u57DF\u7EA7\u5F52\u6863");
+    const receipt = JSON.parse(await readFile2(receiptPath, "utf8"));
+    if (receipt.domain_id !== domainId || receipt.action !== "domain_archived" || receipt.checked_at < run.started_at) {
+      throw new Error("\u9886\u57DF\u5F52\u6863\u7ED3\u679C\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8FD0\u884C");
+    }
+    await updateDomainMeta(repoRoot, domainId, (meta) => {
+      meta.documents = receipt.results.map((item) => ({
+        archive_id: item.archive_id || path2.basename(item.path),
+        source_ref: item.source_ref,
+        path: item.path,
+        action: item.action
+      }));
+    });
+    if (run.mode === "incremental" && !current.local_changes && receipt.created_count === 0) {
+      current.completed_steps.push("archives", "archive-facts", "domain-knowledge");
+      current.confirmed = true;
+      await writeRun(repoRoot, run);
+      return { action: "domain_unchanged", domain_id: domainId };
+    }
+  }
+  if (step === "domain-knowledge") {
+    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", `${domainId}.md`);
+    const l1 = await readFile2(l1Path, "utf8");
+    for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
+      if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
+    }
+  }
+  current.completed_steps.push(step);
+  await writeRun(repoRoot, run);
+  return { action: "step_completed", domain_id: domainId, step };
+}
+async function confirmDomain(repoRoot, domainId) {
+  const run = await readRun(repoRoot);
+  if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
+  const current = run.domains.find((item) => !item.confirmed);
+  if (!current || current.id !== domainId || !current.completed_steps.includes("domain-knowledge")) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u786E\u8BA4\u9886\u57DF ${domainId}`);
+  current.confirmed = true;
+  await writeRun(repoRoot, run);
+  return { action: "domain_confirmed", domain_id: domainId };
+}
+async function completeRun(repoRoot) {
+  const run = await readRun(repoRoot);
+  if (!run || run.status !== "active" || run.domains.some((item) => !item.confirmed) || !run.l0_reviewed) throw new Error("\u5F53\u524D\u8FD0\u884C\u5C1A\u672A\u8FBE\u5230\u5B8C\u6210\u6761\u4EF6");
+  run.status = "complete";
+  run.completed_at = (/* @__PURE__ */ new Date()).toISOString();
+  await writeRun(repoRoot, run);
+  return { action: "run_completed", mode: run.mode };
+}
 async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
-  const loaded = await loadScope(repoRoot, args.scope || "docs/kb/domain-scope.yaml");
-  const result = await validateScope(repoRoot, loaded.value);
-  if (result.errors.length > 0) {
-    printJson({ action: "invalid", scope_path: loaded.relative, ...result });
+  if (args.start) return printJson(await startRun(repoRoot));
+  if (args.completeStep) return printJson(await completeStep(repoRoot, args.completeStep, args.domain));
+  if (args.confirmDomain) return printJson(await confirmDomain(repoRoot, args.confirmDomain));
+  if (args.completeRun) return printJson(await completeRun(repoRoot));
+  printJson(await inspectWorkflow(repoRoot));
+}
+if (isMain(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`[workflow] ${error.message}
+`);
     process.exitCode = 1;
-    return;
-  }
-  const resolved = {
-    schema_version: 1,
-    scope_path: loaded.relative,
-    generated_at: (/* @__PURE__ */ new Date()).toISOString(),
-    domains: result.domains,
-    domain_order: result.domains.filter((domain) => domain.status === "active").map((domain) => domain.id),
-    workflow: DOMAIN_WORKFLOW,
-    warnings: result.warnings
-  };
-  const output = path2.resolve(repoRoot, args.output || "docs/kb/.meta/scope-resolved.json");
-  const relative = path2.relative(repoRoot, output);
-  if (relative.startsWith("..") || path2.isAbsolute(relative)) throw new Error("\u8F93\u51FA\u6587\u4EF6\u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
-  let unchanged = false;
-  try {
-    const existing = JSON.parse(await readFile2(output, "utf8"));
-    const { generated_at: _existingGeneratedAt, ...existingComparable } = existing;
-    const { generated_at: _resolvedGeneratedAt, ...resolvedComparable } = resolved;
-    unchanged = JSON.stringify(existingComparable) === JSON.stringify(resolvedComparable);
-  } catch (error) {
-    if (error.code !== "ENOENT") throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u5DF2\u6709\u8303\u56F4\u5FEB\u7167: ${error.message}`);
-  }
-  if (!unchanged) {
-    await mkdir(path2.dirname(output), { recursive: true });
-    const temporary = `${output}.${process.pid}.tmp`;
-    await writeFile(temporary, `${JSON.stringify(resolved, null, 2)}
-`, "utf8");
-    await rename(temporary, output);
-  }
-  printJson({
-    action: "validated",
-    unchanged,
-    scope_path: loaded.relative,
-    resolved_path: relative.split(path2.sep).join("/"),
-    domain_order: resolved.domain_order,
-    workflow: DOMAIN_WORKFLOW,
-    warnings: result.warnings
   });
 }
-main().catch((error) => {
-  process.stderr.write(`[scope-check] ${error.message}
-`);
-  process.exitCode = 1;
-});
+export {
+  inspectWorkflow
+};

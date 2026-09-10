@@ -1,9 +1,45 @@
 #!/usr/bin/env node
 
 // src/yuque-selection.js
+import path2 from "node:path";
+
+// src/args.js
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+function parseArgs(argv) {
+  const values = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
+    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const next = argv[index + 1];
+    if (!next || next.startsWith("--")) {
+      values[key] = true;
+    } else {
+      values[key] = next;
+      index += 1;
+    }
+  }
+  return values;
+}
+function printJson(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}
+`);
+}
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
+function isMain(moduleUrl) {
+  if (!process.argv[1]) return false;
+  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
+}
+
+// src/yuque-selection-data.js
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 // node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -57,17 +93,17 @@ function visit(node, visitor) {
 visit.BREAK = BREAK;
 visit.SKIP = SKIP;
 visit.REMOVE = REMOVE;
-function visit_(key, node, visitor, path2) {
-  const ctrl = callVisitor(key, node, visitor, path2);
+function visit_(key, node, visitor, path3) {
+  const ctrl = callVisitor(key, node, visitor, path3);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path2, ctrl);
-    return visit_(key, ctrl, visitor, path2);
+    replaceNode(key, path3, ctrl);
+    return visit_(key, ctrl, visitor, path3);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path2 = Object.freeze(path2.concat(node));
+      path3 = Object.freeze(path3.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = visit_(i, node.items[i], visitor, path2);
+        const ci = visit_(i, node.items[i], visitor, path3);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -78,13 +114,13 @@ function visit_(key, node, visitor, path2) {
         }
       }
     } else if (isPair(node)) {
-      path2 = Object.freeze(path2.concat(node));
-      const ck = visit_("key", node.key, visitor, path2);
+      path3 = Object.freeze(path3.concat(node));
+      const ck = visit_("key", node.key, visitor, path3);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = visit_("value", node.value, visitor, path2);
+      const cv = visit_("value", node.value, visitor, path3);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -105,17 +141,17 @@ async function visitAsync(node, visitor) {
 visitAsync.BREAK = BREAK;
 visitAsync.SKIP = SKIP;
 visitAsync.REMOVE = REMOVE;
-async function visitAsync_(key, node, visitor, path2) {
-  const ctrl = await callVisitor(key, node, visitor, path2);
+async function visitAsync_(key, node, visitor, path3) {
+  const ctrl = await callVisitor(key, node, visitor, path3);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path2, ctrl);
-    return visitAsync_(key, ctrl, visitor, path2);
+    replaceNode(key, path3, ctrl);
+    return visitAsync_(key, ctrl, visitor, path3);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path2 = Object.freeze(path2.concat(node));
+      path3 = Object.freeze(path3.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = await visitAsync_(i, node.items[i], visitor, path2);
+        const ci = await visitAsync_(i, node.items[i], visitor, path3);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -126,13 +162,13 @@ async function visitAsync_(key, node, visitor, path2) {
         }
       }
     } else if (isPair(node)) {
-      path2 = Object.freeze(path2.concat(node));
-      const ck = await visitAsync_("key", node.key, visitor, path2);
+      path3 = Object.freeze(path3.concat(node));
+      const ck = await visitAsync_("key", node.key, visitor, path3);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = await visitAsync_("value", node.value, visitor, path2);
+      const cv = await visitAsync_("value", node.value, visitor, path3);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -159,23 +195,23 @@ function initVisitor(visitor) {
   }
   return visitor;
 }
-function callVisitor(key, node, visitor, path2) {
+function callVisitor(key, node, visitor, path3) {
   if (typeof visitor === "function")
-    return visitor(key, node, path2);
+    return visitor(key, node, path3);
   if (isMap(node))
-    return visitor.Map?.(key, node, path2);
+    return visitor.Map?.(key, node, path3);
   if (isSeq(node))
-    return visitor.Seq?.(key, node, path2);
+    return visitor.Seq?.(key, node, path3);
   if (isPair(node))
-    return visitor.Pair?.(key, node, path2);
+    return visitor.Pair?.(key, node, path3);
   if (isScalar(node))
-    return visitor.Scalar?.(key, node, path2);
+    return visitor.Scalar?.(key, node, path3);
   if (isAlias(node))
-    return visitor.Alias?.(key, node, path2);
+    return visitor.Alias?.(key, node, path3);
   return void 0;
 }
-function replaceNode(key, path2, node) {
-  const parent = path2[path2.length - 1];
+function replaceNode(key, path3, node) {
+  const parent = path3[path3.length - 1];
   if (isCollection(parent)) {
     parent.items[key] = node;
   } else if (isPair(parent)) {
@@ -702,10 +738,10 @@ function createNode(value, tagName, ctx) {
 }
 
 // node_modules/yaml/browser/dist/nodes/Collection.js
-function collectionFromPath(schema4, path2, value) {
+function collectionFromPath(schema4, path3, value) {
   let v = value;
-  for (let i = path2.length - 1; i >= 0; --i) {
-    const k = path2[i];
+  for (let i = path3.length - 1; i >= 0; --i) {
+    const k = path3[i];
     if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
       const a = [];
       a[k] = v;
@@ -724,7 +760,7 @@ function collectionFromPath(schema4, path2, value) {
     sourceObjects: /* @__PURE__ */ new Map()
   });
 }
-var isEmptyPath = (path2) => path2 == null || typeof path2 === "object" && !!path2[Symbol.iterator]().next().done;
+var isEmptyPath = (path3) => path3 == null || typeof path3 === "object" && !!path3[Symbol.iterator]().next().done;
 var Collection = class extends NodeBase {
   constructor(type, schema4) {
     super(type);
@@ -754,11 +790,11 @@ var Collection = class extends NodeBase {
    * be a Pair instance or a `{ key, value }` object, which may not have a key
    * that already exists in the map.
    */
-  addIn(path2, value) {
-    if (isEmptyPath(path2))
+  addIn(path3, value) {
+    if (isEmptyPath(path3))
       this.add(value);
     else {
-      const [key, ...rest] = path2;
+      const [key, ...rest] = path3;
       const node = this.get(key, true);
       if (isCollection(node))
         node.addIn(rest, value);
@@ -772,8 +808,8 @@ var Collection = class extends NodeBase {
    * Removes a value from the collection.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path2) {
-    const [key, ...rest] = path2;
+  deleteIn(path3) {
+    const [key, ...rest] = path3;
     if (rest.length === 0)
       return this.delete(key);
     const node = this.get(key, true);
@@ -787,8 +823,8 @@ var Collection = class extends NodeBase {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path2, keepScalar) {
-    const [key, ...rest] = path2;
+  getIn(path3, keepScalar) {
+    const [key, ...rest] = path3;
     const node = this.get(key, true);
     if (rest.length === 0)
       return !keepScalar && isScalar(node) ? node.value : node;
@@ -806,8 +842,8 @@ var Collection = class extends NodeBase {
   /**
    * Checks if the collection includes a value with the key `key`.
    */
-  hasIn(path2) {
-    const [key, ...rest] = path2;
+  hasIn(path3) {
+    const [key, ...rest] = path3;
     if (rest.length === 0)
       return this.has(key);
     const node = this.get(key, true);
@@ -817,8 +853,8 @@ var Collection = class extends NodeBase {
    * Sets a value in this collection. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path2, value) {
-    const [key, ...rest] = path2;
+  setIn(path3, value) {
+    const [key, ...rest] = path3;
     if (rest.length === 0) {
       this.set(key, value);
     } else {
@@ -2946,9 +2982,9 @@ var Document = class _Document {
       this.contents.add(value);
   }
   /** Adds a value to the document. */
-  addIn(path2, value) {
+  addIn(path3, value) {
     if (assertCollection(this.contents))
-      this.contents.addIn(path2, value);
+      this.contents.addIn(path3, value);
   }
   /**
    * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3023,14 +3059,14 @@ var Document = class _Document {
    * Removes a value from the document.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path2) {
-    if (isEmptyPath(path2)) {
+  deleteIn(path3) {
+    if (isEmptyPath(path3)) {
       if (this.contents == null)
         return false;
       this.contents = null;
       return true;
     }
-    return assertCollection(this.contents) ? this.contents.deleteIn(path2) : false;
+    return assertCollection(this.contents) ? this.contents.deleteIn(path3) : false;
   }
   /**
    * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3045,10 +3081,10 @@ var Document = class _Document {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path2, keepScalar) {
-    if (isEmptyPath(path2))
+  getIn(path3, keepScalar) {
+    if (isEmptyPath(path3))
       return !keepScalar && isScalar(this.contents) ? this.contents.value : this.contents;
-    return isCollection(this.contents) ? this.contents.getIn(path2, keepScalar) : void 0;
+    return isCollection(this.contents) ? this.contents.getIn(path3, keepScalar) : void 0;
   }
   /**
    * Checks if the document includes a value with the key `key`.
@@ -3059,10 +3095,10 @@ var Document = class _Document {
   /**
    * Checks if the document includes a value at `path`.
    */
-  hasIn(path2) {
-    if (isEmptyPath(path2))
+  hasIn(path3) {
+    if (isEmptyPath(path3))
       return this.contents !== void 0;
-    return isCollection(this.contents) ? this.contents.hasIn(path2) : false;
+    return isCollection(this.contents) ? this.contents.hasIn(path3) : false;
   }
   /**
    * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3079,13 +3115,13 @@ var Document = class _Document {
    * Sets a value in this document. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path2, value) {
-    if (isEmptyPath(path2)) {
+  setIn(path3, value) {
+    if (isEmptyPath(path3)) {
       this.contents = value;
     } else if (this.contents == null) {
-      this.contents = collectionFromPath(this.schema, Array.from(path2), value);
+      this.contents = collectionFromPath(this.schema, Array.from(path3), value);
     } else if (assertCollection(this.contents)) {
-      this.contents.setIn(path2, value);
+      this.contents.setIn(path3, value);
     }
   }
   /**
@@ -4627,9 +4663,9 @@ function visit2(cst, visitor) {
 visit2.BREAK = BREAK2;
 visit2.SKIP = SKIP2;
 visit2.REMOVE = REMOVE2;
-visit2.itemAtPath = (cst, path2) => {
+visit2.itemAtPath = (cst, path3) => {
   let item = cst;
-  for (const [field, index] of path2) {
+  for (const [field, index] of path3) {
     const tok = item?.[field];
     if (tok && "items" in tok) {
       item = tok.items[index];
@@ -4638,23 +4674,23 @@ visit2.itemAtPath = (cst, path2) => {
   }
   return item;
 };
-visit2.parentCollection = (cst, path2) => {
-  const parent = visit2.itemAtPath(cst, path2.slice(0, -1));
-  const field = path2[path2.length - 1][0];
+visit2.parentCollection = (cst, path3) => {
+  const parent = visit2.itemAtPath(cst, path3.slice(0, -1));
+  const field = path3[path3.length - 1][0];
   const coll = parent?.[field];
   if (coll && "items" in coll)
     return coll;
   throw new Error("Parent collection not found");
 };
-function _visit(path2, item, visitor) {
-  let ctrl = visitor(item, path2);
+function _visit(path3, item, visitor) {
+  let ctrl = visitor(item, path3);
   if (typeof ctrl === "symbol")
     return ctrl;
   for (const field of ["key", "value"]) {
     const token = item[field];
     if (token && "items" in token) {
       for (let i = 0; i < token.items.length; ++i) {
-        const ci = _visit(Object.freeze(path2.concat([[field, i]])), token.items[i], visitor);
+        const ci = _visit(Object.freeze(path3.concat([[field, i]])), token.items[i], visitor);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK2)
@@ -4665,10 +4701,10 @@ function _visit(path2, item, visitor) {
         }
       }
       if (typeof ctrl === "function" && field === "key")
-        ctrl = ctrl(item, path2);
+        ctrl = ctrl(item, path3);
     }
   }
-  return typeof ctrl === "function" ? ctrl(item, path2) : ctrl;
+  return typeof ctrl === "function" ? ctrl(item, path3) : ctrl;
 }
 
 // node_modules/yaml/browser/dist/parse/cst.js
@@ -6234,39 +6270,7 @@ function parse(src, reviver, options) {
   return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
 
-// src/args.js
-function parseArgs(argv) {
-  const values = {};
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
-    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
-    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    const next = argv[index + 1];
-    if (!next || next.startsWith("--")) {
-      values[key] = true;
-    } else {
-      values[key] = next;
-      index += 1;
-    }
-  }
-  return values;
-}
-function printJson(value) {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}
-`);
-}
-function printHelp(argv, help) {
-  if (!argv.includes("--help") && !argv.includes("-h")) return false;
-  process.stdout.write(`${help.trim()}
-`);
-  return true;
-}
-
-// src/yuque-selection.js
-var HELP = `Usage: yuque-selection.js --domain <domain_id> [--repo-root <path>]
-
-Validate human candidate decisions and output approved Yuque documents.
-Run from the target repository root unless --repo-root is provided.`;
+// src/yuque-selection-data.js
 async function readYuqueSelection(repoRoot, domainId) {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(domainId)) throw new Error("\u9886\u57DF ID \u683C\u5F0F\u65E0\u6548");
   const file = path.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
@@ -6277,39 +6281,41 @@ async function readYuqueSelection(repoRoot, domainId) {
     if (error.code === "ENOENT") throw new Error(`\u5019\u9009\u6587\u4EF6\u4E0D\u5B58\u5728: ${path.relative(repoRoot, file)}`);
     throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u5019\u9009\u6587\u4EF6: ${error.message}`);
   }
-  if (value?.domain_id !== domainId || !Array.isArray(value?.candidates)) {
-    throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u9886\u57DF\u4E0D\u5339\u914D");
-  }
-  const allowed = /* @__PURE__ */ new Set(["pending", "approved", "rejected"]);
+  if (value?.domain_id !== domainId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u9886\u57DF\u4E0D\u5339\u914D");
   for (const [index, candidate] of value.candidates.entries()) {
-    if (!allowed.has(candidate?.decision)) {
+    if (!["pending", "approved", "rejected"].includes(candidate?.decision)) {
       throw new Error(`candidates[${index}].decision \u5FC5\u987B\u662F pending\u3001approved \u6216 rejected`);
     }
   }
   const pending = value.candidates.filter((candidate) => candidate.decision === "pending");
-  const approved = value.candidates.filter((candidate) => candidate.decision === "approved").map((candidate) => ({
-    doc_id: candidate.doc_id || null,
-    document_url: candidate.document_url || candidate.url || null,
-    title: candidate.title,
-    content_updated_at: candidate.content_updated_at || null,
-    updated_at: candidate.updated_at || null
-  }));
   return {
     action: pending.length > 0 ? "awaiting_confirmation" : "confirmed",
     requires_human_input: pending.length > 0,
     domain_id: domainId,
     pending_count: pending.length,
-    approved
+    approved: value.candidates.filter((candidate) => candidate.decision === "approved").map((candidate) => ({
+      doc_id: candidate.doc_id || null,
+      document_url: candidate.document_url || candidate.url || null,
+      title: candidate.title,
+      content_updated_at: candidate.content_updated_at || null,
+      updated_at: candidate.updated_at || null
+    }))
   };
 }
+
+// src/yuque-selection.js
+var HELP = `Usage: yuque-selection.js --domain <domain_id> [--repo-root <path>]
+
+Validate human candidate decisions and output approved Yuque documents.
+Run from the target repository root unless --repo-root is provided.`;
 async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
   if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
-  printJson(await readYuqueSelection(path.resolve(args.repoRoot || process.cwd()), args.domain));
+  printJson(await readYuqueSelection(path2.resolve(args.repoRoot || process.cwd()), args.domain));
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   main().catch((error) => {
     process.stderr.write(`[yuque-selection] ${error.message}
 `);

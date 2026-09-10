@@ -3257,8 +3257,8 @@ var require_utils = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path3) {
-      let input = path3;
+    function removeDotSegments(path6) {
+      let input = path6;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -3663,8 +3663,8 @@ var require_schemes = __commonJS({
       }
       if (wsComponent.resourceName) {
         const queryIndex = wsComponent.resourceName.indexOf("?");
-        const path3 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
-        wsComponent.path = path3 && path3 !== "/" ? path3 : void 0;
+        const path6 = queryIndex === -1 ? wsComponent.resourceName : wsComponent.resourceName.slice(0, queryIndex);
+        wsComponent.path = path6 && path6 !== "/" ? path6 : void 0;
         wsComponent.query = queryIndex === -1 ? void 0 : wsComponent.resourceName.slice(queryIndex + 1);
         wsComponent.resourceName = void 0;
       }
@@ -7287,9 +7287,49 @@ var require_content_type = __commonJS({
   }
 });
 
-// src/yuque-candidates.js
-import { mkdir, readFile as readFile2, rename, writeFile } from "node:fs/promises";
-import path2 from "node:path";
+// src/archive-domain.js
+import path5 from "node:path";
+import { mkdir as mkdir2, rename as rename2, writeFile as writeFile3 } from "node:fs/promises";
+
+// src/args.js
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+function parseArgs(argv) {
+  const values = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const token = argv[index];
+    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
+    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const next = argv[index + 1];
+    if (!next || next.startsWith("--")) {
+      values[key] = true;
+    } else {
+      values[key] = next;
+      index += 1;
+    }
+  }
+  return values;
+}
+function printJson(value) {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}
+`);
+}
+function printHelp(argv, help) {
+  if (!argv.includes("--help") && !argv.includes("-h")) return false;
+  process.stdout.write(`${help.trim()}
+`);
+  return true;
+}
+function isMain(moduleUrl) {
+  if (!process.argv[1]) return false;
+  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
+}
+
+// src/scope.js
+import { execFile } from "node:child_process";
+import { access, readFile } from "node:fs/promises";
+import path from "node:path";
+import { promisify } from "node:util";
 
 // node_modules/yaml/browser/dist/nodes/identity.js
 var ALIAS = Symbol.for("yaml.alias");
@@ -7343,17 +7383,17 @@ function visit(node, visitor) {
 visit.BREAK = BREAK;
 visit.SKIP = SKIP;
 visit.REMOVE = REMOVE;
-function visit_(key, node, visitor, path3) {
-  const ctrl = callVisitor(key, node, visitor, path3);
+function visit_(key, node, visitor, path6) {
+  const ctrl = callVisitor(key, node, visitor, path6);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path3, ctrl);
-    return visit_(key, ctrl, visitor, path3);
+    replaceNode(key, path6, ctrl);
+    return visit_(key, ctrl, visitor, path6);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path3 = Object.freeze(path3.concat(node));
+      path6 = Object.freeze(path6.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = visit_(i, node.items[i], visitor, path3);
+        const ci = visit_(i, node.items[i], visitor, path6);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -7364,13 +7404,13 @@ function visit_(key, node, visitor, path3) {
         }
       }
     } else if (isPair(node)) {
-      path3 = Object.freeze(path3.concat(node));
-      const ck = visit_("key", node.key, visitor, path3);
+      path6 = Object.freeze(path6.concat(node));
+      const ck = visit_("key", node.key, visitor, path6);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = visit_("value", node.value, visitor, path3);
+      const cv = visit_("value", node.value, visitor, path6);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -7391,17 +7431,17 @@ async function visitAsync(node, visitor) {
 visitAsync.BREAK = BREAK;
 visitAsync.SKIP = SKIP;
 visitAsync.REMOVE = REMOVE;
-async function visitAsync_(key, node, visitor, path3) {
-  const ctrl = await callVisitor(key, node, visitor, path3);
+async function visitAsync_(key, node, visitor, path6) {
+  const ctrl = await callVisitor(key, node, visitor, path6);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path3, ctrl);
-    return visitAsync_(key, ctrl, visitor, path3);
+    replaceNode(key, path6, ctrl);
+    return visitAsync_(key, ctrl, visitor, path6);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path3 = Object.freeze(path3.concat(node));
+      path6 = Object.freeze(path6.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = await visitAsync_(i, node.items[i], visitor, path3);
+        const ci = await visitAsync_(i, node.items[i], visitor, path6);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -7412,13 +7452,13 @@ async function visitAsync_(key, node, visitor, path3) {
         }
       }
     } else if (isPair(node)) {
-      path3 = Object.freeze(path3.concat(node));
-      const ck = await visitAsync_("key", node.key, visitor, path3);
+      path6 = Object.freeze(path6.concat(node));
+      const ck = await visitAsync_("key", node.key, visitor, path6);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = await visitAsync_("value", node.value, visitor, path3);
+      const cv = await visitAsync_("value", node.value, visitor, path6);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -7445,23 +7485,23 @@ function initVisitor(visitor) {
   }
   return visitor;
 }
-function callVisitor(key, node, visitor, path3) {
+function callVisitor(key, node, visitor, path6) {
   if (typeof visitor === "function")
-    return visitor(key, node, path3);
+    return visitor(key, node, path6);
   if (isMap(node))
-    return visitor.Map?.(key, node, path3);
+    return visitor.Map?.(key, node, path6);
   if (isSeq(node))
-    return visitor.Seq?.(key, node, path3);
+    return visitor.Seq?.(key, node, path6);
   if (isPair(node))
-    return visitor.Pair?.(key, node, path3);
+    return visitor.Pair?.(key, node, path6);
   if (isScalar(node))
-    return visitor.Scalar?.(key, node, path3);
+    return visitor.Scalar?.(key, node, path6);
   if (isAlias(node))
-    return visitor.Alias?.(key, node, path3);
+    return visitor.Alias?.(key, node, path6);
   return void 0;
 }
-function replaceNode(key, path3, node) {
-  const parent = path3[path3.length - 1];
+function replaceNode(key, path6, node) {
+  const parent = path6[path6.length - 1];
   if (isCollection(parent)) {
     parent.items[key] = node;
   } else if (isPair(parent)) {
@@ -7988,10 +8028,10 @@ function createNode(value, tagName, ctx) {
 }
 
 // node_modules/yaml/browser/dist/nodes/Collection.js
-function collectionFromPath(schema4, path3, value) {
+function collectionFromPath(schema4, path6, value) {
   let v = value;
-  for (let i = path3.length - 1; i >= 0; --i) {
-    const k = path3[i];
+  for (let i = path6.length - 1; i >= 0; --i) {
+    const k = path6[i];
     if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
       const a = [];
       a[k] = v;
@@ -8010,7 +8050,7 @@ function collectionFromPath(schema4, path3, value) {
     sourceObjects: /* @__PURE__ */ new Map()
   });
 }
-var isEmptyPath = (path3) => path3 == null || typeof path3 === "object" && !!path3[Symbol.iterator]().next().done;
+var isEmptyPath = (path6) => path6 == null || typeof path6 === "object" && !!path6[Symbol.iterator]().next().done;
 var Collection = class extends NodeBase {
   constructor(type, schema4) {
     super(type);
@@ -8040,11 +8080,11 @@ var Collection = class extends NodeBase {
    * be a Pair instance or a `{ key, value }` object, which may not have a key
    * that already exists in the map.
    */
-  addIn(path3, value) {
-    if (isEmptyPath(path3))
+  addIn(path6, value) {
+    if (isEmptyPath(path6))
       this.add(value);
     else {
-      const [key, ...rest] = path3;
+      const [key, ...rest] = path6;
       const node = this.get(key, true);
       if (isCollection(node))
         node.addIn(rest, value);
@@ -8058,8 +8098,8 @@ var Collection = class extends NodeBase {
    * Removes a value from the collection.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path3) {
-    const [key, ...rest] = path3;
+  deleteIn(path6) {
+    const [key, ...rest] = path6;
     if (rest.length === 0)
       return this.delete(key);
     const node = this.get(key, true);
@@ -8073,8 +8113,8 @@ var Collection = class extends NodeBase {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path3, keepScalar) {
-    const [key, ...rest] = path3;
+  getIn(path6, keepScalar) {
+    const [key, ...rest] = path6;
     const node = this.get(key, true);
     if (rest.length === 0)
       return !keepScalar && isScalar(node) ? node.value : node;
@@ -8092,8 +8132,8 @@ var Collection = class extends NodeBase {
   /**
    * Checks if the collection includes a value with the key `key`.
    */
-  hasIn(path3) {
-    const [key, ...rest] = path3;
+  hasIn(path6) {
+    const [key, ...rest] = path6;
     if (rest.length === 0)
       return this.has(key);
     const node = this.get(key, true);
@@ -8103,8 +8143,8 @@ var Collection = class extends NodeBase {
    * Sets a value in this collection. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path3, value) {
-    const [key, ...rest] = path3;
+  setIn(path6, value) {
+    const [key, ...rest] = path6;
     if (rest.length === 0) {
       this.set(key, value);
     } else {
@@ -10232,9 +10272,9 @@ var Document = class _Document {
       this.contents.add(value);
   }
   /** Adds a value to the document. */
-  addIn(path3, value) {
+  addIn(path6, value) {
     if (assertCollection(this.contents))
-      this.contents.addIn(path3, value);
+      this.contents.addIn(path6, value);
   }
   /**
    * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -10309,14 +10349,14 @@ var Document = class _Document {
    * Removes a value from the document.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path3) {
-    if (isEmptyPath(path3)) {
+  deleteIn(path6) {
+    if (isEmptyPath(path6)) {
       if (this.contents == null)
         return false;
       this.contents = null;
       return true;
     }
-    return assertCollection(this.contents) ? this.contents.deleteIn(path3) : false;
+    return assertCollection(this.contents) ? this.contents.deleteIn(path6) : false;
   }
   /**
    * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -10331,10 +10371,10 @@ var Document = class _Document {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path3, keepScalar) {
-    if (isEmptyPath(path3))
+  getIn(path6, keepScalar) {
+    if (isEmptyPath(path6))
       return !keepScalar && isScalar(this.contents) ? this.contents.value : this.contents;
-    return isCollection(this.contents) ? this.contents.getIn(path3, keepScalar) : void 0;
+    return isCollection(this.contents) ? this.contents.getIn(path6, keepScalar) : void 0;
   }
   /**
    * Checks if the document includes a value with the key `key`.
@@ -10345,10 +10385,10 @@ var Document = class _Document {
   /**
    * Checks if the document includes a value at `path`.
    */
-  hasIn(path3) {
-    if (isEmptyPath(path3))
+  hasIn(path6) {
+    if (isEmptyPath(path6))
       return this.contents !== void 0;
-    return isCollection(this.contents) ? this.contents.hasIn(path3) : false;
+    return isCollection(this.contents) ? this.contents.hasIn(path6) : false;
   }
   /**
    * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -10365,13 +10405,13 @@ var Document = class _Document {
    * Sets a value in this document. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path3, value) {
-    if (isEmptyPath(path3)) {
+  setIn(path6, value) {
+    if (isEmptyPath(path6)) {
       this.contents = value;
     } else if (this.contents == null) {
-      this.contents = collectionFromPath(this.schema, Array.from(path3), value);
+      this.contents = collectionFromPath(this.schema, Array.from(path6), value);
     } else if (assertCollection(this.contents)) {
-      this.contents.setIn(path3, value);
+      this.contents.setIn(path6, value);
     }
   }
   /**
@@ -11913,9 +11953,9 @@ function visit2(cst, visitor) {
 visit2.BREAK = BREAK2;
 visit2.SKIP = SKIP2;
 visit2.REMOVE = REMOVE2;
-visit2.itemAtPath = (cst, path3) => {
+visit2.itemAtPath = (cst, path6) => {
   let item = cst;
-  for (const [field, index] of path3) {
+  for (const [field, index] of path6) {
     const tok = item?.[field];
     if (tok && "items" in tok) {
       item = tok.items[index];
@@ -11924,23 +11964,23 @@ visit2.itemAtPath = (cst, path3) => {
   }
   return item;
 };
-visit2.parentCollection = (cst, path3) => {
-  const parent = visit2.itemAtPath(cst, path3.slice(0, -1));
-  const field = path3[path3.length - 1][0];
+visit2.parentCollection = (cst, path6) => {
+  const parent = visit2.itemAtPath(cst, path6.slice(0, -1));
+  const field = path6[path6.length - 1][0];
   const coll = parent?.[field];
   if (coll && "items" in coll)
     return coll;
   throw new Error("Parent collection not found");
 };
-function _visit(path3, item, visitor) {
-  let ctrl = visitor(item, path3);
+function _visit(path6, item, visitor) {
+  let ctrl = visitor(item, path6);
   if (typeof ctrl === "symbol")
     return ctrl;
   for (const field of ["key", "value"]) {
     const token = item[field];
     if (token && "items" in token) {
       for (let i = 0; i < token.items.length; ++i) {
-        const ci = _visit(Object.freeze(path3.concat([[field, i]])), token.items[i], visitor);
+        const ci = _visit(Object.freeze(path6.concat([[field, i]])), token.items[i], visitor);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK2)
@@ -11951,10 +11991,10 @@ function _visit(path3, item, visitor) {
         }
       }
       if (typeof ctrl === "function" && field === "key")
-        ctrl = ctrl(item, path3);
+        ctrl = ctrl(item, path6);
     }
   }
-  return typeof ctrl === "function" ? ctrl(item, path3) : ctrl;
+  return typeof ctrl === "function" ? ctrl(item, path6) : ctrl;
 }
 
 // node_modules/yaml/browser/dist/parse/cst.js
@@ -13519,61 +13559,345 @@ function parse(src, reviver, options) {
   }
   return doc.toJS(Object.assign({ reviver: _reviver }, options));
 }
-function stringify3(value, replacer, options) {
-  let _replacer = null;
-  if (typeof replacer === "function" || Array.isArray(replacer)) {
-    _replacer = replacer;
-  } else if (options === void 0 && replacer) {
-    options = replacer;
+
+// src/scope.js
+var execFileAsync = promisify(execFile);
+function stringArray(value, field, errors) {
+  if (value === void 0 || value === null) return [];
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
+    errors.push(`${field} \u5FC5\u987B\u662F\u975E\u7A7A\u5B57\u7B26\u4E32\u6570\u7EC4`);
+    return [];
   }
-  if (typeof options === "string")
-    options = options.length;
-  if (typeof options === "number") {
-    const indent = Math.round(options);
-    options = indent < 1 ? void 0 : indent > 8 ? { indent: 8 } : { indent };
+  return value.map((item) => item.trim());
+}
+function safeRelativePath(repoRoot, value, field, errors) {
+  const absolute = path.resolve(repoRoot, value);
+  const relative = path.relative(repoRoot, absolute);
+  if (!value || relative.startsWith("..") || path.isAbsolute(relative)) {
+    errors.push(`${field} \u5FC5\u987B\u662F\u4ED3\u5E93\u5185\u7684\u76F8\u5BF9\u8DEF\u5F84: ${value}`);
+    return null;
   }
-  if (value === void 0) {
-    const { keepUndefined } = options ?? replacer ?? {};
-    if (!keepUndefined)
-      return void 0;
+  return relative.split(path.sep).join("/");
+}
+async function exists(file) {
+  try {
+    await access(file);
+    return true;
+  } catch (error2) {
+    if (error2.code === "ENOENT") return false;
+    throw error2;
   }
-  if (isDocument(value) && !_replacer)
-    return value.toString(options);
-  return new Document(value, _replacer, options).toString(options);
+}
+async function trackedFiles(repoRoot) {
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["ls-files", "--cached", "--others", "--exclude-standard"],
+      { cwd: repoRoot }
+    );
+    return stdout.split(/\r?\n/).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
+  const absolute = path.resolve(repoRoot, scopePath);
+  const relative = path.relative(repoRoot, absolute);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
+  }
+  let value;
+  try {
+    value = parse(await readFile(absolute, "utf8"));
+  } catch (error2) {
+    if (error2.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
+    throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error2.message}`);
+  }
+  return { absolute, relative: relative.split(path.sep).join("/"), value };
+}
+async function validateScope(repoRoot, raw) {
+  const errors = [];
+  const warnings = [];
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return { errors: ["domain-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, domains: [] };
+  }
+  if (raw.schema_version !== 1) errors.push("schema_version \u5FC5\u987B\u4E3A 1");
+  if (!Array.isArray(raw.domains) || raw.domains.length === 0) {
+    errors.push("domains \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u9886\u57DF");
+    return { errors, warnings, domains: [] };
+  }
+  const files = await trackedFiles(repoRoot);
+  const ids = /* @__PURE__ */ new Set();
+  const domains = [];
+  for (const [index, item] of raw.domains.entries()) {
+    const prefix = `domains[${index}]`;
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      errors.push(`${prefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
+      continue;
+    }
+    const id = typeof item.id === "string" ? item.id.trim() : "";
+    if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) errors.push(`${prefix}.id \u5FC5\u987B\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ \u6216 -`);
+    if (ids.has(id)) errors.push(`\u9886\u57DF id \u91CD\u590D: ${id}`);
+    ids.add(id);
+    const domainErrors = [];
+    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, domainErrors);
+    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, domainErrors);
+    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, domainErrors);
+    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, domainErrors);
+    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, domainErrors);
+    const keywords = stringArray(item.keywords, `${prefix}.keywords`, domainErrors);
+    errors.push(...domainErrors);
+    if (includePackages.length === 0 && includeFiles.length === 0) {
+      errors.push(`${prefix} \u81F3\u5C11\u586B\u5199 include_packages \u6216 include_files`);
+    }
+    for (const packageName of [...includePackages, ...excludePackages]) {
+      const packagePath = packageName.replaceAll(".", "/");
+      const matched = files.some((file) => file.includes(`/${packagePath}/`) || file.startsWith(`${packagePath}/`));
+      if (!matched) warnings.push(`${prefix} \u5305\u8303\u56F4\u672A\u5339\u914D\u5DF2\u8DDF\u8E2A\u6587\u4EF6: ${packageName}`);
+    }
+    const normalizePaths = async (values, field, required2) => {
+      const normalized = [];
+      for (const value of values) {
+        const relative = safeRelativePath(repoRoot, value, `${prefix}.${field}`, errors);
+        if (!relative) continue;
+        if (!await exists(path.join(repoRoot, relative))) {
+          const message = `${prefix}.${field} \u672A\u627E\u5230: ${relative}`;
+          (required2 ? errors : warnings).push(message);
+        }
+        normalized.push(relative);
+      }
+      return normalized;
+    };
+    const yuqueSources = [];
+    if (item.yuque_sources !== void 0 && item.yuque_sources !== null && !Array.isArray(item.yuque_sources)) {
+      errors.push(`${prefix}.yuque_sources \u5FC5\u987B\u662F\u6570\u7EC4`);
+    }
+    for (const [sourceIndex, source] of (Array.isArray(item.yuque_sources) ? item.yuque_sources : []).entries()) {
+      const sourcePrefix = `${prefix}.yuque_sources[${sourceIndex}]`;
+      if (!source || typeof source !== "object" || Array.isArray(source)) {
+        errors.push(`${sourcePrefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
+        continue;
+      }
+      const baseSlug = typeof source.base_slug === "string" ? source.base_slug.trim() : "";
+      const documentUrl = typeof source.document_url === "string" ? source.document_url.trim() : "";
+      if (Boolean(baseSlug) === Boolean(documentUrl)) {
+        errors.push(`${sourcePrefix} \u5FC5\u987B\u4E14\u53EA\u80FD\u586B\u5199 base_slug \u6216 document_url`);
+        continue;
+      }
+      yuqueSources.push(baseSlug ? { base_slug: baseSlug } : { document_url: documentUrl });
+    }
+    if (yuqueSources.some((source) => source.base_slug) && keywords.length === 0) {
+      errors.push(`${prefix} \u914D\u7F6E base_slug \u65F6\u5FC5\u987B\u586B\u5199 keywords`);
+    }
+    const status = typeof item.status === "string" ? item.status.trim() : "active";
+    if (!["active", "inactive"].includes(status)) {
+      errors.push(`${prefix}.status \u5FC5\u987B\u662F active \u6216 inactive`);
+    }
+    domains.push({
+      id,
+      name: typeof item.name === "string" ? item.name.trim() : id,
+      owner: typeof item.owner === "string" ? item.owner.trim() : "",
+      status,
+      include_packages: includePackages,
+      include_files: await normalizePaths(includeFiles, "include_files", true),
+      exclude_packages: excludePackages,
+      exclude_files: await normalizePaths(excludeFiles, "exclude_files", false),
+      keywords,
+      project_docs: await normalizePaths(projectDocs, "project_docs", true),
+      yuque_sources: yuqueSources
+    });
+  }
+  return { errors, warnings, domains };
 }
 
-// src/args.js
-import { realpathSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-function parseArgs(argv) {
-  const values = {};
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
-    if (!token.startsWith("--")) throw new Error(`\u672A\u77E5\u53C2\u6570: ${token}`);
-    const key = token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-    const next = argv[index + 1];
-    if (!next || next.startsWith("--")) {
-      values[key] = true;
-    } else {
-      values[key] = next;
-      index += 1;
+// src/yuque-selection-data.js
+import { readFile as readFile2 } from "node:fs/promises";
+import path2 from "node:path";
+async function readYuqueSelection(repoRoot, domainId) {
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(domainId)) throw new Error("\u9886\u57DF ID \u683C\u5F0F\u65E0\u6548");
+  const file = path2.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+  let value;
+  try {
+    value = parse(await readFile2(file, "utf8"));
+  } catch (error2) {
+    if (error2.code === "ENOENT") throw new Error(`\u5019\u9009\u6587\u4EF6\u4E0D\u5B58\u5728: ${path2.relative(repoRoot, file)}`);
+    throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u5019\u9009\u6587\u4EF6: ${error2.message}`);
+  }
+  if (value?.domain_id !== domainId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u9886\u57DF\u4E0D\u5339\u914D");
+  for (const [index, candidate] of value.candidates.entries()) {
+    if (!["pending", "approved", "rejected"].includes(candidate?.decision)) {
+      throw new Error(`candidates[${index}].decision \u5FC5\u987B\u662F pending\u3001approved \u6216 rejected`);
     }
   }
-  return values;
+  const pending = value.candidates.filter((candidate) => candidate.decision === "pending");
+  return {
+    action: pending.length > 0 ? "awaiting_confirmation" : "confirmed",
+    requires_human_input: pending.length > 0,
+    domain_id: domainId,
+    pending_count: pending.length,
+    approved: value.candidates.filter((candidate) => candidate.decision === "approved").map((candidate) => ({
+      doc_id: candidate.doc_id || null,
+      document_url: candidate.document_url || candidate.url || null,
+      title: candidate.title,
+      content_updated_at: candidate.content_updated_at || null,
+      updated_at: candidate.updated_at || null
+    }))
+  };
 }
-function printJson(value) {
-  process.stdout.write(`${JSON.stringify(value, null, 2)}
-`);
+
+// src/archive.js
+import { createHash } from "node:crypto";
+import { execFile as execFile2 } from "node:child_process";
+import { mkdir, readFile as readFile3, readdir, stat, writeFile } from "node:fs/promises";
+import path3 from "node:path";
+import { promisify as promisify2 } from "node:util";
+
+// src/chunker.js
+var DEFAULT_TARGET = 28e3;
+var DEFAULT_OVERLAP = 200;
+function chunkText(text, options = {}) {
+  const target = Math.max(500, options.targetChars ?? DEFAULT_TARGET);
+  const overlap = Math.max(0, Math.min(
+    options.overlapChars ?? DEFAULT_OVERLAP,
+    Math.floor(target / 2)
+  ));
+  const trimmed = String(text ?? "").trim();
+  if (!trimmed) return [];
+  if (trimmed.length <= target) return [trimmed];
+  const sections = [];
+  let current = [];
+  for (const line of trimmed.split("\n")) {
+    if (/^#{1,6}\s+\S/.test(line) && current.length > 0) {
+      sections.push(current.join("\n"));
+      current = [line];
+    } else {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) sections.push(current.join("\n"));
+  const units = [];
+  for (const section of sections) {
+    const value = section.trim();
+    if (!value) continue;
+    if (value.length <= target) {
+      units.push(value);
+      continue;
+    }
+    for (const paragraph of value.split(/\n\s*\n/)) {
+      const part = paragraph.trim();
+      if (!part) continue;
+      if (part.length <= target) {
+        units.push(part);
+      } else {
+        for (let offset = 0; offset < part.length; offset += target) {
+          units.push(part.slice(offset, offset + target));
+        }
+      }
+    }
+  }
+  const chunks = [];
+  let buffer = "";
+  for (const unit of units) {
+    const candidate = buffer ? `${buffer}
+
+${unit}` : unit;
+    if (candidate.length > target && buffer) {
+      chunks.push(buffer);
+      const tail = overlap > 0 ? buffer.slice(-overlap) : "";
+      buffer = tail ? `${tail}
+
+${unit}` : unit;
+    } else {
+      buffer = candidate;
+    }
+  }
+  if (buffer) chunks.push(buffer);
+  return chunks;
 }
-function printHelp(argv, help) {
-  if (!argv.includes("--help") && !argv.includes("-h")) return false;
-  process.stdout.write(`${help.trim()}
-`);
-  return true;
+
+// src/frontmatter.js
+function parseFrontmatter(markdown) {
+  const match = String(markdown).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { data: {}, content: String(markdown) };
+  return { data: parseSimpleYaml(match[1]), content: match[2] };
 }
-function isMain(moduleUrl) {
-  if (!process.argv[1]) return false;
-  return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
+function parseSimpleYaml(yaml) {
+  const data = {};
+  let listKey = null;
+  for (const rawLine of yaml.split(/\r?\n/)) {
+    if (!rawLine.trim()) continue;
+    const listItem = rawLine.match(/^\s*-\s+(.*)$/);
+    if (listItem && listKey) {
+      data[listKey].push(unquote(listItem[1].trim()));
+      continue;
+    }
+    const pair = rawLine.match(/^([\w-]+)\s*:\s*(.*)$/);
+    if (!pair) continue;
+    const [, key, rawValue] = pair;
+    const value = rawValue.trim();
+    listKey = null;
+    if (value === "") {
+      data[key] = [];
+      listKey = key;
+    } else if (value === "null" || value === "~") {
+      data[key] = null;
+    } else if (value === "true" || value === "false") {
+      data[key] = value === "true";
+    } else if (/^-?\d+(\.\d+)?$/.test(value)) {
+      data[key] = Number(value);
+    } else if (value.startsWith("[") && value.endsWith("]")) {
+      const inner = value.slice(1, -1).trim();
+      data[key] = inner ? inner.split(",").map((item) => unquote(item.trim())) : [];
+    } else {
+      data[key] = unquote(value);
+    }
+  }
+  return data;
+}
+function unquote(value) {
+  if (value.startsWith('"') && value.endsWith('"')) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value.slice(1, -1);
+    }
+  }
+  if (value.startsWith("'") && value.endsWith("'")) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+function serializeFrontmatter(data) {
+  const lines = ["---"];
+  for (const [key, value] of Object.entries(data)) {
+    if (value === null || value === void 0 || value === "") {
+      lines.push(`${key}: null`);
+    } else if (Array.isArray(value)) {
+      if (value.length === 0) {
+        lines.push(`${key}: []`);
+      } else {
+        lines.push(`${key}:`);
+        for (const item of value) lines.push(`  - ${formatScalar(item)}`);
+      }
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      lines.push(`${key}: ${value}`);
+    } else {
+      lines.push(`${key}: ${formatScalar(value)}`);
+    }
+  }
+  lines.push("---", "");
+  return lines.join("\n");
+}
+function formatScalar(value) {
+  const string5 = String(value);
+  if (!string5 || /[:#?&*!|>'"%@`{}\[\]]/.test(string5) || /^\s|\s$/.test(string5)) {
+    return `"${string5.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  }
+  if (/^(true|false|null|~|-?\d+(\.\d+)?)$/.test(string5)) return `"${string5}"`;
+  return string5;
+}
+function extractHeading(markdown, fallback) {
+  return String(markdown).match(/^#\s+(.+)$/m)?.[1]?.trim() || fallback;
 }
 
 // node_modules/zod/v4/core/core.js
@@ -13772,10 +14096,10 @@ function assignProp(target, prop, value) {
     configurable: true
   });
 }
-function getElementAtPath(obj, path3) {
-  if (!path3)
+function getElementAtPath(obj, path6) {
+  if (!path6)
     return obj;
-  return path3.reduce((acc, key) => acc?.[key], obj);
+  return path6.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -14095,11 +14419,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path3, issues) {
+function prefixIssues(path6, issues) {
   return issues.map((iss) => {
     var _a;
     (_a = iss).path ?? (_a.path = []);
-    iss.path.unshift(path3);
+    iss.path.unshift(path6);
     return iss;
   });
 }
@@ -22301,7 +22625,8 @@ var StreamableHTTPClientTransport = class {
 };
 
 // src/mcp-client.js
-var YUQUE_SEARCH_TOOL = "yuque_search_documents";
+var YUQUE_GET_TOOL = "yuque_get_document";
+var DOC_SUMMARIZE_TOOL = "doc_extract_and_summarize";
 var MCP_URL = "http://192.168.0.22:3000/mcp";
 async function withMcpClient(callback) {
   const client = new Client({ name: "lyy-kb-scripts", version: "0.1.0" });
@@ -22337,292 +22662,342 @@ function structuredToolResult(result) {
   }
 }
 
-// src/scope.js
-import { execFile } from "node:child_process";
-import { access, readFile } from "node:fs/promises";
-import path from "node:path";
-import { promisify } from "node:util";
-var execFileAsync = promisify(execFile);
-function stringArray(value, field, errors) {
-  if (value === void 0 || value === null) return [];
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item.trim())) {
-    errors.push(`${field} \u5FC5\u987B\u662F\u975E\u7A7A\u5B57\u7B26\u4E32\u6570\u7EC4`);
-    return [];
-  }
-  return value.map((item) => item.trim());
+// src/archive.js
+var execFileAsync2 = promisify2(execFile2);
+function sha256(content) {
+  return createHash("sha256").update(content).digest("hex");
 }
-function safeRelativePath(repoRoot, value, field, errors) {
-  const absolute = path.resolve(repoRoot, value);
-  const relative = path.relative(repoRoot, absolute);
-  if (!value || relative.startsWith("..") || path.isAbsolute(relative)) {
-    errors.push(`${field} \u5FC5\u987B\u662F\u4ED3\u5E93\u5185\u7684\u76F8\u5BF9\u8DEF\u5F84: ${value}`);
-    return null;
-  }
-  return relative.split(path.sep).join("/");
+function slugify(value) {
+  const slug = String(value).normalize("NFKC").replace(/[\\/:*?"<>|\s]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  return slug || "document";
 }
-async function exists(file) {
+async function loadRepoDocument(repoRoot, file) {
+  const absolute = path3.resolve(repoRoot, file);
+  const relativePath = path3.relative(repoRoot, absolute);
+  const relative = relativePath.split(path3.sep).join("/");
+  if (relativePath.startsWith("..") || path3.isAbsolute(relativePath)) {
+    throw new Error("\u9879\u76EE\u6587\u6863\u5FC5\u987B\u4F4D\u4E8E\u4ED3\u5E93\u5185");
+  }
+  if (path3.extname(absolute).toLowerCase() !== ".md") {
+    throw new Error("\u9879\u76EE\u6587\u6863\u5FC5\u987B\u662F Markdown \u6587\u4EF6");
+  }
+  const { stdout: statusOutput } = await execFileAsync2(
+    "git",
+    ["status", "--porcelain", "--", relative],
+    { cwd: repoRoot }
+  );
+  if (statusOutput.trim()) throw new Error(`\u9879\u76EE\u6587\u6863\u5B58\u5728\u672A\u63D0\u4EA4\u53D8\u66F4: ${relative}`);
+  const { stdout: commitOutput } = await execFileAsync2(
+    "git",
+    ["log", "-1", "--format=%H", "--", relative],
+    { cwd: repoRoot }
+  );
+  const sourceCommit = commitOutput.trim();
+  if (!sourceCommit) throw new Error(`\u9879\u76EE\u6587\u6863\u6CA1\u6709\u53EF\u8FFD\u6EAF\u63D0\u4EA4: ${relative}`);
+  const content = await readFile3(absolute, "utf8");
+  return {
+    content,
+    title: extractHeading(content, path3.basename(relative, path3.extname(relative))),
+    sourceType: "repo",
+    sourceRef: relative,
+    sourceCommit,
+    sourceUpdatedAt: null,
+    docId: null
+  };
+}
+async function loadYuqueDocument({ docId, documentUrl }) {
+  const args = documentUrl ? { document_url: documentUrl } : { doc_id: String(docId) };
+  const result = structuredToolResult(await callMcpTool(YUQUE_GET_TOOL, args));
+  return normalizeYuqueDocument(result, { docId, documentUrl });
+}
+function normalizeYuqueDocument(result, { docId, documentUrl } = {}) {
+  const content = result.content ?? result.content_markdown;
+  if (typeof content !== "string" || !content.trim()) {
+    throw new Error(`${YUQUE_GET_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 content`);
+  }
+  const sourceUpdatedAt = result.content_updated_at || result.updated_at;
+  if (!sourceUpdatedAt) {
+    throw new Error(`${YUQUE_GET_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 content_updated_at \u548C updated_at`);
+  }
+  const sourceRef = result.document_url || result.url || documentUrl;
+  if (!sourceRef) throw new Error(`${YUQUE_GET_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 document_url`);
+  return {
+    content,
+    title: result.title || extractHeading(content, `yuque-${result.doc_id || docId}`),
+    sourceType: "yuque",
+    sourceRef,
+    sourceCommit: null,
+    sourceUpdatedAt,
+    docId: String(result.doc_id || docId || "")
+  };
+}
+async function findCurrentArchive(archiveRoot, source) {
+  let entries;
   try {
-    await access(file);
-    return true;
+    entries = await readdir(archiveRoot, { withFileTypes: true });
   } catch (error2) {
-    if (error2.code === "ENOENT") return false;
+    if (error2.code === "ENOENT") return null;
     throw error2;
   }
-}
-async function trackedFiles(repoRoot) {
-  try {
-    const { stdout } = await execFileAsync(
-      "git",
-      ["ls-files", "--cached", "--others", "--exclude-standard"],
-      { cwd: repoRoot }
-    );
-    return stdout.split(/\r?\n/).filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
-  const absolute = path.resolve(repoRoot, scopePath);
-  const relative = path.relative(repoRoot, absolute);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
-  }
-  let value;
-  try {
-    value = parse(await readFile(absolute, "utf8"));
-  } catch (error2) {
-    if (error2.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
-    throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error2.message}`);
-  }
-  return { absolute, relative: relative.split(path.sep).join("/"), value };
-}
-async function validateScope(repoRoot, raw) {
-  const errors = [];
-  const warnings = [];
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { errors: ["domain-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, domains: [] };
-  }
-  if (raw.schema_version !== 1) errors.push("schema_version \u5FC5\u987B\u4E3A 1");
-  if (!Array.isArray(raw.domains) || raw.domains.length === 0) {
-    errors.push("domains \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u9886\u57DF");
-    return { errors, warnings, domains: [] };
-  }
-  const files = await trackedFiles(repoRoot);
-  const ids = /* @__PURE__ */ new Set();
-  const domains = [];
-  for (const [index, item] of raw.domains.entries()) {
-    const prefix = `domains[${index}]`;
-    if (!item || typeof item !== "object" || Array.isArray(item)) {
-      errors.push(`${prefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
-      continue;
-    }
-    const id = typeof item.id === "string" ? item.id.trim() : "";
-    if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) errors.push(`${prefix}.id \u5FC5\u987B\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ \u6216 -`);
-    if (ids.has(id)) errors.push(`\u9886\u57DF id \u91CD\u590D: ${id}`);
-    ids.add(id);
-    const domainErrors = [];
-    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, domainErrors);
-    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, domainErrors);
-    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, domainErrors);
-    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, domainErrors);
-    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, domainErrors);
-    const keywords = stringArray(item.keywords, `${prefix}.keywords`, domainErrors);
-    errors.push(...domainErrors);
-    if (includePackages.length === 0 && includeFiles.length === 0) {
-      errors.push(`${prefix} \u81F3\u5C11\u586B\u5199 include_packages \u6216 include_files`);
-    }
-    for (const packageName of [...includePackages, ...excludePackages]) {
-      const packagePath = packageName.replaceAll(".", "/");
-      const matched = files.some((file) => file.includes(`/${packagePath}/`) || file.startsWith(`${packagePath}/`));
-      if (!matched) warnings.push(`${prefix} \u5305\u8303\u56F4\u672A\u5339\u914D\u5DF2\u8DDF\u8E2A\u6587\u4EF6: ${packageName}`);
-    }
-    const normalizePaths = async (values, field, required2) => {
-      const normalized = [];
-      for (const value of values) {
-        const relative = safeRelativePath(repoRoot, value, `${prefix}.${field}`, errors);
-        if (!relative) continue;
-        if (!await exists(path.join(repoRoot, relative))) {
-          const message = `${prefix}.${field} \u672A\u627E\u5230: ${relative}`;
-          (required2 ? errors : warnings).push(message);
-        }
-        normalized.push(relative);
+  const matches = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const summaryPath = path3.join(archiveRoot, entry.name, "summary.md");
+    try {
+      const { data } = parseFrontmatter(await readFile3(summaryPath, "utf8"));
+      if (data.source_type === source.sourceType && data.source_ref === source.sourceRef) {
+        matches.push({ path: path3.join(archiveRoot, entry.name), data });
       }
-      return normalized;
-    };
-    const yuqueSources = [];
-    if (item.yuque_sources !== void 0 && item.yuque_sources !== null && !Array.isArray(item.yuque_sources)) {
-      errors.push(`${prefix}.yuque_sources \u5FC5\u987B\u662F\u6570\u7EC4`);
+    } catch (error2) {
+      if (error2.code !== "ENOENT") throw error2;
     }
-    for (const [sourceIndex, source] of (Array.isArray(item.yuque_sources) ? item.yuque_sources : []).entries()) {
-      const sourcePrefix = `${prefix}.yuque_sources[${sourceIndex}]`;
-      if (!source || typeof source !== "object" || Array.isArray(source)) {
-        errors.push(`${sourcePrefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
-        continue;
-      }
-      const baseSlug = typeof source.base_slug === "string" ? source.base_slug.trim() : "";
-      const documentUrl = typeof source.document_url === "string" ? source.document_url.trim() : "";
-      if (Boolean(baseSlug) === Boolean(documentUrl)) {
-        errors.push(`${sourcePrefix} \u5FC5\u987B\u4E14\u53EA\u80FD\u586B\u5199 base_slug \u6216 document_url`);
-        continue;
-      }
-      yuqueSources.push(baseSlug ? { base_slug: baseSlug } : { document_url: documentUrl });
-    }
-    if (yuqueSources.some((source) => source.base_slug) && keywords.length === 0) {
-      errors.push(`${prefix} \u914D\u7F6E base_slug \u65F6\u5FC5\u987B\u586B\u5199 keywords`);
-    }
-    const status = typeof item.status === "string" ? item.status.trim() : "active";
-    if (!["active", "inactive"].includes(status)) {
-      errors.push(`${prefix}.status \u5FC5\u987B\u662F active \u6216 inactive`);
-    }
-    domains.push({
-      id,
-      name: typeof item.name === "string" ? item.name.trim() : id,
-      owner: typeof item.owner === "string" ? item.owner.trim() : "",
-      status,
-      include_packages: includePackages,
-      include_files: await normalizePaths(includeFiles, "include_files", true),
-      exclude_packages: excludePackages,
-      exclude_files: await normalizePaths(excludeFiles, "exclude_files", false),
-      keywords,
-      project_docs: await normalizePaths(projectDocs, "project_docs", true),
-      yuque_sources: yuqueSources
-    });
   }
-  return { errors, warnings, domains };
+  matches.sort((a, b) => String(b.data.archived_at).localeCompare(String(a.data.archived_at)));
+  return matches[0] || null;
+}
+function sourceUnchanged(current, source) {
+  if (!current) return false;
+  if (source.sourceType === "repo") return current.data.source_commit === source.sourceCommit;
+  return current.data.source_updated_at === source.sourceUpdatedAt;
+}
+function normalizeDocumentSummary(result, chunks) {
+  const summary = typeof result.summary === "string" ? result.summary.trim() : "";
+  const topics = Array.isArray(result.topics) && result.topics.length > 0 ? result.topics : result.keywords;
+  if (!summary) throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 summary`);
+  if (!Array.isArray(topics) || topics.length === 0 || topics.some((item) => typeof item !== "string" || !item.trim())) {
+    throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u503C\u7F3A\u5C11 topics`);
+  }
+  if (!Array.isArray(result.chunks) || result.chunks.length !== chunks.length) {
+    throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u7684 chunks \u6570\u91CF\u4E0E\u672C\u5730\u5207\u5206\u4E0D\u4E00\u81F4`);
+  }
+  const summaries = /* @__PURE__ */ new Map();
+  for (const item of result.chunks) {
+    if (!Number.isInteger(item.index) || item.index < 0 || item.index >= chunks.length) {
+      throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u4E86\u65E0\u6548 chunk index`);
+    }
+    if (summaries.has(item.index)) throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u4E86\u91CD\u590D chunk index`);
+    if (typeof item.title !== "string" || !item.title.trim() || typeof item.summary !== "string" || !item.summary.trim()) {
+      throw new Error(`${DOC_SUMMARIZE_TOOL} \u8FD4\u56DE\u7684 chunk \u6458\u8981\u4E0D\u5B8C\u6574`);
+    }
+    summaries.set(item.index, { title: item.title.trim(), summary: item.summary.trim() });
+  }
+  if (summaries.size !== chunks.length) throw new Error(`${DOC_SUMMARIZE_TOOL} \u672A\u8986\u76D6\u5168\u90E8 chunk`);
+  return {
+    title: typeof result.title === "string" && result.title.trim() ? result.title.trim() : null,
+    keyTopics: topics.map((item) => item.trim()),
+    summary,
+    chunks: chunks.map((_, index) => summaries.get(index))
+  };
+}
+async function summarizeDocument(source, chunks) {
+  const result = structuredToolResult(await callMcpTool(DOC_SUMMARIZE_TOOL, {
+    content: source.content,
+    title: source.title,
+    max_keywords: 7,
+    include_chunk_summaries: true
+  }));
+  return normalizeDocumentSummary(result, chunks);
+}
+async function createStaging({ repoRoot, archiveRoot, name, source, summarize = summarizeDocument }) {
+  const now = /* @__PURE__ */ new Date();
+  const date4 = now.toISOString().slice(0, 10);
+  const baseId = `${date4}-${source.sourceType}-${slugify(name || source.title)}`;
+  const archiveId = await nextArchiveId(archiveRoot, baseId);
+  const stagingRoot = path3.join(repoRoot, "docs", "kb", ".meta", "archive-staging");
+  const stagingPath = path3.join(stagingRoot, `${archiveId}-${process.pid}-${Date.now()}`);
+  const finalPath = path3.join(archiveRoot, archiveId);
+  const chunks = chunkText(source.content);
+  if (chunks.length === 0) throw new Error("\u6765\u6E90\u6587\u6863\u4E3A\u7A7A");
+  const documentSummary = await summarize(source, chunks);
+  await mkdir(path3.join(stagingPath, "chunks"), { recursive: true });
+  await writeFile(path3.join(stagingPath, "original.md"), source.content, "utf8");
+  const common = {
+    source_type: source.sourceType,
+    source_ref: source.sourceRef,
+    doc_id: source.docId,
+    source_hash: sha256(source.content),
+    source_commit: source.sourceCommit,
+    source_updated_at: source.sourceUpdatedAt,
+    archived_at: now.toISOString(),
+    status: "\u73B0\u884C"
+  };
+  const summary = serializeFrontmatter({
+    type: "doc-summary",
+    docId: archiveId,
+    title: source.title,
+    keyTopics: documentSummary.keyTopics,
+    ...common
+  }) + `# ${documentSummary.title || source.title}
+
+${documentSummary.summary}
+
+## \u6DB5\u76D6\u5185\u5BB9
+
+${documentSummary.keyTopics.map((topic) => `- ${topic}`).join("\n")}
+`;
+  await writeFile(path3.join(stagingPath, "summary.md"), summary, "utf8");
+  const chunkHashes = [];
+  for (let index = 0; index < chunks.length; index += 1) {
+    const content = chunks[index];
+    chunkHashes.push(sha256(content));
+    const markdown = serializeFrontmatter({
+      type: "chunk",
+      docId: archiveId,
+      index,
+      title: documentSummary.chunks[index].title || extractHeading(content, source.title),
+      summary: documentSummary.chunks[index].summary,
+      prev: index > 0 ? index - 1 : null,
+      next: index < chunks.length - 1 ? index + 1 : null
+    }) + `${content}
+`;
+    await writeFile(path3.join(stagingPath, "chunks", `${String(index).padStart(2, "0")}.md`), markdown, "utf8");
+  }
+  const manifest = {
+    schema_version: 1,
+    archive_id: archiveId,
+    archive_root: archiveRoot,
+    final_path: finalPath,
+    source: common,
+    chunk_hashes: chunkHashes
+  };
+  await writeFile(path3.join(stagingPath, "manifest.json"), `${JSON.stringify(manifest, null, 2)}
+`, "utf8");
+  return { stagingPath, finalPath, manifest };
+}
+async function nextArchiveId(archiveRoot, baseId) {
+  await mkdir(archiveRoot, { recursive: true });
+  for (let suffix = 1; ; suffix += 1) {
+    const candidate = suffix === 1 ? baseId : `${baseId}-${suffix}`;
+    try {
+      await stat(path3.join(archiveRoot, candidate));
+    } catch (error2) {
+      if (error2.code === "ENOENT") return candidate;
+      throw error2;
+    }
+  }
 }
 
-// src/yuque-candidates.js
-var HELP = `Usage: yuque-candidates.js --domain <domain_id> [--repo-root <path>]
+// src/archive-publisher.js
+import { readFile as readFile4, readdir as readdir2, rename, unlink, writeFile as writeFile2 } from "node:fs/promises";
+import path4 from "node:path";
+function assertComplete(value, label) {
+  if (!value || String(value).includes("TODO")) throw new Error(`${label} \u5C1A\u672A\u5B8C\u6210`);
+}
+async function publishStaging(stagingPath) {
+  stagingPath = path4.resolve(stagingPath);
+  const manifest = JSON.parse(await readFile4(path4.join(stagingPath, "manifest.json"), "utf8"));
+  const archiveRoot = path4.resolve(manifest.archive_root);
+  const finalPath = path4.resolve(manifest.final_path);
+  const relative = path4.relative(archiveRoot, finalPath);
+  if (!relative || relative.startsWith("..") || path4.isAbsolute(relative)) throw new Error("manifest.final_path \u4E0D\u5728 archive \u6839\u76EE\u5F55\u5185");
+  const summaryPath = path4.join(stagingPath, "summary.md");
+  const summary = parseFrontmatter(await readFile4(summaryPath, "utf8"));
+  assertComplete(summary.data.title, "summary.title");
+  if (!Array.isArray(summary.data.keyTopics) || summary.data.keyTopics.length === 0) throw new Error("summary.keyTopics \u5C1A\u672A\u5B8C\u6210");
+  for (const topic of summary.data.keyTopics) assertComplete(topic, "summary.keyTopics");
+  assertComplete(summary.content, "summary \u6B63\u6587");
+  summary.data = { ...summary.data, type: "doc-summary", docId: manifest.archive_id, ...manifest.source };
+  await writeFile2(summaryPath, `${serializeFrontmatter(summary.data)}${summary.content.trim()}
+`, "utf8");
+  const chunkDir = path4.join(stagingPath, "chunks");
+  const files = (await readdir2(chunkDir)).filter((file) => file.endsWith(".md")).sort();
+  if (files.length !== manifest.chunk_hashes.length) throw new Error("chunk \u6570\u91CF\u4E0E manifest \u4E0D\u4E00\u81F4");
+  for (let index = 0; index < files.length; index += 1) {
+    const chunkPath = path4.join(chunkDir, files[index]);
+    const chunk = parseFrontmatter(await readFile4(chunkPath, "utf8"));
+    assertComplete(chunk.data.title, `chunk ${index} title`);
+    assertComplete(chunk.data.summary, `chunk ${index} summary`);
+    if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
+    chunk.data = { ...chunk.data, type: "chunk", docId: manifest.archive_id, index, prev: index > 0 ? index - 1 : null, next: index < files.length - 1 ? index + 1 : null };
+    await writeFile2(chunkPath, `${serializeFrontmatter(chunk.data)}${chunk.content.trim()}
+`, "utf8");
+  }
+  await unlink(path4.join(stagingPath, "manifest.json"));
+  await rename(stagingPath, finalPath);
+  return { action: "created", path: finalPath, archive_id: manifest.archive_id };
+}
 
-Search configured Yuque sources and refresh the human review candidate file.
-Run from the target repository root unless --repo-root is provided.`;
-function candidateKey(candidate) {
-  const documentUrl = candidate.document_url || candidate.url;
-  return documentUrl ? `url:${documentUrl}` : `doc:${candidate.doc_id}`;
-}
-function searchItems(value) {
-  if (Array.isArray(value)) return value;
-  for (const key of ["documents", "items", "results"]) {
-    if (Array.isArray(value?.[key])) return value[key];
-  }
-  throw new Error("yuque_search \u8FD4\u56DE\u503C\u5FC5\u987B\u662F\u6587\u6863\u6570\u7EC4");
-}
-async function existingDecisions(file) {
-  try {
-    const value = parse(await readFile2(file, "utf8"));
-    const decisions = /* @__PURE__ */ new Map();
-    for (const [index, item] of (value?.candidates || []).entries()) {
-      if (!["pending", "approved", "rejected"].includes(item?.decision)) {
-        throw new Error(`candidates[${index}].decision \u65E0\u6548`);
-      }
-      decisions.set(candidateKey(item), item.decision);
-    }
-    return decisions;
-  } catch (error2) {
-    if (error2.code === "ENOENT") return /* @__PURE__ */ new Map();
-    throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u73B0\u6709\u5019\u9009\u6587\u4EF6: ${error2.message}`);
-  }
-}
-async function generateYuqueCandidates({ repoRoot, domainId, search }) {
+// src/archive-domain.js
+var HELP = `Usage:
+  archive-domain.js --domain <domain_id> [--repo-root <path>]
+
+Archive all project and approved Yuque documents for one domain.
+The script handles source checks, incremental skips, summarization, validation, and publication.`;
+async function domainSources(repoRoot, domainId) {
   const loaded = await loadScope(repoRoot);
   const checked = await validateScope(repoRoot, loaded.value);
   if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
   const domain = checked.domains.find((item) => item.id === domainId && item.status === "active");
   if (!domain) throw new Error(`\u672A\u627E\u5230 active \u9886\u57DF: ${domainId}`);
-  const output = path2.join(repoRoot, "docs", "kb", ".review", domain.id, "yuque-candidates.yaml");
-  const decisions = await existingDecisions(output);
-  const candidates = /* @__PURE__ */ new Map();
-  const runSearch = search || (async (args) => structuredToolResult(
-    await callMcpTool(YUQUE_SEARCH_TOOL, args)
-  ));
-  for (const source of domain.yuque_sources) {
-    if (source.document_url) {
-      const candidate = {
-        doc_id: null,
-        title: source.document_url,
-        document_url: source.document_url,
-        summary: null,
-        updated_at: null,
-        content_updated_at: null,
-        sources: [{ document_url: source.document_url }],
-        matched_keywords: [],
-        match_evidence: "domain-scope.yaml \u76F4\u63A5\u6307\u5B9A\u7684\u6587\u6863\u5730\u5740"
-      };
-      candidates.set(candidateKey(candidate), candidate);
+  const sources = domain.project_docs.map((file) => ({ mode: "repo", value: file }));
+  if (domain.yuque_sources.length > 0) {
+    const selection = await readYuqueSelection(repoRoot, domainId);
+    if (selection.pending_count > 0) throw new Error(`\u8BED\u96C0\u5019\u9009\u4ECD\u6709 ${selection.pending_count} \u4E2A pending\uFF1B\u5148\u5B8C\u6210\u4EBA\u5DE5\u786E\u8BA4`);
+    sources.push(...selection.approved.map((item) => ({ mode: "yuque", value: item })));
+  }
+  return sources;
+}
+async function archiveDomain({ repoRoot, domainId, summarize }) {
+  const archiveRoot = path5.join(repoRoot, "docs", "kb", "archive");
+  const sources = await domainSources(repoRoot, domainId);
+  const results = [];
+  for (const item of sources) {
+    const source = item.mode === "repo" ? await loadRepoDocument(repoRoot, item.value) : await loadYuqueDocument({ docId: item.value.doc_id, documentUrl: item.value.document_url });
+    const current = await findCurrentArchive(archiveRoot, source);
+    if (sourceUnchanged(current, source)) {
+      results.push({ action: "skipped", source_ref: source.sourceRef, path: current.path, reason: "source_unchanged" });
       continue;
     }
-    const result = searchItems(await runSearch({
-      book_slug: source.base_slug,
-      keywords: domain.keywords,
-      fetch_all: true
-    }));
-    for (const item of result) {
-      const docId = item.doc_id === void 0 || item.doc_id === null ? null : String(item.doc_id);
-      const documentUrl = typeof item.document_url === "string" ? item.document_url : typeof item.url === "string" ? item.url : null;
-      if (!documentUrl) throw new Error(`${YUQUE_SEARCH_TOOL} \u5019\u9009\u7F3A\u5C11 document_url`);
-      const key = `url:${documentUrl}`;
-      const matched = Array.isArray(item.matched_keywords) ? item.matched_keywords.filter((keyword) => typeof keyword === "string") : [];
-      const previous = candidates.get(key);
-      const mergedKeywords = [.../* @__PURE__ */ new Set([...previous?.matched_keywords || [], ...matched])];
-      candidates.set(key, {
-        doc_id: docId,
-        title: typeof item.title === "string" && item.title ? item.title : documentUrl,
-        document_url: documentUrl,
-        summary: typeof item.summary === "string" && item.summary ? item.summary : null,
-        updated_at: item.updated_at || null,
-        content_updated_at: item.content_updated_at || null,
-        sources: [
-          ...previous?.sources || [],
-          ...!previous?.sources?.some((value2) => value2.base_slug === source.base_slug) ? [{ base_slug: source.base_slug }] : []
-        ],
-        matched_keywords: mergedKeywords,
-        match_evidence: mergedKeywords.length > 0 ? `\u68C0\u7D22\u547D\u4E2D\u5173\u952E\u8BCD\uFF1A${mergedKeywords.join("\u3001")}` : `\u6765\u81EA\u77E5\u8BC6\u5E93 ${source.base_slug} \u7684\u68C0\u7D22\u7ED3\u679C`
-      });
-    }
+    const staged = await createStaging({
+      repoRoot,
+      archiveRoot,
+      name: `${domainId}-${source.title}`,
+      source,
+      summarize
+    });
+    const published = await publishStaging(staged.stagingPath);
+    results.push({ ...published, source_ref: source.sourceRef });
   }
-  const sorted = [...candidates.values()].sort((a, b) => b.matched_keywords.length - a.matched_keywords.length || String(b.updated_at || "").localeCompare(String(a.updated_at || "")) || candidateKey(a).localeCompare(candidateKey(b))).map((candidate) => ({
-    ...candidate,
-    decision: ["approved", "rejected"].includes(decisions.get(candidateKey(candidate))) ? decisions.get(candidateKey(candidate)) : "pending"
+  const portableResults = results.map((item) => ({
+    ...item,
+    path: item.path ? path5.relative(repoRoot, item.path).split(path5.sep).join("/") : null
   }));
-  const value = {
-    schema_version: 1,
-    domain_id: domain.id,
-    generated_at: (/* @__PURE__ */ new Date()).toISOString(),
-    search_keywords: domain.keywords,
-    candidates: sorted
+  const result = {
+    action: "domain_archived",
+    domain_id: domainId,
+    checked_at: (/* @__PURE__ */ new Date()).toISOString(),
+    processed_count: results.length,
+    created_count: results.filter((item) => item.action === "created").length,
+    skipped_count: results.filter((item) => item.action === "skipped").length,
+    results: portableResults
   };
-  await mkdir(path2.dirname(output), { recursive: true });
-  const temporary = `${output}.${process.pid}.tmp`;
-  const header = "# \u672C\u6587\u4EF6\u7531\u811A\u672C\u751F\u6210\u3002\u4EBA\u5DE5\u53EA\u4FEE\u6539 decision: pending | approved | rejected\u3002\n";
-  await writeFile(temporary, `${header}${stringify3(value, { lineWidth: 0 })}`, "utf8");
-  await rename(temporary, output);
-  return {
-    action: sorted.some((candidate) => candidate.decision === "pending") ? "awaiting_confirmation" : "confirmed",
-    path: path2.relative(repoRoot, output).split(path2.sep).join("/"),
-    domain_id: domain.id,
-    candidate_count: sorted.length,
-    pending_count: sorted.filter((candidate) => candidate.decision === "pending").length
-  };
+  const receipt = path5.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
+  await mkdir2(path5.dirname(receipt), { recursive: true });
+  const temporary = `${receipt}.${process.pid}.tmp`;
+  await writeFile3(temporary, `${JSON.stringify(result, null, 2)}
+`, "utf8");
+  await rename2(temporary, receipt);
+  return result;
 }
 async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
   if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
-  printJson(await generateYuqueCandidates({
-    repoRoot: path2.resolve(args.repoRoot || process.cwd()),
+  printJson(await archiveDomain({
+    repoRoot: path5.resolve(args.repoRoot || process.cwd()),
     domainId: args.domain
   }));
 }
 if (isMain(import.meta.url)) {
   main().catch((error2) => {
-    process.stderr.write(`[yuque-candidates] ${error2.message}
+    process.stderr.write(`[archive-domain] ${error2.message}
 `);
     process.exitCode = 1;
   });
 }
 export {
-  generateYuqueCandidates
+  archiveDomain
 };
 /*! Bundled license information:
 
