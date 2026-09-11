@@ -23,6 +23,19 @@ node <skill-dir>/scripts/yuque-candidates.js --domain <domain_id>
 node <skill-dir>/scripts/workflow.js --complete-step yuque-candidates --domain <domain_id>
 ```
 
+
+当前领域未配置了语雀来源时运行：
+```bash
+node <skill-dir>/scripts/yuque-books.js
+```
+让用户确认知识库 slug，可以显式传入运行：
+
+```bash
+node <skill-dir>/scripts/yuque-candidates.js --domain <domain_id> --book-slug <slug> --confirm-book
+```
+
+`--book-slug` 必须和 `--confirm-book` 一起使用；它只覆盖本次检索，不会静默修改 `domain-scope.yaml`，并会在候选文件中记录 `confirmed_book_slug`。
+
 向用户展示 `docs/kb/.review/<domain_id>/yuque-candidates.yaml` 中的候选，说明只需把每项 `decision` 从 `pending` 改成 `approved` 或 `rejected`。Agent 不代替用户决定，也不修改候选事实字段。
 
 用户修改后运行：

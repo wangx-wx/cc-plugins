@@ -22491,7 +22491,7 @@ async function validateScope(repoRoot, raw) {
 }
 
 // src/yuque-candidates.js
-var HELP = `Usage: yuque-candidates.js --domain <domain_id> [--repo-root <path>]
+var HELP = `Usage: yuque-candidates.js --domain <domain_id> [--book-slug <slug> --confirm-book] [--repo-root <path>]
 
 Search configured Yuque sources and refresh the human review candidate file.
 Run from the target repository root unless --repo-root is provided.`;
@@ -22522,19 +22522,27 @@ async function existingDecisions(file) {
     throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u73B0\u6709\u5019\u9009\u6587\u4EF6: ${error2.message}`);
   }
 }
-async function generateYuqueCandidates({ repoRoot, domainId, search }) {
+async function generateYuqueCandidates({ repoRoot, domainId, bookSlug, confirmBook = false, search }) {
   const loaded = await loadScope(repoRoot);
   const checked = await validateScope(repoRoot, loaded.value);
   if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
   const domain = checked.domains.find((item) => item.id === domainId && item.status === "active");
   if (!domain) throw new Error(`\u672A\u627E\u5230 active \u9886\u57DF: ${domainId}`);
+  const selectedBookSlug = typeof bookSlug === "string" ? bookSlug.trim() : "";
+  if (confirmBook && !selectedBookSlug) {
+    throw new Error("--confirm-book \u5FC5\u987B\u548C --book-slug <slug> \u4E00\u8D77\u4F7F\u7528");
+  }
+  if (selectedBookSlug && !confirmBook) {
+    throw new Error("\u4F20\u5165 --book-slug \u65F6\u5FC5\u987B\u540C\u65F6\u4F20\u5165 --confirm-book\uFF0C\u7531\u7528\u6237\u660E\u786E\u786E\u8BA4\u77E5\u8BC6\u5E93 slug");
+  }
+  const sources = selectedBookSlug ? [{ base_slug: selectedBookSlug }] : domain.yuque_sources;
   const output = path2.join(repoRoot, "docs", "kb", ".review", domain.id, "yuque-candidates.yaml");
   const decisions = await existingDecisions(output);
   const candidates = /* @__PURE__ */ new Map();
   const runSearch = search || (async (args) => structuredToolResult(
     await callMcpTool(YUQUE_SEARCH_TOOL, args)
   ));
-  for (const source of domain.yuque_sources) {
+  for (const source of sources) {
     if (source.document_url) {
       const candidate = {
         doc_id: null,
@@ -22588,6 +22596,7 @@ async function generateYuqueCandidates({ repoRoot, domainId, search }) {
     domain_id: domain.id,
     generated_at: (/* @__PURE__ */ new Date()).toISOString(),
     search_keywords: domain.keywords,
+    ...selectedBookSlug ? { confirmed_book_slug: selectedBookSlug } : {},
     candidates: sorted
   };
   await mkdir(path2.dirname(output), { recursive: true });
@@ -22610,7 +22619,9 @@ async function main() {
   if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
   printJson(await generateYuqueCandidates({
     repoRoot: path2.resolve(args.repoRoot || process.cwd()),
-    domainId: args.domain
+    domainId: args.domain,
+    bookSlug: args.bookSlug,
+    confirmBook: args.confirmBook === true
   }));
 }
 if (isMain(import.meta.url)) {
