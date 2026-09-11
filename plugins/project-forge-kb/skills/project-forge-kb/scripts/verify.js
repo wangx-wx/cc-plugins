@@ -91,6 +91,28 @@ function unquote(value) {
 
 // src/artifacts.js
 var INACTIVE_STATUSES = /* @__PURE__ */ new Set(["candidate", "stale", "retired"]);
+var L1_STATUSES = /* @__PURE__ */ new Set(["candidate", "draft", "confirmed", "review_required", "stale", "retired"]);
+var TEMPLATE_PLACEHOLDER_TOKENS = /* @__PURE__ */ new Set([
+  "domain_id",
+  "capability_id",
+  "symbol",
+  "number",
+  "name",
+  "slug",
+  "archive_id",
+  "domain",
+  "repo/yuque",
+  "YYYY-MM-DD"
+]);
+function findContentPlaceholders(markdown) {
+  const found = /* @__PURE__ */ new Set();
+  for (const match of String(markdown).matchAll(/<(?!\!)[^<>\n]{1,120}>/g)) {
+    const inner = match[0].slice(1, -1);
+    if (inner !== inner.trim()) continue;
+    if (/[\u4e00-\u9fa5]/.test(inner) || TEMPLATE_PLACEHOLDER_TOKENS.has(inner)) found.add(match[0]);
+  }
+  return [...found];
+}
 async function pathExists(file) {
   try {
     await access(file);
@@ -183,6 +205,10 @@ async function main() {
     if (l0Item.data.layer !== void 0 && l0Item.data.layer !== "L0") {
       errors.push(finding("L0_LAYER_INVALID", relativePosix(repoRoot, l0Path), "layer \u5FC5\u987B\u4E3A L0"));
     }
+    const l0Placeholders = findContentPlaceholders(l0Item.markdown);
+    if (l0Placeholders.length > 0) {
+      errors.push(finding("L0_PLACEHOLDER_REMAINS", relativePosix(repoRoot, l0Path), `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${l0Placeholders.join("\u3001")}`));
+    }
   }
   const domainsRoot = path2.join(kbRoot, "domains");
   const l1Files = await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2);
@@ -195,6 +221,13 @@ async function main() {
     if (absent.length) errors.push(finding("L1_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
     if (item.data.layer !== void 0 && item.data.layer !== "L1") errors.push(finding("L1_LAYER_INVALID", relative, "layer \u5FC5\u987B\u4E3A L1"));
     if (item.data.id && item.data.id !== fileId) errors.push(finding("L1_ID_MISMATCH", relative, `\u9886\u57DF\u76EE\u5F55 ${fileId} \u4E0E Markdown id ${item.data.id} \u4E0D\u4E00\u81F4`));
+    if (item.data.status !== void 0 && !L1_STATUSES.has(String(item.data.status).toLowerCase())) {
+      errors.push(finding("L1_STATUS_INVALID", relative, `status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`));
+    }
+    const placeholders = findContentPlaceholders(item.markdown);
+    if (placeholders.length > 0) {
+      errors.push(finding("L1_PLACEHOLDER_REMAINS", relative, `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`));
+    }
     if (item.data.id) {
       const previous = ids.get(item.data.id);
       if (previous) errors.push(finding("L1_ID_DUPLICATE", relative, `id ${item.data.id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));

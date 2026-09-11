@@ -6,6 +6,8 @@
 
 把当前领域的代码调查派发给只读子代理，提供人工确认的 include/exclude 范围和 [L1 提取规范](l1-extraction.md)。主 Agent 汇总证据，使用模板生成或更新 `docs/kb/domains/<domain_id>/README.md` 的代码版草稿；观察和推断不得写成已确认规则。
 
+若该 README 的 `status` 是 `confirmed`、`review_required`、`stale` 或 `retired`，Agent 不要直接改写它。按 [L1 提取规范](l1-extraction.md) 把新发现的差异写入 `.review/<domain_id>/l1-changes.md`；只有 `draft` 和 `candidate` 可以由 Agent 直接改写。用户可以直接维护任意合法状态下的 L1 内容和状态。
+
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step code-facts --domain <domain_id>
 ```
@@ -41,7 +43,7 @@ node <skill-dir>/scripts/workflow.js --complete-step archives --domain <domain_i
 
 ## 4. 调查归档事实
 
-把当前领域的归档调查派发给只读子代理。子代理先读相关摘要，按需读取 chunk，报告对领域上下文、术语、规则、边界和设计候选的支持、补充或冲突；不提取所属团队或相关领域。主 Agent 综合代码与归档证据；冲突和推断继续作为候选。
+把当前领域的归档调查派发给只读子代理。子代理先读相关摘要，按需读取 chunk，报告对领域上下文、术语、规则、边界和设计候选的支持、补充或冲突。主 Agent 综合代码与归档证据；冲突和推断继续作为候选。
 
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step archive-facts --domain <domain_id>
@@ -69,7 +71,7 @@ node <skill-dir>/scripts/workflow.js --confirm-domain <domain_id>
 
 ## 7. 完成仓库
 
-所有领域确认后，派发仓库级只读子代理调查服务身份和系统边界。主 Agent 使用 `assets/L0.md` 创建或更新 `docs/kb/L0.md` 人工区，只保留“服务身份”和“系统边界”，并明确请用户 review。
+所有领域确认后，派发仓库级只读子代理调查服务身份和系统边界。主 Agent 使用 `<skill-dir>/assets/L0.md` 创建或更新 `docs/kb/L0.md` 人工区，只保留“服务身份”和“系统边界”，并明确请用户 review。替换全部模板占位符后再进入下一步，`verify.js` 会报告仍含占位符的 L0。
 
 用户完成 L0 review 后运行：
 
@@ -82,3 +84,10 @@ node <skill-dir>/scripts/workflow.js --complete-run
 ```
 
 任一命令失败都停止并报告。增量运行若没有受影响领域，`workflow.js` 会直接提示完成本轮，不重写领域知识。
+
+## 增量运行
+
+增量运行只处理受影响的领域，流程可能比预期短，遇到时不要误判为出错：
+
+- **代码没变但仍进入代码调查**：只要领域配置了语雀来源就会被选中。此时确认 README 的已确认内容未被改写即可，不必重新做领域访谈。
+- **领域被直接跳过**：若代码没有变化、也没有新增归档，`workflow.js` 会判定该领域知识无需重写并直接放行。这表示没有东西要写，不代表流程失败。

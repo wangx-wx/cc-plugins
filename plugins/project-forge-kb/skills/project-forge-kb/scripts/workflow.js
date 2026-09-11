@@ -6323,6 +6323,30 @@ function unquote(value) {
   return value;
 }
 
+// src/artifacts.js
+var L1_STATUSES = /* @__PURE__ */ new Set(["candidate", "draft", "confirmed", "review_required", "stale", "retired"]);
+var TEMPLATE_PLACEHOLDER_TOKENS = /* @__PURE__ */ new Set([
+  "domain_id",
+  "capability_id",
+  "symbol",
+  "number",
+  "name",
+  "slug",
+  "archive_id",
+  "domain",
+  "repo/yuque",
+  "YYYY-MM-DD"
+]);
+function findContentPlaceholders(markdown) {
+  const found = /* @__PURE__ */ new Set();
+  for (const match of String(markdown).matchAll(/<(?!\!)[^<>\n]{1,120}>/g)) {
+    const inner = match[0].slice(1, -1);
+    if (inner !== inner.trim()) continue;
+    if (/[\u4e00-\u9fa5]/.test(inner) || TEMPLATE_PLACEHOLDER_TOKENS.has(inner)) found.add(match[0]);
+  }
+  return [...found];
+}
+
 // src/scope.js
 import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
@@ -6487,7 +6511,9 @@ var HELP = `Usage:
   workflow.js --complete-run [--repo-root <path>]
 
 Drive one initialization or incremental knowledge-base run.
-Steps: code-facts, yuque-candidates, archives, archive-facts, domain-knowledge, l0-review.`;
+
+Per-domain steps: ${STEPS.join(", ")}
+Repository steps: l0-review, then --complete-run`;
 async function exists2(file) {
   try {
     await access2(file);
@@ -6626,6 +6652,17 @@ async function inspectWorkflow(repoRoot) {
   if (!run.l0_reviewed) return result("REPO_L0_REVIEW", null, "create_or_review_l0");
   return result("REPO_FINALIZE", null, "run_index_state_verify");
 }
+async function assertL1Complete(repoRoot, domainId) {
+  const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
+  const l1 = await readFile2(l1Path, "utf8");
+  for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
+    if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
+  }
+  const placeholders = findContentPlaceholders(l1);
+  if (placeholders.length > 0) {
+    throw new Error(`\u9886\u57DF\u6587\u6863\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`);
+  }
+}
 async function completeStep(repoRoot, step, domainId) {
   const run = await readRun(repoRoot);
   if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
@@ -6649,8 +6686,14 @@ async function completeStep(repoRoot, step, domainId) {
   if (step === "code-facts") {
     const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
     if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/domains/${domainId}/README.md`);
-    const l1 = parseFrontmatter(await readFile2(l1Path, "utf8"));
+    const l1Markdown = await readFile2(l1Path, "utf8");
+    const l1 = parseFrontmatter(l1Markdown);
     if (l1.data.id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
+    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
+    const currentStatus = String(l1.data.status || "").toLowerCase();
+    if (!L1_STATUSES.has(currentStatus)) {
+      throw new Error(`\u9886\u57DF ${domainId} \u7684 status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`);
+    }
     const meta = {
       schema_version: 1,
       domain_id: domainId,
@@ -6658,9 +6701,9 @@ async function completeStep(repoRoot, step, domainId) {
       scope: domain,
       observed: {},
       documents: [],
-      candidates: []
+      candidates: [],
+      l1: { status: currentStatus }
     };
-    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
     await mkdir(path2.dirname(metaPath), { recursive: true });
     const temporary = `${metaPath}.${process.pid}.tmp`;
     await writeFile(temporary, `${JSON.stringify(meta, null, 2)}
@@ -6690,6 +6733,7 @@ async function completeStep(repoRoot, step, domainId) {
       }));
     });
     if (run.mode === "incremental" && !current.local_changes && receipt.created_count === 0) {
+      await assertL1Complete(repoRoot, domainId);
       current.completed_steps.push("archives", "archive-facts", "domain-knowledge");
       current.confirmed = true;
       await writeRun(repoRoot, run);
@@ -6697,11 +6741,7 @@ async function completeStep(repoRoot, step, domainId) {
     }
   }
   if (step === "domain-knowledge") {
-    const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
-    const l1 = await readFile2(l1Path, "utf8");
-    for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
-      if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
-    }
+    await assertL1Complete(repoRoot, domainId);
   }
   current.completed_steps.push(step);
   await writeRun(repoRoot, run);
