@@ -22929,7 +22929,7 @@ async function domainSources(repoRoot, domainId) {
   const domain = checked.domains.find((item) => item.id === domainId && item.status === "active");
   if (!domain) throw new Error(`\u672A\u627E\u5230 active \u9886\u57DF: ${domainId}`);
   const sources = domain.project_docs.map((file) => ({ mode: "repo", value: file }));
-  if (domain.yuque_sources.length > 0) {
+  if (domain.yuque_sources.length > 0 || domain.keywords.length > 0) {
     const selection = await readYuqueSelection(repoRoot, domainId);
     if (selection.pending_count > 0) throw new Error(`\u8BED\u96C0\u5019\u9009\u4ECD\u6709 ${selection.pending_count} \u4E2A pending\uFF1B\u5148\u5B8C\u6210\u4EBA\u5DE5\u786E\u8BA4`);
     sources.push(...selection.approved.map((item) => ({ mode: "yuque", value: item })));
@@ -22996,7 +22996,8 @@ if (isMain(import.meta.url)) {
   });
 }
 export {
-  archiveDomain
+  archiveDomain,
+  domainSources
 };
 /*! Bundled license information:
 
