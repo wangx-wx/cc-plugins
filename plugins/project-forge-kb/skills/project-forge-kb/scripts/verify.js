@@ -210,7 +210,7 @@ async function main() {
       errors.push(finding("L0_PLACEHOLDER_REMAINS", relativePosix(repoRoot, l0Path), `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${l0Placeholders.join("\u3001")}`));
     }
   }
-  const domainsRoot = path2.join(kbRoot, "domains");
+  const domainsRoot = path2.join(kbRoot, "L1");
   const l1Files = await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2);
   const l1Items = await Promise.all(l1Files.map(readMarkdownFrontmatter));
   const ids = /* @__PURE__ */ new Map();
@@ -250,7 +250,7 @@ async function main() {
     const filenameMatch = filename.match(/^(\d{4})-.+/);
     if (!filenameMatch) errors.push(finding("ADR_FILENAME_INVALID", relative, "ADR \u6587\u4EF6\u540D\u5FC5\u987B\u4F7F\u7528\u56DB\u4F4D\u7F16\u53F7\u548C\u63CF\u8FF0\uFF0C\u4F8B\u5982 0001-use-snapshot.md"));
     if (!directoryDomain || item.data.domain !== directoryDomain) {
-      errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E domains/<domain>/adr/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
+      errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E L1/<domain>/adr/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
     }
     if (filenameMatch && directoryDomain && item.data.id && item.data.id !== `ADR-${directoryDomain}-${filenameMatch[1]}`) {
       errors.push(finding("ADR_ID_MISMATCH", relative, `ADR id \u5FC5\u987B\u4E3A ADR-${directoryDomain}-${filenameMatch[1]}`));

@@ -6620,7 +6620,10 @@ async function loadCandidates(repoRoot, domainId) {
   if (!await exists2(file)) return null;
   const value = parse(await readFile2(file, "utf8"));
   if (value?.domain_id !== domainId || !Array.isArray(value.candidates)) throw new Error("\u8BED\u96C0\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548");
-  return value.candidates;
+  return value;
+}
+function requiresYuqueCandidates(domain) {
+  return domain.yuque_sources.length > 0 || domain.keywords.length > 0;
 }
 function result(step, domain, nextAction, blockingReason = null) {
   return { status: nextAction === "complete" ? "complete" : "action_required", domain, step, next_action: nextAction, blocking_reason: blockingReason };
@@ -6636,11 +6639,11 @@ async function inspectWorkflow(repoRoot) {
   if (domainState) {
     const domain = checked.domains.find((item) => item.id === domainState.id);
     if (!domainState.completed_steps.includes("code-facts")) return result("DOMAIN_CODE_SCAN", domain.id, "delegate_code_fact_investigation");
-    if (domain.yuque_sources.length > 0 && !domainState.completed_steps.includes("yuque-candidates")) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
-    if (domain.yuque_sources.length > 0) {
-      const candidates = await loadCandidates(repoRoot, domain.id);
-      if (!candidates) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
-      const pending = candidates.filter((item) => item.decision === "pending").length;
+    if (requiresYuqueCandidates(domain) && !domainState.completed_steps.includes("yuque-candidates")) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
+    if (requiresYuqueCandidates(domain)) {
+      const review = await loadCandidates(repoRoot, domain.id);
+      if (!review) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
+      const pending = review.candidates.filter((item) => item.decision === "pending").length;
       if (pending > 0) return result("YUQUE_REVIEW", domain.id, "ask_user_edit_yaml", `${pending} \u4E2A\u8BED\u96C0\u5019\u9009\u4ECD\u4E3A pending`);
     }
     if (!domainState.completed_steps.includes("archives")) return result("DOMAIN_ARCHIVE", domain.id, "run_domain_archive");
@@ -6653,7 +6656,7 @@ async function inspectWorkflow(repoRoot) {
   return result("REPO_FINALIZE", null, "run_index_state_verify");
 }
 async function assertL1Complete(repoRoot, domainId) {
-  const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
+  const l1Path = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
   const l1 = await readFile2(l1Path, "utf8");
   for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
     if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
@@ -6678,14 +6681,14 @@ async function completeStep(repoRoot, step, domainId) {
   const checked = await checkedScope(repoRoot);
   const domain = checked.domains.find((item) => item.id === domainId);
   let expected = STEPS.find((item) => !current.completed_steps.includes(item));
-  if (expected === "yuque-candidates" && domain.yuque_sources.length === 0) {
+  if (expected === "yuque-candidates" && !requiresYuqueCandidates(domain)) {
     current.completed_steps.push("yuque-candidates");
     expected = "archives";
   }
   if (step !== expected) throw new Error(`\u5F53\u524D\u5E94\u5B8C\u6210\u6B65\u9AA4 ${expected}\uFF0C\u4E0D\u80FD\u6807\u8BB0 ${step}`);
   if (step === "code-facts") {
-    const l1Path = path2.join(repoRoot, "docs", "kb", "domains", domainId, "README.md");
-    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/domains/${domainId}/README.md`);
+    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}/README.md`);
     const l1Markdown = await readFile2(l1Path, "utf8");
     const l1 = parseFrontmatter(l1Markdown);
     if (l1.data.id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
@@ -6711,10 +6714,13 @@ async function completeStep(repoRoot, step, domainId) {
     await rename(temporary, metaPath);
   }
   if (step === "yuque-candidates") {
-    const candidates = await loadCandidates(repoRoot, domainId);
-    if (!candidates) throw new Error("\u8BED\u96C0\u5019\u9009\u5C1A\u672A\u751F\u6210");
+    const review = await loadCandidates(repoRoot, domainId);
+    if (!review) throw new Error("\u8BED\u96C0\u5019\u9009\u5C1A\u672A\u751F\u6210");
+    if (domain.yuque_sources.length === 0 && (typeof review.confirmed_book_slug !== "string" || !review.confirmed_book_slug.trim())) {
+      throw new Error("\u5F53\u524D\u9886\u57DF\u53EA\u6709 keywords\uFF0C\u5FC5\u987B\u7531\u7528\u6237\u901A\u8FC7 --book-slug <slug> --confirm-book \u786E\u8BA4\u8BED\u96C0\u77E5\u8BC6\u5E93");
+    }
     await updateDomainMeta(repoRoot, domainId, (meta) => {
-      meta.candidates = candidates;
+      meta.candidates = review.candidates;
     });
   }
   if (step === "archives") {

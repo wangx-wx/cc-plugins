@@ -4,7 +4,7 @@
 
 ## 1. 调查代码事实
 
-把当前领域的代码调查派发给只读子代理，提供人工确认的 include/exclude 范围和 [L1 提取规范](l1-extraction.md)。主 Agent 汇总证据，使用模板生成或更新 `docs/kb/domains/<domain_id>/README.md` 的代码版草稿；观察和推断不得写成已确认规则。
+把当前领域的代码调查派发给只读子代理，提供人工确认的 include/exclude 范围和 [L1 提取规范](l1-extraction.md)。主 Agent 汇总证据，使用模板生成或更新 `docs/kb/L1/<domain_id>/README.md` 的代码版草稿；观察和推断不得写成已确认规则。
 
 若该 README 的 `status` 是 `confirmed`、`review_required`、`stale` 或 `retired`，Agent 不要直接改写它。按 [L1 提取规范](l1-extraction.md) 把新发现的差异写入 `.review/<domain_id>/l1-changes.md`；只有 `draft` 和 `candidate` 可以由 Agent 直接改写。用户可以直接维护任意合法状态下的 L1 内容和状态。
 
@@ -16,25 +16,25 @@ node <skill-dir>/scripts/workflow.js --complete-step code-facts --domain <domain
 
 ## 2. 获取并确认语雀候选
 
-当前领域配置了语雀来源时运行：
+当前领域配置了 `yuque_sources` 时运行：
 
 ```bash
 node <skill-dir>/scripts/yuque-candidates.js --domain <domain_id>
 node <skill-dir>/scripts/workflow.js --complete-step yuque-candidates --domain <domain_id>
 ```
+当前领域没有配置 `yuque_sources`、但填写了 `keywords` 时，不得跳过语雀候选阶段。先运行：
 
-
-当前领域未配置了语雀来源时运行：
 ```bash
 node <skill-dir>/scripts/yuque-books.js
 ```
-让用户确认知识库 slug，可以显式传入运行：
+
+向用户展示知识库名称和 slug；用户确认后显式传入：
 
 ```bash
 node <skill-dir>/scripts/yuque-candidates.js --domain <domain_id> --book-slug <slug> --confirm-book
 ```
 
-`--book-slug` 必须和 `--confirm-book` 一起使用；它只覆盖本次检索，不会静默修改 `domain-scope.yaml`，并会在候选文件中记录 `confirmed_book_slug`。
+`--book-slug` 必须和 `--confirm-book` 一起使用；它只指定本次检索，不会静默修改 `domain-scope.yaml`，并会在候选文件中记录 `confirmed_book_slug`。只有 `keywords` 和 `yuque_sources` 都为空时，工作流才跳过语雀候选阶段。
 
 向用户展示 `docs/kb/.review/<domain_id>/yuque-candidates.yaml` 中的候选，说明只需把每项 `decision` 从 `pending` 改成 `approved` 或 `rejected`。Agent 不代替用户决定，也不修改候选事实字段。
 
@@ -84,7 +84,7 @@ node <skill-dir>/scripts/workflow.js --confirm-domain <domain_id>
 
 ## 7. 完成仓库
 
-所有领域确认后，派发仓库级只读子代理调查服务身份和系统边界。主 Agent 使用 `<skill-dir>/assets/L0.md` 创建或更新 `docs/kb/L0.md` 人工区，只保留“服务身份”和“系统边界”，并明确请用户 review。替换全部模板占位符后再进入下一步，`verify.js` 会报告仍含占位符的 L0。
+所有领域确认后，派发仓库级只读子代理调查服务身份。主 Agent 使用 `<skill-dir>/assets/L0.md` 创建或更新 `docs/kb/L0.md` 的“服务身份”，并明确请用户 review。替换全部模板占位符后再进入下一步，`verify.js` 会报告仍含占位符的 L0。`index.js` 只生成领域知识索引，不在 L0 中生成 ADR 或 archive 索引。
 
 用户完成 L0 review 后运行：
 

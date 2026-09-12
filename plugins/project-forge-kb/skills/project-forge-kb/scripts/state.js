@@ -188,7 +188,7 @@ async function main() {
     path: relativePosix(repoRoot, file),
     hash: await hashFile(file)
   })));
-  const adrFiles = await listFiles(path2.join(kbRoot, "domains"), (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
+  const adrFiles = await listFiles(path2.join(kbRoot, "L1"), (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
   const adrs = await Promise.all(adrFiles.map(async (file) => {
     const item = await readMarkdownFrontmatter(file);
     return {

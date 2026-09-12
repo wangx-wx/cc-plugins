@@ -68,6 +68,8 @@ domains:
 - `base_slug`：在指定知识库内使用本领域 `keywords` 搜索；slug 使用 `yuque-books.js` 返回值，不得猜测。
 - `document_url`：将确定的单篇文档加入待人工确认候选。
 
+只要填写了 `keywords`，语雀候选阶段就不能跳过。未配置 `yuque_sources` 时，流程会先通过 `yuque-books.js` 展示可用知识库，再要求用户使用 `--book-slug <slug> --confirm-book` 明确选择本次检索的知识库。只有 `keywords` 和 `yuque_sources` 都为空时才不检索语雀。
+
 `status: active` 的领域进入 `domain_order`；`inactive` 保留配置但本轮不处理。领域顺序就是 `domains` 的书写顺序。
 
 ## 写完后的校验

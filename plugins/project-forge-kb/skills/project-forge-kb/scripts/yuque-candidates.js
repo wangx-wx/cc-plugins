@@ -22535,7 +22535,13 @@ async function generateYuqueCandidates({ repoRoot, domainId, bookSlug, confirmBo
   if (selectedBookSlug && !confirmBook) {
     throw new Error("\u4F20\u5165 --book-slug \u65F6\u5FC5\u987B\u540C\u65F6\u4F20\u5165 --confirm-book\uFF0C\u7531\u7528\u6237\u660E\u786E\u786E\u8BA4\u77E5\u8BC6\u5E93 slug");
   }
+  if (selectedBookSlug && domain.keywords.length === 0) {
+    throw new Error("\u4F7F\u7528 --book-slug \u68C0\u7D22\u8BED\u96C0\u77E5\u8BC6\u5E93\u65F6\u5FC5\u987B\u5728\u9886\u57DF\u914D\u7F6E\u4E2D\u586B\u5199 keywords");
+  }
   const sources = selectedBookSlug ? [{ base_slug: selectedBookSlug }] : domain.yuque_sources;
+  if (sources.length === 0 && domain.keywords.length > 0) {
+    throw new Error("\u5F53\u524D\u9886\u57DF\u53EA\u6709 keywords\uFF1B\u8BF7\u5148\u8FD0\u884C yuque-books.js \u8BA9\u7528\u6237\u786E\u8BA4\u77E5\u8BC6\u5E93\uFF0C\u518D\u4F20\u5165 --book-slug <slug> --confirm-book");
+  }
   const output = path2.join(repoRoot, "docs", "kb", ".review", domain.id, "yuque-candidates.yaml");
   const decisions = await existingDecisions(output);
   const candidates = /* @__PURE__ */ new Map();

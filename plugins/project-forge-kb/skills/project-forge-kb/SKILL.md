@@ -11,14 +11,14 @@ description: 从人工划定的领域范围构建或增量更新单仓领域知�
 
 - `docs/kb/domain-scope.yaml` 归人工所有。`scope-init` 只能在文件不存在时创建空骨架；不得填充、改写、拆分、合并或静默修复正式领域。
 - 每轮提取以人工触发时的代码版本为基线。事实调查必须交给限定范围的子代理。
-- 用户可以直接修改 `docs/kb/domains/<domain_id>/README.md` 的内容和 `status`。Agent 只能改写 `draft` 和 `candidate`；`confirmed`、`review_required`、`stale`、`retired` 都承载人工判断，Agent 不得覆盖，新发现的差异写入 `docs/kb/.review/<domain_id>/l1-changes.md`（模板 `<skill-dir>/assets/review-changes.md`）。
+- 用户可以直接修改 `docs/kb/L1/<domain_id>/README.md` 的内容和 `status`。Agent 只能改写 `draft` 和 `candidate`；`confirmed`、`review_required`、`stale`、`retired` 都承载人工判断，Agent 不得覆盖，新发现的差异写入 `docs/kb/.review/<domain_id>/l1-changes.md`（模板 `<skill-dir>/assets/review-changes.md`）。
 - 代码和归档调查只产生术语候选与 ADR 问题候选。正式术语和 ADR 必须经过 [领域建模访谈](references/domain-questioning.md)；推断不得写成正式术语或规则。
 - 代码、归档资料与人工结论冲突时保留各方证据，不自行裁决。
 - 无法获得人工解释的问题写入 `docs/kb/.review/<domain_id>/domain-questions.md`，不进入 L1，也不阻塞其余 L1 草稿生成。
 - ADR 必须满足领域建模访谈规定的全部准入条件；不得把调查问题、普通实现事实或 Agent 推测写成 ADR，也不为 ADR 设置 `status`。
 - L1 最终保持 `draft`，只有人工可以改成 `confirmed`。归档由脚本维护，来源变化时保留历史并生成新快照。状态取值为 `candidate`、`draft`、`confirmed`、`review_required`、`stale`、`retired`；其中 `draft` 和 `candidate` 是 Agent 可改写的未确认状态，其余状态的内容和状态由用户维护。
 - archive 是全局共享的不可变来源快照；同一文档关联多个领域时只归档一次，每个领域分别在自身 README 和机器元数据中引用它。
-- L0 只包含服务身份、系统边界和机器索引。主 Agent 必须基于仓库级子代理的事实调查起草人工区，并在最终检查时明确提醒用户 review L0。
+- L0 只包含服务身份和机器生成的领域知识索引。主 Agent 必须基于仓库级子代理的事实调查起草服务身份，并在最终检查时明确提醒用户 review L0。
 - 首次生成知识库状态可以使用建库产物；已有基线后执行增量更新要求工作区干净，避免当前工作区内容与版本基线混用。
 - `scripts/*.js` 是已封装的执行工具，不要通过读取或搜索脚本源码推断流程。按本 Skill 和 references 中的命令直接运行；用法不明确时执行 `node <skill-dir>/scripts/<name>.js --help`。只有用户明确要求开发或调试 ProjectForgeKB 脚本时才检查源码。
 
@@ -43,4 +43,4 @@ description: 从人工划定的领域范围构建或增量更新单仓领域知�
 
 ## 完成条件
 
-报告当前领域、代码基线、创建或跳过的 archive、生成的 L1/ADR、`.review` 中未解决的问题、需要人工处理的确切事项和下一步。最终报告必须单独列出 `docs/kb/L0.md`，提醒用户 review“服务身份”和“系统边界”。存在 `pending` 语雀候选、脚本失败、未替换的模板占位符或未完成的当前领域步骤时，不得声称完成。
+报告当前领域、代码基线、创建或跳过的 archive、生成的 L1/ADR、`.review` 中未解决的问题、需要人工处理的确切事项和下一步。最终报告必须单独列出 `docs/kb/L0.md`，提醒用户 review“服务身份”。存在 `pending` 语雀候选、脚本失败、未替换的模板占位符或未完成的当前领域步骤时，不得声称完成。

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // src/index.js
-import { readFile as readFile2, readdir as readdir2, rename, writeFile } from "node:fs/promises";
+import { readFile as readFile2, rename, writeFile } from "node:fs/promises";
 import path2 from "node:path";
 
 // src/args.js
@@ -128,15 +128,6 @@ function cell(value) {
 function link(label, target) {
   return `[${cell(label)}](${target})`;
 }
-async function archiveSummaries(directory) {
-  try {
-    const entries = await readdir2(directory, { withFileTypes: true });
-    return entries.filter((entry) => entry.isDirectory()).map((entry) => path2.join(directory, entry.name, "summary.md")).sort();
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    throw error;
-  }
-}
 function table(headers, rows) {
   if (rows.length === 0) return "_\u65E0_";
   return [
@@ -145,27 +136,7 @@ function table(headers, rows) {
     ...rows.map((row) => `| ${row.join(" | ")} |`)
   ].join("\n");
 }
-function renderIndex(kbRoot, l1Items, archiveItems, adrItems) {
-  const groups = /* @__PURE__ */ new Map();
-  for (const item of archiveItems) {
-    const key = `${item.data.source_type}\0${item.data.source_ref}`;
-    const group = groups.get(key) || [];
-    group.push(item);
-    groups.set(key, group);
-  }
-  const currentArchives = [];
-  const historicalArchives = [];
-  for (const group of groups.values()) {
-    group.sort((a, b) => String(b.data.archived_at || "").localeCompare(String(a.data.archived_at || "")));
-    if (group[0] && isCurrentStatus(group[0].data.status)) currentArchives.push(group[0]);
-    historicalArchives.push(...group.slice(1).filter((item) => isCurrentStatus(item.data.status)));
-  }
-  const archiveRow = (item) => [
-    cell(item.data.source_type),
-    link(item.data.title || item.data.docId, `archive/${path2.basename(path2.dirname(item.file))}/summary.md`),
-    cell(item.data.source_ref),
-    cell(item.data.archived_at)
-  ];
+function renderIndex(kbRoot, l1Items) {
   return [
     "## \u9886\u57DF\u77E5\u8BC6\u7D22\u5F15",
     "",
@@ -173,23 +144,7 @@ function renderIndex(kbRoot, l1Items, archiveItems, adrItems) {
       link(item.data.title || item.data.id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
       cell(item.data.description),
       cell(item.data.status)
-    ])),
-    "",
-    "## \u8BBE\u8BA1\u51B3\u7B56\u7D22\u5F15",
-    "",
-    table(["\u9886\u57DF", "\u51B3\u7B56", "\u65E5\u671F"], adrItems.sort((a, b) => String(a.data.id).localeCompare(String(b.data.id))).map((item) => [
-      cell(item.data.domain),
-      link(item.data.title || item.data.id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
-      cell(item.data.date)
-    ])),
-    "",
-    "## \u73B0\u884C\u5F52\u6863\u7D22\u5F15",
-    "",
-    table(["\u6765\u6E90", "\u6587\u6863", "\u6765\u6E90\u5730\u5740", "\u5F52\u6863\u65F6\u95F4"], currentArchives.sort((a, b) => String(a.data.source_ref).localeCompare(String(b.data.source_ref))).map(archiveRow)),
-    "",
-    "## \u5386\u53F2\u5F52\u6863\u7D22\u5F15",
-    "",
-    table(["\u6765\u6E90", "\u6587\u6863", "\u6765\u6E90\u5730\u5740", "\u5F52\u6863\u65F6\u95F4"], historicalArchives.sort((a, b) => String(b.data.archived_at).localeCompare(String(a.data.archived_at))).map(archiveRow))
+    ]))
   ].join("\n");
 }
 function markerPosition(markdown, marker, label) {
@@ -209,17 +164,15 @@ async function main() {
   try {
     markdown = await readFile2(l0Path, "utf8");
   } catch (error) {
-    if (error.code === "ENOENT") throw new Error("L0.md \u4E0D\u5B58\u5728\uFF1B\u5148\u4F7F\u7528 assets/L0.md \u521B\u5EFA\u5E76\u586B\u5199\u670D\u52A1\u8EAB\u4EFD\u548C\u7CFB\u7EDF\u8FB9\u754C");
+    if (error.code === "ENOENT") throw new Error("L0.md \u4E0D\u5B58\u5728\uFF1B\u5148\u4F7F\u7528 assets/L0.md \u521B\u5EFA\u5E76\u586B\u5199\u670D\u52A1\u8EAB\u4EFD");
     throw error;
   }
   const start = markerPosition(markdown, START, "\u5F00\u59CB");
   const end = markerPosition(markdown, END, "\u7ED3\u675F");
   if (end < start) throw new Error("L0.md \u7684 kb-index \u6807\u8BB0\u987A\u5E8F\u9519\u8BEF");
-  const domainsRoot = path2.join(kbRoot, "domains");
+  const domainsRoot = path2.join(kbRoot, "L1");
   const l1Items = await Promise.all((await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2)).map(readMarkdownFrontmatter));
-  const archiveItems = await Promise.all((await archiveSummaries(path2.join(kbRoot, "archive"))).map(readMarkdownFrontmatter));
-  const adrItems = await Promise.all((await listFiles(domainsRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"))).map(readMarkdownFrontmatter));
-  const generated = renderIndex(kbRoot, l1Items, archiveItems, adrItems);
+  const generated = renderIndex(kbRoot, l1Items);
   const updated = `${markdown.slice(0, start + START.length)}
 ${generated}
 ${markdown.slice(end)}`;
@@ -229,9 +182,7 @@ ${markdown.slice(end)}`;
   printJson({
     action: "indexed",
     path: path2.relative(repoRoot, l0Path).split(path2.sep).join("/"),
-    l1_count: l1Items.filter((item) => isCurrentStatus(item.data.status)).length,
-    adr_count: adrItems.length,
-    archive_count: archiveItems.length
+    l1_count: l1Items.filter((item) => isCurrentStatus(item.data.status)).length
   });
 }
 main().catch((error) => {
