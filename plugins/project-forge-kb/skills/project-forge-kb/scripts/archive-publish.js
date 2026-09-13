@@ -13095,12 +13095,13 @@ async function publishStaging(stagingPath) {
     assertComplete(chunk.data.title, `chunk ${index} title`);
     assertComplete(chunk.data.summary, `chunk ${index} summary`);
     if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
+    const chunkDocId = `chunk-${String(index).padStart(2, "0")}-${manifest.archive_id}`;
     chunk.data = {
       ...chunk.data,
       type: "chunk",
-      doc_id: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      doc_id: chunkDocId,
       // Transitional alias for older archive readers.
-      docId: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      docId: chunkDocId,
       parent_doc_id: manifest.archive_id,
       index,
       prev: index > 0 ? index - 1 : null,

@@ -16416,7 +16416,7 @@ ${documentSummary.keyTopics.map((topic) => `- ${topic}`).join("\n")}
   const chunkHashes = [];
   for (let index = 0; index < chunks.length; index += 1) {
     const content = chunks[index];
-    const chunkDocId = `${archiveId}-chunk-${String(index).padStart(2, "0")}`;
+    const chunkDocId = `chunk-${String(index).padStart(2, "0")}-${archiveId}`;
     chunkHashes.push(sha256(content));
     const markdown = serializeFrontmatter({
       type: "chunk",

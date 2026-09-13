@@ -147,9 +147,9 @@ function relativePosix(from, to) {
 }
 
 // src/verify.js
-var L0_REQUIRED = ["layer", "title", "description"];
+var L0_REQUIRED = ["id", "layer", "title", "description"];
 var L1_REQUIRED = ["domain_id", "layer", "title", "description", "status"];
-var ADR_REQUIRED = ["id", "layer", "domain", "title", "date"];
+var ADR_REQUIRED = ["doc_id", "layer", "domain", "title", "date"];
 var ARCHIVE_REQUIRED = ["type", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
 var HELP = `Usage: verify.js [--repo-root <path>] [--kb-root <path>]
 
@@ -252,13 +252,13 @@ async function main() {
     if (!directoryDomain || item.data.domain !== directoryDomain) {
       errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E L1/<domain>/adr/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
     }
-    if (filenameMatch && directoryDomain && item.data.id && item.data.id !== `ADR-${directoryDomain}-${filenameMatch[1]}`) {
-      errors.push(finding("ADR_ID_MISMATCH", relative, `ADR id \u5FC5\u987B\u4E3A ADR-${directoryDomain}-${filenameMatch[1]}`));
+    if (filenameMatch && directoryDomain && item.data.doc_id && item.data.doc_id !== `ADR-${directoryDomain}-${filenameMatch[1]}`) {
+      errors.push(finding("ADR_ID_MISMATCH", relative, `ADR doc_id \u5FC5\u987B\u4E3A ADR-${directoryDomain}-${filenameMatch[1]}`));
     }
-    if (item.data.id) {
-      const previous = adrIds.get(item.data.id);
-      if (previous) errors.push(finding("ADR_ID_DUPLICATE", relative, `id ${item.data.id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
-      else adrIds.set(item.data.id, relative);
+    if (item.data.doc_id) {
+      const previous = adrIds.get(item.data.doc_id);
+      if (previous) errors.push(finding("ADR_ID_DUPLICATE", relative, `doc_id ${item.data.doc_id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
+      else adrIds.set(item.data.doc_id, relative);
     }
   }
   const jsonFiles = await listFiles(path2.join(kbRoot, ".meta"), (file) => file.endsWith(".json"));
@@ -269,6 +269,30 @@ async function main() {
       jsonValues.set(file, JSON.parse(await readFile2(file, "utf8")));
     } catch (error) {
       errors.push(finding("META_JSON_INVALID", relative, error.message));
+    }
+  }
+  const catalogPath = path2.join(kbRoot, ".meta", "knowledge-base.json");
+  const catalog = jsonValues.get(catalogPath);
+  if (catalog !== void 0) {
+    const catalogRelative = relativePosix(repoRoot, catalogPath);
+    if (!catalog || typeof catalog !== "object" || Array.isArray(catalog) || catalog.schema_version !== 1 || !Array.isArray(catalog.nodes) || !Array.isArray(catalog.edges)) {
+      errors.push(finding("KNOWLEDGE_BASE_SCHEMA_INVALID", catalogRelative, "knowledge-base.json \u5FC5\u987B\u5305\u542B schema_version=1\u3001nodes \u548C edges"));
+    } else {
+      const nodeIds = /* @__PURE__ */ new Set();
+      for (const node of catalog.nodes) {
+        const nodeId = node?.doc_id || node?.domain_id || node?.id;
+        if (!node || typeof node !== "object" || !node.kind || !nodeId) {
+          errors.push(finding("KNOWLEDGE_BASE_NODE_INVALID", catalogRelative, "catalog \u8282\u70B9\u5FC5\u987B\u5305\u542B kind \u548C\u552F\u4E00\u6807\u8BC6\u5B57\u6BB5"));
+          continue;
+        }
+        if (nodeIds.has(nodeId)) errors.push(finding("KNOWLEDGE_BASE_NODE_DUPLICATE", catalogRelative, `catalog \u8282\u70B9\u6807\u8BC6\u91CD\u590D: ${nodeId}`));
+        nodeIds.add(nodeId);
+      }
+      for (const edge of catalog.edges) {
+        if (!edge || !nodeIds.has(edge.from) || !nodeIds.has(edge.to)) {
+          errors.push(finding("KNOWLEDGE_BASE_EDGE_TARGET_MISSING", catalogRelative, "catalog \u8FB9\u7684 from \u548C to \u5FC5\u987B\u6307\u5411\u5DF2\u5B58\u5728\u8282\u70B9"));
+        }
+      }
     }
   }
   const metaRoot = path2.join(kbRoot, ".meta", "domains");
@@ -287,7 +311,6 @@ async function main() {
     if (markdown && markdown.data.domain_id !== value.domain_id) {
       errors.push(finding("DOMAIN_ID_MISMATCH", relative, `Markdown domain_id ${markdown.data.domain_id || "(\u7F3A\u5931)"} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
     }
-    const linkedArchives = new Set((markdown ? markdownDestinations(markdown.markdown) : []).map((destination) => path2.resolve(path2.dirname(markdown.file), destination)));
     for (const document of value.documents) {
       if (!document || typeof document.path !== "string" || !document.path) {
         errors.push(finding("DOMAIN_ARCHIVE_REFERENCE_INVALID", relative, "documents \u4E2D\u7684\u5F52\u6863\u5FC5\u987B\u5305\u542B path"));
@@ -300,9 +323,6 @@ async function main() {
         errors.push(finding("DOMAIN_ARCHIVE_MISSING", relative, `\u9886\u57DF\u5F52\u6863\u4E0D\u5B58\u5728: ${document.path}`));
         continue;
       }
-      if (!markdown || !linkedArchives.has(summaryPath)) {
-        errors.push(finding("DOMAIN_ARCHIVE_LINK_MISSING", relative, `\u9886\u57DF README \u672A\u94FE\u63A5\u5F52\u6863: ${document.path}/summary.md`));
-      }
     }
   }
   const summaryFiles = await listFiles(path2.join(kbRoot, "archive"), (file) => path2.basename(file) === "summary.md");
@@ -314,6 +334,16 @@ async function main() {
     if (item.data.source_type === "repo" && !item.data.source_commit) absent.push("source_commit");
     if (item.data.source_type === "yuque" && !item.data.source_updated_at) absent.push("source_updated_at");
     if (absent.length) errors.push(finding("ARCHIVE_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${[...new Set(absent)].join(", ")}`));
+    const archiveDocId = item.data.doc_id || item.data.docId;
+    const chunkFiles = await listFiles(path2.join(path2.dirname(item.file), "chunks"), (file) => file.endsWith(".md"));
+    for (const chunkFile of chunkFiles) {
+      const chunk = await readMarkdownFrontmatter(chunkFile);
+      const index = Number.isInteger(chunk.data.index) ? chunk.data.index : Number.parseInt(path2.basename(chunkFile, ".md"), 10);
+      const expected = `chunk-${String(index).padStart(2, "0")}-${archiveDocId}`;
+      if (chunk.data.doc_id !== expected) {
+        errors.push(finding("CHUNK_DOC_ID_INVALID", relativePosix(repoRoot, chunkFile), `chunk doc_id \u5FC5\u987B\u4E3A ${expected}`));
+      }
+    }
   }
   const scopePath = path2.join(kbRoot, ".meta", "scope-resolved.json");
   const scope = jsonValues.get(scopePath);

@@ -1,5 +1,5 @@
 ---
-id: ADR-<domain_id>-<number>
+doc_id: ADR-<domain_id>-<number>
 layer: ADR
 domain: <domain_id>
 title: <设计决策标题>

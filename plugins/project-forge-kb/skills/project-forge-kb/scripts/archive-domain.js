@@ -22842,7 +22842,7 @@ ${documentSummary.keyTopics.map((topic) => `- ${topic}`).join("\n")}
   const chunkHashes = [];
   for (let index = 0; index < chunks.length; index += 1) {
     const content = chunks[index];
-    const chunkDocId = `${archiveId}-chunk-${String(index).padStart(2, "0")}`;
+    const chunkDocId = `chunk-${String(index).padStart(2, "0")}-${archiveId}`;
     chunkHashes.push(sha256(content));
     const markdown = serializeFrontmatter({
       type: "chunk",
@@ -22922,12 +22922,13 @@ async function publishStaging(stagingPath) {
     assertComplete(chunk.data.title, `chunk ${index} title`);
     assertComplete(chunk.data.summary, `chunk ${index} summary`);
     if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
+    const chunkDocId = `chunk-${String(index).padStart(2, "0")}-${manifest.archive_id}`;
     chunk.data = {
       ...chunk.data,
       type: "chunk",
-      doc_id: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      doc_id: chunkDocId,
       // Transitional alias for older archive readers.
-      docId: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      docId: chunkDocId,
       parent_doc_id: manifest.archive_id,
       index,
       prev: index > 0 ? index - 1 : null,
@@ -22969,7 +22970,7 @@ async function archiveDomain({ repoRoot, domainId, summarize }) {
     const source = item.mode === "repo" ? await loadRepoDocument(repoRoot, item.value) : await loadYuqueDocument({ docId: item.value.doc_id, documentUrl: item.value.document_url });
     const current = await findCurrentArchive(archiveRoot, source);
     if (sourceUnchanged(current, source)) {
-      results.push({ action: "skipped", source_ref: source.sourceRef, path: current.path, reason: "source_unchanged" });
+      results.push({ action: "skipped", kind: "archive", source_ref: source.sourceRef, path: current.path, reason: "source_unchanged" });
       continue;
     }
     const staged = await createStaging({
@@ -22980,7 +22981,7 @@ async function archiveDomain({ repoRoot, domainId, summarize }) {
       summarize
     });
     const published = await publishStaging(staged.stagingPath);
-    results.push({ ...published, source_ref: source.sourceRef });
+    results.push({ ...published, kind: "archive", source_ref: source.sourceRef });
   }
   const portableResults = results.map((item) => ({
     ...item,

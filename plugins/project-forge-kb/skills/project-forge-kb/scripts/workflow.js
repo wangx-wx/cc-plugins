@@ -6591,7 +6591,9 @@ async function affectedDomains(repoRoot, checked, baseline) {
   return active.map((domain) => ({
     domain,
     localChanges: changed.some((file) => domainMatches(domain, file))
-  })).filter((item) => item.localChanges || item.domain.yuque_sources.length > 0);
+    // A keywords-only domain still searches Yuque, so it must stay selectable in
+    // incremental runs; otherwise Yuque updates are silently never picked up.
+  })).filter((item) => item.localChanges || requiresYuqueCandidates(item.domain));
 }
 async function startRun(repoRoot) {
   const checked = await checkedScope(repoRoot);
@@ -6741,6 +6743,7 @@ async function completeStep(repoRoot, step, domainId) {
     }
     await updateDomainMeta(repoRoot, domainId, (meta) => {
       meta.documents = receipt.results.map((item) => ({
+        kind: item.kind || "archive",
         archive_id: item.archive_id || path2.basename(item.path),
         source_ref: item.source_ref,
         path: item.path,

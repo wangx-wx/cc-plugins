@@ -22578,6 +22578,7 @@ async function generateYuqueCandidates({ repoRoot, domainId, bookSlug, confirmBo
       const previous = candidates.get(key);
       const mergedKeywords = [.../* @__PURE__ */ new Set([...previous?.matched_keywords || [], ...matched])];
       candidates.set(key, {
+        kind: "source",
         doc_id: docId,
         title: typeof item.title === "string" && item.title ? item.title : documentUrl,
         document_url: documentUrl,

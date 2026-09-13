@@ -140,7 +140,8 @@ function renderIndex(kbRoot, l1Items) {
   return [
     "## \u9886\u57DF\u77E5\u8BC6\u7D22\u5F15",
     "",
-    table(["domain_id", "\u9886\u57DF", "\u8BF4\u660E", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.domain_id).localeCompare(String(b.data.domain_id))).map((item) => [
+    table(["kind", "domain_id", "\u9886\u57DF", "\u8BF4\u660E", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.domain_id).localeCompare(String(b.data.domain_id))).map((item) => [
+      "l1",
       cell(item.data.domain_id),
       link(item.data.title || item.data.domain_id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
       cell(item.data.description),
@@ -167,12 +168,12 @@ async function buildKnowledgeBase(repoRoot, kbRoot, l0, l1Items) {
     nodes.push({ ...node, path: relativePath(repoRoot, file) });
     pathToId.set(path2.resolve(file), node.doc_id || node.domain_id || node.id);
   };
-  addNode({ id: l0.data.id || path2.basename(repoRoot), kind: "l0", title: l0.data.title, status: l0.data.status || null }, l0.file);
+  addNode({ id: l0.data.id, kind: "l0", title: l0.data.title, status: l0.data.status || null }, l0.file);
   for (const item of l1Items) addNode({ domain_id: item.data.domain_id, kind: "l1", title: item.data.title, status: item.data.status }, item.file);
   const adrFiles = await listFiles(path2.join(kbRoot, "L1"), (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
   for (const file of adrFiles) {
     const item = await readMarkdownFrontmatter(file);
-    addNode({ doc_id: item.data.doc_id || item.data.id, kind: "adr", title: item.data.title, domain_id: item.data.domain || null }, file);
+    addNode({ doc_id: item.data.doc_id, kind: "adr", title: item.data.title, domain_id: item.data.domain || null }, file);
   }
   const summaryFiles = await listFiles(path2.join(kbRoot, "archive"), (file) => path2.basename(file) === "summary.md");
   for (const file of summaryFiles) {
@@ -183,19 +184,49 @@ async function buildKnowledgeBase(repoRoot, kbRoot, l0, l1Items) {
     for (const chunk of chunkFiles) {
       const chunkItem = await readMarkdownFrontmatter(chunk);
       const index = Number.isInteger(chunkItem.data.index) ? chunkItem.data.index : Number.parseInt(path2.basename(chunk, ".md"), 10);
-      addNode({ doc_id: chunkItem.data.doc_id || chunkItem.data.docId || `${archiveDocId}-chunk-${String(index).padStart(2, "0")}`, kind: "chunk", title: chunkItem.data.title, parent_doc_id: archiveDocId, index }, chunk);
+      addNode({ doc_id: chunkItem.data.doc_id || chunkItem.data.docId || `chunk-${String(index).padStart(2, "0")}-${archiveDocId}`, kind: "chunk", title: chunkItem.data.title, parent_doc_id: archiveDocId, index }, chunk);
     }
   }
   const edges = [];
+  const edgeKeys = /* @__PURE__ */ new Set();
+  const addEdge = (edge) => {
+    const key = `${edge.from}\0${edge.to}\0${edge.type}`;
+    if (!edgeKeys.has(key)) {
+      edgeKeys.add(key);
+      edges.push(edge);
+    }
+  };
   for (const item of [...l1Items, l0]) {
     const from = pathToId.get(path2.resolve(item.file));
     for (const destination of destinationPaths(item.markdown)) {
       const target = path2.resolve(path2.dirname(item.file), destination);
       const to = pathToId.get(target) || pathToId.get(`${target}.md`);
-      if (from && to) edges.push({ from, to, type: "references" });
+      if (from && to) {
+        const targetNode = nodes.find((node) => (node.doc_id || node.domain_id || node.id) === to);
+        addEdge({ from, to, type: targetNode?.kind === "archive" ? "evidence" : "references" });
+      }
     }
   }
-  for (const node of nodes.filter((item) => item.kind === "chunk")) edges.push({ from: node.parent_doc_id, to: node.doc_id, type: "contains" });
+  for (const node of nodes.filter((item) => item.kind === "chunk")) addEdge({ from: node.parent_doc_id, to: node.doc_id, type: "contains" });
+  const domainMetaFiles = await listFiles(path2.join(kbRoot, ".meta", "domains"), (file) => file.endsWith(".json"));
+  for (const file of domainMetaFiles) {
+    let meta;
+    try {
+      meta = JSON.parse(await readFile2(file, "utf8"));
+    } catch {
+      continue;
+    }
+    const l1Id = meta.domain_id;
+    for (const document of meta.documents || []) {
+      const archiveId = document.archive_id || document.doc_id;
+      if (l1Id && archiveId && pathToId.has(path2.resolve(path2.join(kbRoot, "archive", archiveId, "summary.md")))) {
+        addEdge({ from: l1Id, to: archiveId, type: "evidence" });
+      }
+    }
+  }
+  for (const node of nodes.filter((item) => item.kind === "adr" && item.domain_id)) {
+    addEdge({ from: node.domain_id, to: node.doc_id, type: "references" });
+  }
   const catalog = { schema_version: 1, generated_at: (/* @__PURE__ */ new Date()).toISOString(), nodes, edges };
   const catalogPath = path2.join(kbRoot, ".meta", "knowledge-base.json");
   const temporary = `${catalogPath}.${process.pid}.tmp`;
