@@ -192,7 +192,7 @@ async function main() {
   const adrs = await Promise.all(adrFiles.map(async (file) => {
     const item = await readMarkdownFrontmatter(file);
     return {
-      id: item.data.id,
+      domain_id: item.data.domain_id,
       domain: item.data.domain,
       path: relativePosix(repoRoot, file),
       hash: await hashFile(file)

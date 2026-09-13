@@ -148,9 +148,9 @@ function relativePosix(from, to) {
 
 // src/verify.js
 var L0_REQUIRED = ["layer", "title", "description"];
-var L1_REQUIRED = ["id", "layer", "title", "description", "status"];
+var L1_REQUIRED = ["domain_id", "layer", "title", "description", "status"];
 var ADR_REQUIRED = ["id", "layer", "domain", "title", "date"];
-var ARCHIVE_REQUIRED = ["type", "docId", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
+var ARCHIVE_REQUIRED = ["type", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
 var HELP = `Usage: verify.js [--repo-root <path>] [--kb-root <path>]
 
 Validate L0, L1, ADR, archive, metadata, and relative links.
@@ -220,7 +220,7 @@ async function main() {
     const absent = missing(item.data, L1_REQUIRED);
     if (absent.length) errors.push(finding("L1_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
     if (item.data.layer !== void 0 && item.data.layer !== "L1") errors.push(finding("L1_LAYER_INVALID", relative, "layer \u5FC5\u987B\u4E3A L1"));
-    if (item.data.id && item.data.id !== fileId) errors.push(finding("L1_ID_MISMATCH", relative, `\u9886\u57DF\u76EE\u5F55 ${fileId} \u4E0E Markdown id ${item.data.id} \u4E0D\u4E00\u81F4`));
+    if (item.data.domain_id && item.data.domain_id !== fileId) errors.push(finding("L1_DOMAIN_ID_MISMATCH", relative, `\u9886\u57DF\u76EE\u5F55 ${fileId} \u4E0E Markdown domain_id ${item.data.domain_id} \u4E0D\u4E00\u81F4`));
     if (item.data.status !== void 0 && !L1_STATUSES.has(String(item.data.status).toLowerCase())) {
       errors.push(finding("L1_STATUS_INVALID", relative, `status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`));
     }
@@ -228,10 +228,10 @@ async function main() {
     if (placeholders.length > 0) {
       errors.push(finding("L1_PLACEHOLDER_REMAINS", relative, `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`));
     }
-    if (item.data.id) {
-      const previous = ids.get(item.data.id);
-      if (previous) errors.push(finding("L1_ID_DUPLICATE", relative, `id ${item.data.id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
-      else ids.set(item.data.id, relative);
+    if (item.data.domain_id) {
+      const previous = ids.get(item.data.domain_id);
+      if (previous) errors.push(finding("L1_DOMAIN_ID_DUPLICATE", relative, `domain_id ${item.data.domain_id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
+      else ids.set(item.data.domain_id, relative);
     }
   }
   const adrFiles = await listFiles(domainsRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
@@ -284,8 +284,8 @@ async function main() {
     const fileId = path2.basename(file, ".json");
     if (value.domain_id !== fileId) errors.push(finding("DOMAIN_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
     const markdown = l1Items.find((item) => path2.basename(path2.dirname(item.file)) === path2.basename(file, ".json"));
-    if (markdown && markdown.data.id !== value.domain_id) {
-      errors.push(finding("DOMAIN_ID_MISMATCH", relative, `Markdown id ${markdown.data.id || "(\u7F3A\u5931)"} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
+    if (markdown && markdown.data.domain_id !== value.domain_id) {
+      errors.push(finding("DOMAIN_ID_MISMATCH", relative, `Markdown domain_id ${markdown.data.domain_id || "(\u7F3A\u5931)"} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
     }
     const linkedArchives = new Set((markdown ? markdownDestinations(markdown.markdown) : []).map((destination) => path2.resolve(path2.dirname(markdown.file), destination)));
     for (const document of value.documents) {
@@ -310,6 +310,7 @@ async function main() {
   for (const item of summaryItems) {
     const relative = relativePosix(repoRoot, item.file);
     const absent = missing(item.data, ARCHIVE_REQUIRED);
+    if (!item.data.doc_id && !item.data.docId) absent.push("doc_id");
     if (item.data.source_type === "repo" && !item.data.source_commit) absent.push("source_commit");
     if (item.data.source_type === "yuque" && !item.data.source_updated_at) absent.push("source_updated_at");
     if (absent.length) errors.push(finding("ARCHIVE_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${[...new Set(absent)].join(", ")}`));

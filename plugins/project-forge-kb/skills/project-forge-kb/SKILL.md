@@ -16,7 +16,7 @@ description: 从人工划定的领域范围构建或增量更新单仓领域知�
 - 代码、归档资料与人工结论冲突时保留各方证据，不自行裁决。
 - 无法获得人工解释的问题写入 `docs/kb/.review/<domain_id>/domain-questions.md`，不进入 L1，也不阻塞其余 L1 草稿生成。
 - ADR 必须满足领域建模访谈规定的全部准入条件；不得把调查问题、普通实现事实或 Agent 推测写成 ADR，也不为 ADR 设置 `status`。
-- L1 最终保持 `draft`，只有人工可以改成 `confirmed`。归档由脚本维护，来源变化时保留历史并生成新快照。状态取值为 `candidate`、`draft`、`confirmed`、`review_required`、`stale`、`retired`；其中 `draft` 和 `candidate` 是 Agent 可改写的未确认状态，其余状态的内容和状态由用户维护。
+- L1 在人工确认前保持 `draft` 或 `candidate`，确认后为 `confirmed`。用户执行 `workflow.js --confirm-domain <domain_id>` 确认领域时，脚本会按该人工确认将 L1 README 的状态更新为 `confirmed`。归档由脚本维护，来源变化时保留历史并生成新快照。状态取值为 `candidate`、`draft`、`confirmed`、`review_required`、`stale`、`retired`；其中 `draft` 和 `candidate` 是 Agent 可改写的未确认状态，其余状态的内容和状态由用户维护。
 - archive 是全局共享的不可变来源快照；同一文档关联多个领域时只归档一次，每个领域分别在自身 README 和机器元数据中引用它。
 - L0 只包含服务身份和机器生成的领域知识索引。主 Agent 必须基于仓库级子代理的事实调查起草服务身份，并在最终检查时明确提醒用户 review L0。
 - 首次生成知识库状态可以使用建库产物；已有基线后执行增量更新要求工作区干净，避免当前工作区内容与版本基线混用。

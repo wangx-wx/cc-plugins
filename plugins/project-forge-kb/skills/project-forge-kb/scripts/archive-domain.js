@@ -22667,7 +22667,7 @@ function sha256(content) {
   return createHash("sha256").update(content).digest("hex");
 }
 function slugify(value) {
-  const slug = String(value).normalize("NFKC").replace(/[\\/:*?"<>|\s]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  const slug = String(value).normalize("NFKC").replace(/[\p{P}\p{S}]+/gu, "").replace(/\s+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 80);
   return slug || "document";
 }
 async function loadRepoDocument(repoRoot, file) {
@@ -22727,6 +22727,8 @@ function normalizeYuqueDocument(result, { docId, documentUrl } = {}) {
     sourceRef,
     sourceCommit: null,
     sourceUpdatedAt,
+    sourceDocId: String(result.doc_id || docId || ""),
+    // Transitional alias for callers using the old normalized source shape.
     docId: String(result.doc_id || docId || "")
   };
 }
@@ -22813,7 +22815,7 @@ async function createStaging({ repoRoot, archiveRoot, name, source, summarize = 
   const common = {
     source_type: source.sourceType,
     source_ref: source.sourceRef,
-    doc_id: source.docId,
+    source_doc_id: source.sourceDocId ?? source.docId ?? null,
     source_hash: sha256(source.content),
     source_commit: source.sourceCommit,
     source_updated_at: source.sourceUpdatedAt,
@@ -22822,6 +22824,8 @@ async function createStaging({ repoRoot, archiveRoot, name, source, summarize = 
   };
   const summary = serializeFrontmatter({
     type: "doc-summary",
+    doc_id: archiveId,
+    // Transitional alias; new consumers must use doc_id.
     docId: archiveId,
     title: source.title,
     keyTopics: documentSummary.keyTopics,
@@ -22838,10 +22842,14 @@ ${documentSummary.keyTopics.map((topic) => `- ${topic}`).join("\n")}
   const chunkHashes = [];
   for (let index = 0; index < chunks.length; index += 1) {
     const content = chunks[index];
+    const chunkDocId = `${archiveId}-chunk-${String(index).padStart(2, "0")}`;
     chunkHashes.push(sha256(content));
     const markdown = serializeFrontmatter({
       type: "chunk",
-      docId: archiveId,
+      doc_id: chunkDocId,
+      // Transitional alias for older archive readers.
+      docId: chunkDocId,
+      parent_doc_id: archiveId,
       index,
       title: documentSummary.chunks[index].title || extractHeading(content, source.title),
       summary: documentSummary.chunks[index].summary,
@@ -22895,7 +22903,14 @@ async function publishStaging(stagingPath) {
   if (!Array.isArray(summary.data.keyTopics) || summary.data.keyTopics.length === 0) throw new Error("summary.keyTopics \u5C1A\u672A\u5B8C\u6210");
   for (const topic of summary.data.keyTopics) assertComplete(topic, "summary.keyTopics");
   assertComplete(summary.content, "summary \u6B63\u6587");
-  summary.data = { ...summary.data, type: "doc-summary", docId: manifest.archive_id, ...manifest.source };
+  summary.data = {
+    ...summary.data,
+    type: "doc-summary",
+    doc_id: summary.data.doc_id || manifest.archive_id,
+    // Transitional alias for older archive readers.
+    docId: manifest.archive_id,
+    ...manifest.source
+  };
   await writeFile2(summaryPath, `${serializeFrontmatter(summary.data)}${summary.content.trim()}
 `, "utf8");
   const chunkDir = path4.join(stagingPath, "chunks");
@@ -22907,7 +22922,17 @@ async function publishStaging(stagingPath) {
     assertComplete(chunk.data.title, `chunk ${index} title`);
     assertComplete(chunk.data.summary, `chunk ${index} summary`);
     if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
-    chunk.data = { ...chunk.data, type: "chunk", docId: manifest.archive_id, index, prev: index > 0 ? index - 1 : null, next: index < files.length - 1 ? index + 1 : null };
+    chunk.data = {
+      ...chunk.data,
+      type: "chunk",
+      doc_id: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      // Transitional alias for older archive readers.
+      docId: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      parent_doc_id: manifest.archive_id,
+      index,
+      prev: index > 0 ? index - 1 : null,
+      next: index < files.length - 1 ? index + 1 : null
+    };
     await writeFile2(chunkPath, `${serializeFrontmatter(chunk.data)}${chunk.content.trim()}
 `, "utf8");
   }

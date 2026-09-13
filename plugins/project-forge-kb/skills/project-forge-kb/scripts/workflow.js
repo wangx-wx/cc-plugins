@@ -6566,6 +6566,15 @@ async function updateDomainMeta(repoRoot, domainId, update) {
 `, "utf8");
   await rename(temporary, output);
 }
+async function confirmL1Status(repoRoot, domainId) {
+  const file = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+  const markdown = await readFile2(file, "utf8");
+  const updated = markdown.replace(/^(status\s*:\s*).*$/m, "$1confirmed");
+  if (updated === markdown) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 status: ${domainId}`);
+  const temporary = `${file}.${process.pid}.tmp`;
+  await writeFile(temporary, updated, "utf8");
+  await rename(temporary, file);
+}
 async function checkedScope(repoRoot) {
   const scopePath = path2.join(repoRoot, "docs", "kb", "domain-scope.yaml");
   if (!await exists2(scopePath)) return { missing: true };
@@ -6691,7 +6700,7 @@ async function completeStep(repoRoot, step, domainId) {
     if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}/README.md`);
     const l1Markdown = await readFile2(l1Path, "utf8");
     const l1 = parseFrontmatter(l1Markdown);
-    if (l1.data.id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
+    if (l1.data.domain_id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
     const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
     const currentStatus = String(l1.data.status || "").toLowerCase();
     if (!L1_STATUSES.has(currentStatus)) {
@@ -6758,6 +6767,7 @@ async function confirmDomain(repoRoot, domainId) {
   if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
   const current = run.domains.find((item) => !item.confirmed);
   if (!current || current.id !== domainId || !current.completed_steps.includes("domain-knowledge")) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u786E\u8BA4\u9886\u57DF ${domainId}`);
+  await confirmL1Status(repoRoot, domainId);
   current.confirmed = true;
   await writeRun(repoRoot, run);
   return { action: "domain_confirmed", domain_id: domainId };

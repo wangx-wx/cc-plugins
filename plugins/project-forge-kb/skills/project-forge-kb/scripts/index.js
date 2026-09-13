@@ -140,8 +140,9 @@ function renderIndex(kbRoot, l1Items) {
   return [
     "## \u9886\u57DF\u77E5\u8BC6\u7D22\u5F15",
     "",
-    table(["\u9886\u57DF", "\u8BF4\u660E", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.id).localeCompare(String(b.data.id))).map((item) => [
-      link(item.data.title || item.data.id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
+    table(["domain_id", "\u9886\u57DF", "\u8BF4\u660E", "\u72B6\u6001"], l1Items.filter((item) => isCurrentStatus(item.data.status)).sort((a, b) => String(a.data.domain_id).localeCompare(String(b.data.domain_id))).map((item) => [
+      cell(item.data.domain_id),
+      link(item.data.title || item.data.domain_id, path2.relative(kbRoot, item.file).split(path2.sep).join("/")),
       cell(item.data.description),
       cell(item.data.status)
     ]))
@@ -152,6 +153,56 @@ function markerPosition(markdown, marker, label) {
   if (first < 0) throw new Error(`L0.md \u7F3A\u5C11 ${label} \u6807\u8BB0`);
   if (markdown.indexOf(marker, first + marker.length) >= 0) throw new Error(`L0.md \u5305\u542B\u91CD\u590D\u7684 ${label} \u6807\u8BB0`);
   return first;
+}
+function destinationPaths(markdown) {
+  return [...String(markdown).matchAll(/!?(?:\[[^\]]*\])\(([^)]+)\)/g)].map((match) => match[1].trim().split(/\s+/)[0].replace(/^<|>$/g, "").split("#")[0].split("?")[0]).filter((value) => value && !value.startsWith("/") && !/^[a-z][a-z0-9+.-]*:/i.test(value));
+}
+function relativePath(repoRoot, file) {
+  return path2.relative(repoRoot, file).split(path2.sep).join("/");
+}
+async function buildKnowledgeBase(repoRoot, kbRoot, l0, l1Items) {
+  const nodes = [];
+  const pathToId = /* @__PURE__ */ new Map();
+  const addNode = (node, file) => {
+    nodes.push({ ...node, path: relativePath(repoRoot, file) });
+    pathToId.set(path2.resolve(file), node.doc_id || node.domain_id || node.id);
+  };
+  addNode({ id: l0.data.id || path2.basename(repoRoot), kind: "l0", title: l0.data.title, status: l0.data.status || null }, l0.file);
+  for (const item of l1Items) addNode({ domain_id: item.data.domain_id, kind: "l1", title: item.data.title, status: item.data.status }, item.file);
+  const adrFiles = await listFiles(path2.join(kbRoot, "L1"), (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
+  for (const file of adrFiles) {
+    const item = await readMarkdownFrontmatter(file);
+    addNode({ doc_id: item.data.doc_id || item.data.id, kind: "adr", title: item.data.title, domain_id: item.data.domain || null }, file);
+  }
+  const summaryFiles = await listFiles(path2.join(kbRoot, "archive"), (file) => path2.basename(file) === "summary.md");
+  for (const file of summaryFiles) {
+    const item = await readMarkdownFrontmatter(file);
+    const archiveDocId = item.data.doc_id || item.data.docId;
+    addNode({ doc_id: archiveDocId, kind: "archive", title: item.data.title, status: item.data.status, source_type: item.data.source_type, source_doc_id: item.data.source_doc_id || null }, file);
+    const chunkFiles = await listFiles(path2.join(path2.dirname(file), "chunks"), (chunk) => chunk.endsWith(".md"));
+    for (const chunk of chunkFiles) {
+      const chunkItem = await readMarkdownFrontmatter(chunk);
+      const index = Number.isInteger(chunkItem.data.index) ? chunkItem.data.index : Number.parseInt(path2.basename(chunk, ".md"), 10);
+      addNode({ doc_id: chunkItem.data.doc_id || chunkItem.data.docId || `${archiveDocId}-chunk-${String(index).padStart(2, "0")}`, kind: "chunk", title: chunkItem.data.title, parent_doc_id: archiveDocId, index }, chunk);
+    }
+  }
+  const edges = [];
+  for (const item of [...l1Items, l0]) {
+    const from = pathToId.get(path2.resolve(item.file));
+    for (const destination of destinationPaths(item.markdown)) {
+      const target = path2.resolve(path2.dirname(item.file), destination);
+      const to = pathToId.get(target) || pathToId.get(`${target}.md`);
+      if (from && to) edges.push({ from, to, type: "references" });
+    }
+  }
+  for (const node of nodes.filter((item) => item.kind === "chunk")) edges.push({ from: node.parent_doc_id, to: node.doc_id, type: "contains" });
+  const catalog = { schema_version: 1, generated_at: (/* @__PURE__ */ new Date()).toISOString(), nodes, edges };
+  const catalogPath = path2.join(kbRoot, ".meta", "knowledge-base.json");
+  const temporary = `${catalogPath}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(catalog, null, 2)}
+`, "utf8");
+  await rename(temporary, catalogPath);
+  return { catalogPath, nodeCount: nodes.length, edgeCount: edges.length };
 }
 async function main() {
   const argv = process.argv.slice(2);
@@ -179,10 +230,14 @@ ${markdown.slice(end)}`;
   const temporary = `${l0Path}.${process.pid}.tmp`;
   await writeFile(temporary, updated, "utf8");
   await rename(temporary, l0Path);
+  const catalog = await buildKnowledgeBase(repoRoot, kbRoot, { file: l0Path, data: parseFrontmatter(updated).data, markdown: updated }, l1Items);
   printJson({
     action: "indexed",
     path: path2.relative(repoRoot, l0Path).split(path2.sep).join("/"),
-    l1_count: l1Items.filter((item) => isCurrentStatus(item.data.status)).length
+    l1_count: l1Items.filter((item) => isCurrentStatus(item.data.status)).length,
+    knowledge_base: relativePath(repoRoot, catalog.catalogPath),
+    knowledge_base_node_count: catalog.nodeCount,
+    knowledge_base_edge_count: catalog.edgeCount
   });
 }
 main().catch((error) => {

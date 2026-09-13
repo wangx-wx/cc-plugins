@@ -13076,7 +13076,14 @@ async function publishStaging(stagingPath) {
   if (!Array.isArray(summary.data.keyTopics) || summary.data.keyTopics.length === 0) throw new Error("summary.keyTopics \u5C1A\u672A\u5B8C\u6210");
   for (const topic of summary.data.keyTopics) assertComplete(topic, "summary.keyTopics");
   assertComplete(summary.content, "summary \u6B63\u6587");
-  summary.data = { ...summary.data, type: "doc-summary", docId: manifest.archive_id, ...manifest.source };
+  summary.data = {
+    ...summary.data,
+    type: "doc-summary",
+    doc_id: summary.data.doc_id || manifest.archive_id,
+    // Transitional alias for older archive readers.
+    docId: manifest.archive_id,
+    ...manifest.source
+  };
   await writeFile(summaryPath, `${serializeFrontmatter(summary.data)}${summary.content.trim()}
 `, "utf8");
   const chunkDir = path.join(stagingPath, "chunks");
@@ -13088,7 +13095,17 @@ async function publishStaging(stagingPath) {
     assertComplete(chunk.data.title, `chunk ${index} title`);
     assertComplete(chunk.data.summary, `chunk ${index} summary`);
     if (sha256(chunk.content.trim()) !== manifest.chunk_hashes[index]) throw new Error(`chunk ${index} \u6B63\u6587\u88AB\u4FEE\u6539`);
-    chunk.data = { ...chunk.data, type: "chunk", docId: manifest.archive_id, index, prev: index > 0 ? index - 1 : null, next: index < files.length - 1 ? index + 1 : null };
+    chunk.data = {
+      ...chunk.data,
+      type: "chunk",
+      doc_id: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      // Transitional alias for older archive readers.
+      docId: chunk.data.doc_id || `${manifest.archive_id}-chunk-${String(index).padStart(2, "0")}`,
+      parent_doc_id: manifest.archive_id,
+      index,
+      prev: index > 0 ? index - 1 : null,
+      next: index < files.length - 1 ? index + 1 : null
+    };
     await writeFile(chunkPath, `${serializeFrontmatter(chunk.data)}${chunk.content.trim()}
 `, "utf8");
   }
