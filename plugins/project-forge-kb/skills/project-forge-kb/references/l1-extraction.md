@@ -13,7 +13,7 @@
    - `confirmed`：已经由人工确认的领域知识；
    - `observed`：代码或来源文档中直接存在的行为，只能描述为观察，不自动升级为业务规则；
    - `inferred`：解释或推断，写入候选并等待确认。
-7. 使用 `<skill-dir>/assets/L1.md` 生成或更新 `docs/kb/L1/<domain_id>/README.md`。新文件使用 `status: draft`。代码和文档扫描只能产生术语候选和 ADR 问题候选；未经领域追问确认，不得写入正式“术语”或创建 ADR。提交 `code-facts` 前确认所有模板占位符都已替换，脚本会拒绝仍含占位符的草稿。
+7. 使用 `<skill-dir>/assets/L1.md` 生成或更新 `docs/kb/L1/<domain_id>/README.md`。新文件使用 `status: draft`。代码和文档扫描只能产生术语候选和 ADR 问题候选；未经领域追问确认，不得写入正式“术语”或创建 ADR。满足 ADR 准入后，使用 `<skill-dir>/assets/ADR.md` 写入 `docs/kb/L1/<domain_id>/adr/<四位编号>-<描述>.md`，并使用 `doc_id: ADR-<domain_id>-<编号>`。提交 `code-facts` 前确认所有模板占位符都已替换，脚本会拒绝仍含占位符的草稿。
 8. 流程脚本将代码基线、范围快照、语雀候选和 archive 引用写入 `docs/kb/.meta/domains/<domain_id>.json`；领域解释和必要证据写入 L1，Agent 不手动维护机器元数据。
 9. 按 [领域建模访谈](domain-questioning.md) 处理需要人工解释的术语、规则、边界和设计原因。
 
@@ -47,6 +47,6 @@ Agent 发现这些人工维护内容需要变化时，按 `<skill-dir>/assets/re
 - 建议写入 L1 的领域上下文、术语、规则和边界；
 - 建议创建的 ADR 及其人工确认依据；
 - 冲突证据和 `.review` 中未解决的问题；
-- L1 路径、ADR 路径、代码基线及 L1 的 `draft` 状态。
+- L1 路径、ADR 路径（必须是 `L1/<domain_id>/adr/<四位编号>-<描述>.md`）、代码基线及 L1 的 `draft` 状态。
 
 不得把 L1 改成 `confirmed`，也不得修改正式领域范围。

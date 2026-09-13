@@ -18,6 +18,7 @@ description: 从人工划定的领域范围构建或增量更新单仓领域知�
 - ADR 必须满足领域建模访谈规定的全部准入条件；不得把调查问题、普通实现事实或 Agent 推测写成 ADR，也不为 ADR 设置 `status`。
 - L1 在人工确认前保持 `draft` 或 `candidate`，确认后为 `confirmed`。用户执行 `workflow.js --confirm-domain <domain_id>` 确认领域时，脚本会按该人工确认将 L1 README 的状态更新为 `confirmed`。归档由脚本维护，来源变化时保留历史并生成新快照。状态取值为 `candidate`、`draft`、`confirmed`、`review_required`、`stale`、`retired`；其中 `draft` 和 `candidate` 是 Agent 可改写的未确认状态，其余状态的内容和状态由用户维护。
 - archive 是全局共享的不可变来源快照；同一文档关联多个领域时只归档一次，每个领域分别在自身 README 和机器元数据中引用它。
+- 文档路径契约不可自行变更：L1 固定为 `docs/kb/L1/<domain_id>/README.md`；ADR 固定为 `docs/kb/L1/<domain_id>/adr/<四位编号>-<描述>.md`，不得把 ADR 放在 L1 根目录，也不得用 `ADR-0001-...` 代替文件名前缀。ADR frontmatter 的正式标识为 `doc_id: ADR-<domain_id>-<编号>`。
 - L0 只包含服务身份和机器生成的领域知识索引。主 Agent 必须基于仓库级子代理的事实调查起草服务身份，并在最终检查时明确提醒用户 review L0。
 - 首次生成知识库状态可以使用建库产物；已有基线后执行增量更新要求工作区干净，避免当前工作区内容与版本基线混用。
 - `scripts/*.js` 是已封装的执行工具，不要通过读取或搜索脚本源码推断流程。按本 Skill 和 references 中的命令直接运行；用法不明确时执行 `node <skill-dir>/scripts/<name>.js --help`。只有用户明确要求开发或调试 ProjectForgeKB 脚本时才检查源码。
@@ -30,6 +31,7 @@ description: 从人工划定的领域范围构建或增量更新单仓领域知�
 - 文件存在时，运行 `node <skill-dir>/scripts/scope-check.js`。校验失败立即停止；严格使用输出的 `domain_order`，不得重排、增删、推断或合并领域。
 - 范围校验成功后先运行 `node <skill-dir>/scripts/workflow.js --start` 创建本轮运行，再运行 `node <skill-dir>/scripts/workflow.js` 获取下一步。已有增量基线时，启动脚本会先要求工作区干净并只选出受影响领域。
 - 每完成一个 Agent 阶段或脚本动作，按 [领域工作流](references/domain-workflow.md) 登记完成，再重新运行 `workflow.js`。不得跳过状态脚本给出的 `next_action`。
+- `workflow.js --confirm-domain` 是领域级结构检查点；如果报告 ADR 路径、文件名或 `doc_id` 错误，先修正文档和 L1 链接，不得绕过确认继续下一个领域。
 - 建设仓库时，完整读取并执行 [领域工作流](references/domain-workflow.md)，一次只处理一个领域。
 - 归档文档时，完整读取并执行 [归档工作流](references/archive-workflow.md)；正常流程按领域调用一次归档入口。
 - 提取 L1 时，读取 [L1 提取规范](references/l1-extraction.md)。进入持续领域访谈时，再完整读取 [领域建模访谈](references/domain-questioning.md)。

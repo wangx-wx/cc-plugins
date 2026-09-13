@@ -3,8 +3,8 @@
 // src/workflow.js
 import { createHash } from "node:crypto";
 import { execFile as execFile2 } from "node:child_process";
-import { access as access2, mkdir, readFile as readFile2, rename, writeFile } from "node:fs/promises";
-import path2 from "node:path";
+import { access as access3, mkdir, readFile as readFile3, rename, writeFile } from "node:fs/promises";
+import path3 from "node:path";
 import { promisify as promisify2 } from "node:util";
 
 // node_modules/yaml/browser/dist/nodes/identity.js
@@ -59,17 +59,17 @@ function visit(node, visitor) {
 visit.BREAK = BREAK;
 visit.SKIP = SKIP;
 visit.REMOVE = REMOVE;
-function visit_(key, node, visitor, path3) {
-  const ctrl = callVisitor(key, node, visitor, path3);
+function visit_(key, node, visitor, path4) {
+  const ctrl = callVisitor(key, node, visitor, path4);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path3, ctrl);
-    return visit_(key, ctrl, visitor, path3);
+    replaceNode(key, path4, ctrl);
+    return visit_(key, ctrl, visitor, path4);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path3 = Object.freeze(path3.concat(node));
+      path4 = Object.freeze(path4.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = visit_(i, node.items[i], visitor, path3);
+        const ci = visit_(i, node.items[i], visitor, path4);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -80,13 +80,13 @@ function visit_(key, node, visitor, path3) {
         }
       }
     } else if (isPair(node)) {
-      path3 = Object.freeze(path3.concat(node));
-      const ck = visit_("key", node.key, visitor, path3);
+      path4 = Object.freeze(path4.concat(node));
+      const ck = visit_("key", node.key, visitor, path4);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = visit_("value", node.value, visitor, path3);
+      const cv = visit_("value", node.value, visitor, path4);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -107,17 +107,17 @@ async function visitAsync(node, visitor) {
 visitAsync.BREAK = BREAK;
 visitAsync.SKIP = SKIP;
 visitAsync.REMOVE = REMOVE;
-async function visitAsync_(key, node, visitor, path3) {
-  const ctrl = await callVisitor(key, node, visitor, path3);
+async function visitAsync_(key, node, visitor, path4) {
+  const ctrl = await callVisitor(key, node, visitor, path4);
   if (isNode(ctrl) || isPair(ctrl)) {
-    replaceNode(key, path3, ctrl);
-    return visitAsync_(key, ctrl, visitor, path3);
+    replaceNode(key, path4, ctrl);
+    return visitAsync_(key, ctrl, visitor, path4);
   }
   if (typeof ctrl !== "symbol") {
     if (isCollection(node)) {
-      path3 = Object.freeze(path3.concat(node));
+      path4 = Object.freeze(path4.concat(node));
       for (let i = 0; i < node.items.length; ++i) {
-        const ci = await visitAsync_(i, node.items[i], visitor, path3);
+        const ci = await visitAsync_(i, node.items[i], visitor, path4);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK)
@@ -128,13 +128,13 @@ async function visitAsync_(key, node, visitor, path3) {
         }
       }
     } else if (isPair(node)) {
-      path3 = Object.freeze(path3.concat(node));
-      const ck = await visitAsync_("key", node.key, visitor, path3);
+      path4 = Object.freeze(path4.concat(node));
+      const ck = await visitAsync_("key", node.key, visitor, path4);
       if (ck === BREAK)
         return BREAK;
       else if (ck === REMOVE)
         node.key = null;
-      const cv = await visitAsync_("value", node.value, visitor, path3);
+      const cv = await visitAsync_("value", node.value, visitor, path4);
       if (cv === BREAK)
         return BREAK;
       else if (cv === REMOVE)
@@ -161,23 +161,23 @@ function initVisitor(visitor) {
   }
   return visitor;
 }
-function callVisitor(key, node, visitor, path3) {
+function callVisitor(key, node, visitor, path4) {
   if (typeof visitor === "function")
-    return visitor(key, node, path3);
+    return visitor(key, node, path4);
   if (isMap(node))
-    return visitor.Map?.(key, node, path3);
+    return visitor.Map?.(key, node, path4);
   if (isSeq(node))
-    return visitor.Seq?.(key, node, path3);
+    return visitor.Seq?.(key, node, path4);
   if (isPair(node))
-    return visitor.Pair?.(key, node, path3);
+    return visitor.Pair?.(key, node, path4);
   if (isScalar(node))
-    return visitor.Scalar?.(key, node, path3);
+    return visitor.Scalar?.(key, node, path4);
   if (isAlias(node))
-    return visitor.Alias?.(key, node, path3);
+    return visitor.Alias?.(key, node, path4);
   return void 0;
 }
-function replaceNode(key, path3, node) {
-  const parent = path3[path3.length - 1];
+function replaceNode(key, path4, node) {
+  const parent = path4[path4.length - 1];
   if (isCollection(parent)) {
     parent.items[key] = node;
   } else if (isPair(parent)) {
@@ -704,10 +704,10 @@ function createNode(value, tagName, ctx) {
 }
 
 // node_modules/yaml/browser/dist/nodes/Collection.js
-function collectionFromPath(schema4, path3, value) {
+function collectionFromPath(schema4, path4, value) {
   let v = value;
-  for (let i = path3.length - 1; i >= 0; --i) {
-    const k = path3[i];
+  for (let i = path4.length - 1; i >= 0; --i) {
+    const k = path4[i];
     if (typeof k === "number" && Number.isInteger(k) && k >= 0) {
       const a = [];
       a[k] = v;
@@ -726,7 +726,7 @@ function collectionFromPath(schema4, path3, value) {
     sourceObjects: /* @__PURE__ */ new Map()
   });
 }
-var isEmptyPath = (path3) => path3 == null || typeof path3 === "object" && !!path3[Symbol.iterator]().next().done;
+var isEmptyPath = (path4) => path4 == null || typeof path4 === "object" && !!path4[Symbol.iterator]().next().done;
 var Collection = class extends NodeBase {
   constructor(type, schema4) {
     super(type);
@@ -756,11 +756,11 @@ var Collection = class extends NodeBase {
    * be a Pair instance or a `{ key, value }` object, which may not have a key
    * that already exists in the map.
    */
-  addIn(path3, value) {
-    if (isEmptyPath(path3))
+  addIn(path4, value) {
+    if (isEmptyPath(path4))
       this.add(value);
     else {
-      const [key, ...rest] = path3;
+      const [key, ...rest] = path4;
       const node = this.get(key, true);
       if (isCollection(node))
         node.addIn(rest, value);
@@ -774,8 +774,8 @@ var Collection = class extends NodeBase {
    * Removes a value from the collection.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path3) {
-    const [key, ...rest] = path3;
+  deleteIn(path4) {
+    const [key, ...rest] = path4;
     if (rest.length === 0)
       return this.delete(key);
     const node = this.get(key, true);
@@ -789,8 +789,8 @@ var Collection = class extends NodeBase {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path3, keepScalar) {
-    const [key, ...rest] = path3;
+  getIn(path4, keepScalar) {
+    const [key, ...rest] = path4;
     const node = this.get(key, true);
     if (rest.length === 0)
       return !keepScalar && isScalar(node) ? node.value : node;
@@ -808,8 +808,8 @@ var Collection = class extends NodeBase {
   /**
    * Checks if the collection includes a value with the key `key`.
    */
-  hasIn(path3) {
-    const [key, ...rest] = path3;
+  hasIn(path4) {
+    const [key, ...rest] = path4;
     if (rest.length === 0)
       return this.has(key);
     const node = this.get(key, true);
@@ -819,8 +819,8 @@ var Collection = class extends NodeBase {
    * Sets a value in this collection. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path3, value) {
-    const [key, ...rest] = path3;
+  setIn(path4, value) {
+    const [key, ...rest] = path4;
     if (rest.length === 0) {
       this.set(key, value);
     } else {
@@ -2948,9 +2948,9 @@ var Document = class _Document {
       this.contents.add(value);
   }
   /** Adds a value to the document. */
-  addIn(path3, value) {
+  addIn(path4, value) {
     if (assertCollection(this.contents))
-      this.contents.addIn(path3, value);
+      this.contents.addIn(path4, value);
   }
   /**
    * Create a new `Alias` node, ensuring that the target `node` has the required anchor.
@@ -3025,14 +3025,14 @@ var Document = class _Document {
    * Removes a value from the document.
    * @returns `true` if the item was found and removed.
    */
-  deleteIn(path3) {
-    if (isEmptyPath(path3)) {
+  deleteIn(path4) {
+    if (isEmptyPath(path4)) {
       if (this.contents == null)
         return false;
       this.contents = null;
       return true;
     }
-    return assertCollection(this.contents) ? this.contents.deleteIn(path3) : false;
+    return assertCollection(this.contents) ? this.contents.deleteIn(path4) : false;
   }
   /**
    * Returns item at `key`, or `undefined` if not found. By default unwraps
@@ -3047,10 +3047,10 @@ var Document = class _Document {
    * scalar values from their surrounding node; to disable set `keepScalar` to
    * `true` (collections are always returned intact).
    */
-  getIn(path3, keepScalar) {
-    if (isEmptyPath(path3))
+  getIn(path4, keepScalar) {
+    if (isEmptyPath(path4))
       return !keepScalar && isScalar(this.contents) ? this.contents.value : this.contents;
-    return isCollection(this.contents) ? this.contents.getIn(path3, keepScalar) : void 0;
+    return isCollection(this.contents) ? this.contents.getIn(path4, keepScalar) : void 0;
   }
   /**
    * Checks if the document includes a value with the key `key`.
@@ -3061,10 +3061,10 @@ var Document = class _Document {
   /**
    * Checks if the document includes a value at `path`.
    */
-  hasIn(path3) {
-    if (isEmptyPath(path3))
+  hasIn(path4) {
+    if (isEmptyPath(path4))
       return this.contents !== void 0;
-    return isCollection(this.contents) ? this.contents.hasIn(path3) : false;
+    return isCollection(this.contents) ? this.contents.hasIn(path4) : false;
   }
   /**
    * Sets a value in this document. For `!!set`, `value` needs to be a
@@ -3081,13 +3081,13 @@ var Document = class _Document {
    * Sets a value in this document. For `!!set`, `value` needs to be a
    * boolean to add/remove the item from the set.
    */
-  setIn(path3, value) {
-    if (isEmptyPath(path3)) {
+  setIn(path4, value) {
+    if (isEmptyPath(path4)) {
       this.contents = value;
     } else if (this.contents == null) {
-      this.contents = collectionFromPath(this.schema, Array.from(path3), value);
+      this.contents = collectionFromPath(this.schema, Array.from(path4), value);
     } else if (assertCollection(this.contents)) {
-      this.contents.setIn(path3, value);
+      this.contents.setIn(path4, value);
     }
   }
   /**
@@ -4629,9 +4629,9 @@ function visit2(cst, visitor) {
 visit2.BREAK = BREAK2;
 visit2.SKIP = SKIP2;
 visit2.REMOVE = REMOVE2;
-visit2.itemAtPath = (cst, path3) => {
+visit2.itemAtPath = (cst, path4) => {
   let item = cst;
-  for (const [field, index] of path3) {
+  for (const [field, index] of path4) {
     const tok = item?.[field];
     if (tok && "items" in tok) {
       item = tok.items[index];
@@ -4640,23 +4640,23 @@ visit2.itemAtPath = (cst, path3) => {
   }
   return item;
 };
-visit2.parentCollection = (cst, path3) => {
-  const parent = visit2.itemAtPath(cst, path3.slice(0, -1));
-  const field = path3[path3.length - 1][0];
+visit2.parentCollection = (cst, path4) => {
+  const parent = visit2.itemAtPath(cst, path4.slice(0, -1));
+  const field = path4[path4.length - 1][0];
   const coll = parent?.[field];
   if (coll && "items" in coll)
     return coll;
   throw new Error("Parent collection not found");
 };
-function _visit(path3, item, visitor) {
-  let ctrl = visitor(item, path3);
+function _visit(path4, item, visitor) {
+  let ctrl = visitor(item, path4);
   if (typeof ctrl === "symbol")
     return ctrl;
   for (const field of ["key", "value"]) {
     const token = item[field];
     if (token && "items" in token) {
       for (let i = 0; i < token.items.length; ++i) {
-        const ci = _visit(Object.freeze(path3.concat([[field, i]])), token.items[i], visitor);
+        const ci = _visit(Object.freeze(path4.concat([[field, i]])), token.items[i], visitor);
         if (typeof ci === "number")
           i = ci - 1;
         else if (ci === BREAK2)
@@ -4667,10 +4667,10 @@ function _visit(path3, item, visitor) {
         }
       }
       if (typeof ctrl === "function" && field === "key")
-        ctrl = ctrl(item, path3);
+        ctrl = ctrl(item, path4);
     }
   }
-  return typeof ctrl === "function" ? ctrl(item, path3) : ctrl;
+  return typeof ctrl === "function" ? ctrl(item, path4) : ctrl;
 }
 
 // node_modules/yaml/browser/dist/parse/cst.js
@@ -6270,6 +6270,10 @@ function isMain(moduleUrl) {
   return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(moduleUrl));
 }
 
+// src/artifacts.js
+import { access, readFile, readdir } from "node:fs/promises";
+import path from "node:path";
+
 // src/frontmatter.js
 function parseFrontmatter(markdown) {
   const match = String(markdown).match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
@@ -6346,11 +6350,31 @@ function findContentPlaceholders(markdown) {
   }
   return [...found];
 }
+async function listFiles(root, predicate = () => true) {
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  }
+  const files = [];
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    const entryPath = path.join(root, entry.name);
+    if (entry.isDirectory()) files.push(...await listFiles(entryPath, predicate));
+    else if (entry.isFile() && predicate(entryPath)) files.push(entryPath);
+  }
+  return files;
+}
+async function readMarkdownFrontmatter(file) {
+  const markdown = await readFile(file, "utf8");
+  return { file, markdown, ...parseFrontmatter(markdown) };
+}
 
 // src/scope.js
 import { execFile } from "node:child_process";
-import { access, readFile } from "node:fs/promises";
-import path from "node:path";
+import { access as access2, readFile as readFile2 } from "node:fs/promises";
+import path2 from "node:path";
 import { promisify } from "node:util";
 var execFileAsync = promisify(execFile);
 function stringArray(value, field, errors) {
@@ -6362,17 +6386,17 @@ function stringArray(value, field, errors) {
   return value.map((item) => item.trim());
 }
 function safeRelativePath(repoRoot, value, field, errors) {
-  const absolute = path.resolve(repoRoot, value);
-  const relative = path.relative(repoRoot, absolute);
-  if (!value || relative.startsWith("..") || path.isAbsolute(relative)) {
+  const absolute = path2.resolve(repoRoot, value);
+  const relative = path2.relative(repoRoot, absolute);
+  if (!value || relative.startsWith("..") || path2.isAbsolute(relative)) {
     errors.push(`${field} \u5FC5\u987B\u662F\u4ED3\u5E93\u5185\u7684\u76F8\u5BF9\u8DEF\u5F84: ${value}`);
     return null;
   }
-  return relative.split(path.sep).join("/");
+  return relative.split(path2.sep).join("/");
 }
 async function exists(file) {
   try {
-    await access(file);
+    await access2(file);
     return true;
   } catch (error) {
     if (error.code === "ENOENT") return false;
@@ -6392,19 +6416,19 @@ async function trackedFiles(repoRoot) {
   }
 }
 async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
-  const absolute = path.resolve(repoRoot, scopePath);
-  const relative = path.relative(repoRoot, absolute);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+  const absolute = path2.resolve(repoRoot, scopePath);
+  const relative = path2.relative(repoRoot, absolute);
+  if (relative.startsWith("..") || path2.isAbsolute(relative)) {
     throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
   }
   let value;
   try {
-    value = parse(await readFile(absolute, "utf8"));
+    value = parse(await readFile2(absolute, "utf8"));
   } catch (error) {
     if (error.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
     throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error.message}`);
   }
-  return { absolute, relative: relative.split(path.sep).join("/"), value };
+  return { absolute, relative: relative.split(path2.sep).join("/"), value };
 }
 async function validateScope(repoRoot, raw) {
   const errors = [];
@@ -6451,7 +6475,7 @@ async function validateScope(repoRoot, raw) {
       for (const value of values) {
         const relative = safeRelativePath(repoRoot, value, `${prefix}.${field}`, errors);
         if (!relative) continue;
-        if (!await exists(path.join(repoRoot, relative))) {
+        if (!await exists(path2.join(repoRoot, relative))) {
           const message = `${prefix}.${field} \u672A\u627E\u5230: ${relative}`;
           (required ? errors : warnings).push(message);
         }
@@ -6516,7 +6540,7 @@ Per-domain steps: ${STEPS.join(", ")}
 Repository steps: l0-review, then --complete-run`;
 async function exists2(file) {
   try {
-    await access2(file);
+    await access3(file);
     return true;
   } catch (error) {
     if (error.code === "ENOENT") return false;
@@ -6539,11 +6563,11 @@ function domainMatches(domain, file) {
   return domain.include_packages.some((name) => packageMatches(file, name));
 }
 function runPath(repoRoot) {
-  return path2.join(repoRoot, "docs", "kb", ".meta", "workflow-run.json");
+  return path3.join(repoRoot, "docs", "kb", ".meta", "workflow-run.json");
 }
 async function readRun(repoRoot) {
   try {
-    return JSON.parse(await readFile2(runPath(repoRoot), "utf8"));
+    return JSON.parse(await readFile3(runPath(repoRoot), "utf8"));
   } catch (error) {
     if (error.code === "ENOENT") return null;
     throw new Error(`\u65E0\u6CD5\u8BFB\u53D6 workflow-run.json: ${error.message}`);
@@ -6551,15 +6575,15 @@ async function readRun(repoRoot) {
 }
 async function writeRun(repoRoot, run) {
   const output = runPath(repoRoot);
-  await mkdir(path2.dirname(output), { recursive: true });
+  await mkdir(path3.dirname(output), { recursive: true });
   const temporary = `${output}.${process.pid}.tmp`;
   await writeFile(temporary, `${JSON.stringify(run, null, 2)}
 `, "utf8");
   await rename(temporary, output);
 }
 async function updateDomainMeta(repoRoot, domainId, update) {
-  const output = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
-  const value = JSON.parse(await readFile2(output, "utf8"));
+  const output = path3.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
+  const value = JSON.parse(await readFile3(output, "utf8"));
   update(value);
   const temporary = `${output}.${process.pid}.tmp`;
   await writeFile(temporary, `${JSON.stringify(value, null, 2)}
@@ -6567,8 +6591,8 @@ async function updateDomainMeta(repoRoot, domainId, update) {
   await rename(temporary, output);
 }
 async function confirmL1Status(repoRoot, domainId) {
-  const file = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
-  const markdown = await readFile2(file, "utf8");
+  const file = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+  const markdown = await readFile3(file, "utf8");
   const updated = markdown.replace(/^(status\s*:\s*).*$/m, "$1confirmed");
   if (updated === markdown) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 status: ${domainId}`);
   const temporary = `${file}.${process.pid}.tmp`;
@@ -6576,11 +6600,11 @@ async function confirmL1Status(repoRoot, domainId) {
   await rename(temporary, file);
 }
 async function checkedScope(repoRoot) {
-  const scopePath = path2.join(repoRoot, "docs", "kb", "domain-scope.yaml");
+  const scopePath = path3.join(repoRoot, "docs", "kb", "domain-scope.yaml");
   if (!await exists2(scopePath)) return { missing: true };
   const loaded = await loadScope(repoRoot);
   const checked = await validateScope(repoRoot, loaded.value);
-  return { ...checked, scopeHash: hash(await readFile2(scopePath, "utf8")) };
+  return { ...checked, scopeHash: hash(await readFile3(scopePath, "utf8")) };
 }
 async function affectedDomains(repoRoot, checked, baseline) {
   const active = checked.domains.filter((item) => item.status === "active");
@@ -6599,17 +6623,17 @@ async function startRun(repoRoot) {
   const checked = await checkedScope(repoRoot);
   if (checked.missing) throw new Error("\u7F3A\u5C11 docs/kb/domain-scope.yaml\uFF1B\u5148\u8FD0\u884C scope-init.js \u5E76\u7531\u4EBA\u5DE5\u586B\u5199");
   if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
-  if (!await exists2(path2.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) {
+  if (!await exists2(path3.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) {
     throw new Error("\u7F3A\u5C11 scope-resolved.json\uFF1B\u5148\u8FD0\u884C scope-check.js");
   }
   const existing = await readRun(repoRoot);
   if (existing && existing.status === "active") throw new Error("\u5DF2\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
-  const baselinePath = path2.join(repoRoot, "docs", "kb", ".meta", "source-state.json");
+  const baselinePath = path3.join(repoRoot, "docs", "kb", ".meta", "source-state.json");
   let baseline = null;
   if (await exists2(baselinePath)) {
     const changes = await git(repoRoot, ["status", "--porcelain"]);
     if (changes) throw new Error("\u589E\u91CF\u66F4\u65B0\u5F00\u59CB\u524D\u8981\u6C42\u5DE5\u4F5C\u533A\u5E72\u51C0\uFF1B\u8BF7\u5148\u63D0\u4EA4\u3001\u6E05\u7406\u6216\u6682\u5B58\u5F53\u524D\u53D8\u66F4");
-    baseline = JSON.parse(await readFile2(baselinePath, "utf8"));
+    baseline = JSON.parse(await readFile3(baselinePath, "utf8"));
   }
   const domains = await affectedDomains(repoRoot, checked, baseline);
   const sourceCommit = await git(repoRoot, ["rev-parse", "HEAD"]);
@@ -6627,9 +6651,9 @@ async function startRun(repoRoot) {
   return { action: "run_started", mode: run.mode, source_commit: sourceCommit, domain_order: run.domains.map((item) => item.id) };
 }
 async function loadCandidates(repoRoot, domainId) {
-  const file = path2.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+  const file = path3.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
   if (!await exists2(file)) return null;
-  const value = parse(await readFile2(file, "utf8"));
+  const value = parse(await readFile3(file, "utf8"));
   if (value?.domain_id !== domainId || !Array.isArray(value.candidates)) throw new Error("\u8BED\u96C0\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548");
   return value;
 }
@@ -6643,7 +6667,7 @@ async function inspectWorkflow(repoRoot) {
   const checked = await checkedScope(repoRoot);
   if (checked.missing) return result("SCOPE_MISSING", null, "run_scope_init");
   if (checked.errors.length > 0) return result("SCOPE_INVALID", null, "fix_domain_scope", checked.errors.join("; "));
-  if (!await exists2(path2.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) return result("SCOPE_CHECK_REQUIRED", null, "run_scope_check");
+  if (!await exists2(path3.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) return result("SCOPE_CHECK_REQUIRED", null, "run_scope_check");
   const run = await readRun(repoRoot);
   if (!run || run.status === "complete") return result(run ? "UPDATE_READY" : "INITIALIZATION_READY", null, "run_workflow_start");
   const domainState = run.domains.find((item) => !item.confirmed);
@@ -6667,14 +6691,31 @@ async function inspectWorkflow(repoRoot) {
   return result("REPO_FINALIZE", null, "run_index_state_verify");
 }
 async function assertL1Complete(repoRoot, domainId) {
-  const l1Path = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
-  const l1 = await readFile2(l1Path, "utf8");
+  const l1Path = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+  const l1 = await readFile3(l1Path, "utf8");
   for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
     if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
   }
   const placeholders = findContentPlaceholders(l1);
   if (placeholders.length > 0) {
     throw new Error(`\u9886\u57DF\u6587\u6863\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`);
+  }
+}
+async function assertDomainArtifacts(repoRoot, domainId) {
+  const domainRoot = path3.join(repoRoot, "docs", "kb", "L1", domainId);
+  const adrFiles = await listFiles(domainRoot, (file) => file.endsWith(".md") && path3.basename(file) !== "README.md");
+  for (const file of adrFiles) {
+    const item = await readMarkdownFrontmatter(file);
+    if (item.data.layer !== "ADR") continue;
+    const relative = path3.relative(domainRoot, file).split(path3.sep);
+    if (relative.length !== 2 || relative[0] !== "adr") {
+      throw new Error(`ADR \u5FC5\u987B\u4F4D\u4E8E docs/kb/L1/${domainId}/adr/ \u76EE\u5F55: ${path3.relative(repoRoot, file)}`);
+    }
+    const filename = path3.basename(file, ".md");
+    const match = filename.match(/^(\d{4})-.+$/);
+    if (!match) throw new Error(`ADR \u6587\u4EF6\u540D\u5FC5\u987B\u4F7F\u7528\u56DB\u4F4D\u7F16\u53F7\u548C\u63CF\u8FF0: ${path3.relative(repoRoot, file)}`);
+    const expected = `ADR-${domainId}-${match[1]}`;
+    if (item.data.doc_id !== expected) throw new Error(`ADR doc_id \u5FC5\u987B\u4E3A ${expected}: ${path3.relative(repoRoot, file)}`);
   }
 }
 async function completeStep(repoRoot, step, domainId) {
@@ -6698,12 +6739,12 @@ async function completeStep(repoRoot, step, domainId) {
   }
   if (step !== expected) throw new Error(`\u5F53\u524D\u5E94\u5B8C\u6210\u6B65\u9AA4 ${expected}\uFF0C\u4E0D\u80FD\u6807\u8BB0 ${step}`);
   if (step === "code-facts") {
-    const l1Path = path2.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+    const l1Path = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
     if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}/README.md`);
-    const l1Markdown = await readFile2(l1Path, "utf8");
+    const l1Markdown = await readFile3(l1Path, "utf8");
     const l1 = parseFrontmatter(l1Markdown);
     if (l1.data.domain_id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
-    const metaPath = path2.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
+    const metaPath = path3.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
     const currentStatus = String(l1.data.status || "").toLowerCase();
     if (!L1_STATUSES.has(currentStatus)) {
       throw new Error(`\u9886\u57DF ${domainId} \u7684 status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`);
@@ -6718,7 +6759,7 @@ async function completeStep(repoRoot, step, domainId) {
       candidates: [],
       l1: { status: currentStatus }
     };
-    await mkdir(path2.dirname(metaPath), { recursive: true });
+    await mkdir(path3.dirname(metaPath), { recursive: true });
     const temporary = `${metaPath}.${process.pid}.tmp`;
     await writeFile(temporary, `${JSON.stringify(meta, null, 2)}
 `, "utf8");
@@ -6735,16 +6776,16 @@ async function completeStep(repoRoot, step, domainId) {
     });
   }
   if (step === "archives") {
-    const receiptPath = path2.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
+    const receiptPath = path3.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
     if (!await exists2(receiptPath)) throw new Error("\u5F53\u524D\u9886\u57DF\u5C1A\u672A\u6267\u884C\u9886\u57DF\u7EA7\u5F52\u6863");
-    const receipt = JSON.parse(await readFile2(receiptPath, "utf8"));
+    const receipt = JSON.parse(await readFile3(receiptPath, "utf8"));
     if (receipt.domain_id !== domainId || receipt.action !== "domain_archived" || receipt.checked_at < run.started_at) {
       throw new Error("\u9886\u57DF\u5F52\u6863\u7ED3\u679C\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8FD0\u884C");
     }
     await updateDomainMeta(repoRoot, domainId, (meta) => {
       meta.documents = receipt.results.map((item) => ({
         kind: item.kind || "archive",
-        archive_id: item.archive_id || path2.basename(item.path),
+        archive_id: item.archive_id || path3.basename(item.path),
         source_ref: item.source_ref,
         path: item.path,
         action: item.action
@@ -6770,6 +6811,7 @@ async function confirmDomain(repoRoot, domainId) {
   if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
   const current = run.domains.find((item) => !item.confirmed);
   if (!current || current.id !== domainId || !current.completed_steps.includes("domain-knowledge")) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u786E\u8BA4\u9886\u57DF ${domainId}`);
+  await assertDomainArtifacts(repoRoot, domainId);
   await confirmL1Status(repoRoot, domainId);
   current.confirmed = true;
   await writeRun(repoRoot, run);
@@ -6787,7 +6829,7 @@ async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
-  const repoRoot = path2.resolve(args.repoRoot || process.cwd());
+  const repoRoot = path3.resolve(args.repoRoot || process.cwd());
   if (args.start) return printJson(await startRun(repoRoot));
   if (args.completeStep) return printJson(await completeStep(repoRoot, args.completeStep, args.domain));
   if (args.confirmDomain) return printJson(await confirmDomain(repoRoot, args.confirmDomain));

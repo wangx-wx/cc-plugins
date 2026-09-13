@@ -1,6 +1,6 @@
 # 领域驱动工作流
 
-使用本轮 `workflow.js --start` 返回的 `domain_order`，一次只处理一个领域。完成每个阶段后用脚本登记，再运行 `workflow.js` 获取下一步；当前领域未确认前不得进入下一个领域。
+使用本轮 `workflow.js --start` 返回的 `domain_order`，一次只处理一个领域。完成每个阶段后用脚本登记，再运行 `workflow.js` 获取下一步；当前领域未确认前不得进入下一个领域。所有 ADR 必须写入 `docs/kb/L1/<domain_id>/adr/<四位编号>-<描述>.md`，例如 `docs/kb/L1/payment/adr/0001-preserve-refund.md`；不得直接放在 L1 目录下。
 
 ## 1. 调查代码事实
 
@@ -66,7 +66,7 @@ node <skill-dir>/scripts/workflow.js --complete-step archive-facts --domain <dom
 
 完整执行 [领域建模访谈](domain-questioning.md)。以代码和归档调查得到的术语候选、ADR 问题候选为起点，建立设计树，按 frontier 分轮追问。每轮用户回答后重新计算设计树，并立即把满足准入条件的术语写入 L1 草稿、把满足准入条件的设计写入 ADR；不得根据扫描结果直接生成正式术语或 ADR。
 
-同时将人工确认的领域背景、规则和边界写入 L1，并把本领域机器元数据中关联的每个 archive 写入 README 的“归档资料”；同一个 archive 可以被多个领域 README 引用。将无法获得解释的问题写入 `.review/<domain_id>/domain-questions.md`。frontier 为空后，汇总 L1、ADR 和 `.review`；只有用户确认已经达到共同理解，才运行：
+同时将人工确认的领域背景、规则和边界写入 L1，并把本领域机器元数据中关联的每个 archive 写入 README 的“归档资料”；同一个 archive 可以被多个领域 README 引用。将无法获得解释的问题写入 `.review/<domain_id>/domain-questions.md`。frontier 为空后，汇总 L1、ADR 和 `.review`；新 ADR 使用 `assets/ADR.md`，文件名为 `<四位编号>-<描述>.md`，frontmatter 使用 `doc_id: ADR-<domain_id>-<编号>`，并在 L1 的“设计与决策”表中使用相同 `doc_id` 和正确相对链接。只有用户确认已经达到共同理解，才运行：
 
 ```bash
 node <skill-dir>/scripts/workflow.js --complete-step domain-knowledge --domain <domain_id>
@@ -74,7 +74,7 @@ node <skill-dir>/scripts/workflow.js --complete-step domain-knowledge --domain <
 
 ## 6. 确认当前领域
 
-集中向用户展示当前领域产物、归档关联、仍未解决的问题和主要证据。用户明确确认后运行：
+集中向用户展示当前领域产物、归档关联、仍未解决的问题和主要证据。确认前先确保 ADR 均位于 `L1/<domain_id>/adr/` 且 README 链接可达；`workflow.js --confirm-domain` 会执行这项结构检查。用户明确确认后运行：
 
 ```bash
 node <skill-dir>/scripts/workflow.js --confirm-domain <domain_id>
