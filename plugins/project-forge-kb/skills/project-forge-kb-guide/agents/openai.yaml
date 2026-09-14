@@ -1,0 +1,5 @@
+interface:
+  display_name: "ProjectForgeKBGuide"
+  short_description: "构建和维护项目知识库指南"
+policy:
+  allow_implicit_invocation: true
