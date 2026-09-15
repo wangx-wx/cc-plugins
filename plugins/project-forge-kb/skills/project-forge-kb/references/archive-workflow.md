@@ -1,24 +1,24 @@
 # 归档工作流
 
-归档是领域级动作。Agent 不需要逐个来源管理暂存目录，也不需要手动串联准备与发布。
+归档是业务模块级动作。Agent 不需要逐个来源管理暂存目录，也不需要手动串联准备与发布。
 
-## 1. 执行当前领域归档
+## 1. 执行当前业务模块归档
 
 确认语雀候选已经由用户处理后，运行：
 
 ```bash
-node <skill-dir>/scripts/archive-domain.js --domain <domain_id>
+node <skill-dir>/scripts/archive-module.js --module <module_id>
 ```
 
-脚本会读取当前领域的项目文档和 `yuque-candidates.yaml` 中 `approved` 的语雀文档，完成来源获取、变化判断、摘要、完整性校验和发布。`pending` 或 `rejected` 文档不会被获取。
+脚本会读取当前业务模块的项目文档和 `yuque-candidates.yaml` 中 `approved` 的语雀文档，完成来源获取、变化判断、摘要、完整性校验和发布。`pending` 或 `rejected` 文档不会被获取。
 
-结果中的 `created_count` 表示新归档，`skipped_count` 表示来源未变化而复用现有归档。只有脚本成功返回后，才继续领域事实调查。
+结果中的 `created_count` 表示新归档，`skipped_count` 表示来源未变化而复用现有归档。只有脚本成功返回后，才继续业务模块事实调查。
 
-archive 不归属于单个领域，而是按来源和版本全局复用。同一项目文档或语雀文档出现在多个领域时，首次处理创建 archive，后续领域复用同一路径；每个领域的归档回执和 `.meta/domains/<domain_id>.json` 分别记录这条关联。
+archive 不归属于单个业务模块，而是按来源和版本全局复用。同一项目文档或语雀文档出现在多个业务模块时，首次处理创建 archive，后续业务模块复用同一路径；每个业务模块的归档回执和 `.meta/modules/<module_id>.json` 分别记录这条关联。
 
 ## 2. 失败处理
 
-项目文档存在未提交修改、语雀获取失败、摘要服务失败或归档校验失败时，停止当前领域并报告脚本错误。不要手动编辑 archive、机器状态或摘要结果，也不要用旧归档代替失败结果。
+项目文档存在未提交修改、语雀获取失败、摘要服务失败或归档校验失败时，停止当前业务模块并报告脚本错误。不要手动编辑 archive、机器状态或摘要结果，也不要用旧归档代替失败结果。
 
 `archive-prepare.js` 和 `archive-publish.js` 仍可用于脚本开发或单来源诊断，但不属于正常知识库建设步骤。
 

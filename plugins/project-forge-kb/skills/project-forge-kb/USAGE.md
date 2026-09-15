@@ -1,6 +1,6 @@
 # ProjectForgeKB 使用指南
 
-这份文档教你从零开始，用 ProjectForgeKB 给一个代码仓库建起领域知识库，以及建完之后怎么更新它。
+这份文档教你从零开始，用 ProjectForgeKB 给一个代码仓库建起项目知识库，以及建完之后怎么更新它。
 
 不需要懂脚本原理。你只需要：会填一个 YAML 配置、会回答 Agent 的提问、会看它写出来的 Markdown。
 
@@ -11,8 +11,8 @@
 1. [这个 Skill 到底帮你做什么](#1-这个-skill-到底帮你做什么)
 2. [开始之前](#2-开始之前)
 3. [第一次使用：完整走一遍](#3-第一次使用完整走一遍)
-4. [手把手填写 domain-scope.yaml](#4-手把手填写-domain-scopeyaml)
-5. [逐领域建设：你会经历什么](#5-逐领域建设你会经历什么)
+4. [手把手填写 module-scope.yaml](#4-手把手填写-module-scopeyaml)
+5. [逐业务模块建设：你会经历什么](#5-逐业务模块建设你会经历什么)
 6. [收尾](#6-收尾)
 7. [人工参与点总表](#7-人工参与点总表)
 8. [更新知识库（增量运行）](#8-更新知识库增量运行)
@@ -22,7 +22,7 @@
 
 ## 1. 这个 Skill 到底帮你做什么
 
-**问题**：代码里有类、方法、调用关系，但"这个领域为什么存在""某个词到底指什么""当初为什么这么设计"这些知识只存在人脑里。新人看不懂，AI 更看不懂——它会靠猜，然后猜错。
+**问题**：代码里有类、方法、调用关系，但"这个业务模块为什么存在""某个词到底指什么""当初为什么这么设计"这些知识只存在人脑里。新人看不懂，AI 更看不懂——它会靠猜，然后猜错。
 
 **它做的事**：让 Agent 带着证据来问你，把你的回答固化成三层可追溯的知识，并保证**任何没被你确认过的东西都不会写成正式知识**。
 
@@ -31,14 +31,14 @@
 ```text
 docs/kb/
 ├── L0.md                 项目地图：这个服务是什么
-├── L1/<领域>/README.md   领域知识：术语、规则、边界
-├── L1/<领域>/adr/*.md    设计决策：当初为什么这么做
+├── L1/<业务模块>/README.md   业务模块知识：术语、规则、边界
+├── L1/<业务模块>/adr/*.md    设计决策：当初为什么这么做
 └── archive/*/            关联文档的不可变快照
 ```
 
 **它不做什么**：
 
-- 不替你划分领域（那是业务判断）
+- 不替你划分业务模块（那是业务判断）
 - 不替你决定哪篇文档该收进来
 - 不把 AI 的推测写成结论
 - 不覆盖你已经确认过的内容
@@ -60,11 +60,11 @@ docs/kb/
 
 ### 2.2 心里先想清楚两件事
 
-**第一件：这个仓库能分成哪几个领域？**
+**第一件：这个仓库能分成哪几个业务模块？**
 
-领域指的是**业务上独立的职责单元**，比如"支付""退款""结算""设备管理"。判断标准是：如果你要跟一个新人讲清楚一块业务，你会把它单独讲成一章，那它就是一个领域。
+业务模块指的是**仓库内业务上独立的职责单元**，比如"支付""退款""结算""设备管理"。判断标准是：如果你要跟一个新人讲清楚一块业务，你会把它单独讲成一章，那它就是一个业务模块。它不代表跨多个仓库的完整业务领域。
 
-不要按技术分层（controller / service / dao）划分——那不是领域。
+不要按技术分层（controller / service / dao）划分——那不是业务模块。
 
 **第二件：有没有现成的文档？**
 
@@ -75,14 +75,14 @@ docs/kb/
 
 ### 2.3 你大概要花多少时间
 
-以 3 个领域的中型项目估算：
+以 3 个业务模块的中型项目估算：
 
 | 环节 | 耗时 |
 | --- | --- |
-| 填写 `domain-scope.yaml` | 30–60 分钟（首次） |
-| 每个领域：确认语雀候选 | 10–20 分钟 |
-| 每个领域：回答 Agent 追问 | **30–90 分钟（最耗时）** |
-| 每个领域：确认知识产物 | 10–20 分钟 |
+| 填写 `module-scope.yaml` | 30–60 分钟（首次） |
+| 每个业务模块：确认语雀候选 | 10–20 分钟 |
+| 每个业务模块：回答 Agent 追问 | **30–90 分钟（最耗时）** |
+| 每个业务模块：确认知识产物 | 10–20 分钟 |
 | 收尾 review | 10 分钟 |
 
 > 追问环节花时间是因为它要把"为什么不这样做""这个词准确指什么"问清楚。这是知识库价值的来源，不是流程拖沓。
@@ -95,17 +95,17 @@ docs/kb/
 
 
 ```
-/project-forge-kb 为当前仓库初始化领域知识库
+/project-forge-kb，为当前仓库初始化项目知识库
 ```
 
-Agent 会先检查有没有 `docs/kb/domain-scope.yaml`，然后：
+Agent 会先检查有没有 `docs/kb/module-scope.yaml`，然后：
 
 - **没有** → 创建一个空骨架，展示字段说明和示例，然后**停下来等你填**
-- **有** → 校验配置，进入逐领域建设
+- **有** → 校验配置，进入逐业务模块建设
 
-### 第 2 步：填写 `domain-scope.yaml`
+### 第 2 步：填写 `module-scope.yaml`
 
-这是**唯一一个必须由人从头写的文件**。详细教程见[第 4 节](#4-手把手填写-domain-scopeyaml)。
+这是**唯一一个必须由人从头写的文件**。详细教程见[第 4 节](#4-手把手填写-module-scopeyaml)。
 
 ### 第 3 步：校验配置
 
@@ -120,18 +120,18 @@ node <skill-dir>/scripts/scope-check.js
 ```json
 {
   "action": "validated",
-  "domain_order": ["payment", "refund"],
+  "module_order": ["payment", "refund"],
   "warnings": []
 }
 ```
 
-**注意 `domain_order`**：这个顺序就是处理顺序，等于你在 YAML 里写 `domains` 的顺序。想先做哪个领域，就把它写在前面。
+**注意 `module_order`**：这个顺序就是处理顺序，等于你在 YAML 里写 `modules` 的顺序。想先做哪个业务模块，就把它写在前面。
 
 如果输出 `"action": "invalid"`，看 `errors` 数组，对照[第 4.6 节](#46-报错对照表)修改。
 
-### 第 4 步：逐领域建设
+### 第 4 步：逐业务模块建设
 
-Agent 会**一次只处理一个领域**。每个领域你会经历：
+Agent 会**一次只处理一个业务模块**。每个业务模块你会经历：
 
 ```text
 Agent 派子代理查代码
@@ -148,16 +148,16 @@ Agent 追问你 ──→ 【你答：术语含义、设计原因】
    ↓
 Agent 写 L1 + ADR
    ↓
-【你确认：这个领域的知识对不对】
+【你确认：这个业务模块的知识对不对】
    ↓
-进入下一个领域
+进入下一个业务模块
 ```
 
-凡是你需要动手的环节，Agent 都会停下来等你。详见[第 5 节](#5-逐领域建设你会经历什么)。
+凡是你需要动手的环节，Agent 都会停下来等你。详见[第 5 节](#5-逐业务模块建设你会经历什么)。
 
 ### 第 5 步：收尾
 
-所有领域确认完后：
+所有业务模块确认完后：
 
 ```text
 Agent 起草 L0 的"服务身份"
@@ -171,17 +171,17 @@ Agent 起草 L0 的"服务身份"
 
 ---
 
-## 4. 手把手填写 domain-scope.yaml
+## 4. 手把手填写 module-scope.yaml
 
 ### 4.1 这个文件是什么
 
-路径固定在 `docs/kb/domain-scope.yaml`。它回答三个问题：
+路径固定在 `docs/kb/module-scope.yaml`。它回答三个问题：
 
-1. **这个仓库有哪些领域？**（`domains`）
-2. **每个领域管哪些代码？**（`include_*` / `exclude_*`）
-3. **每个领域要收哪些文档？**（`project_docs` / `yuque_sources` / `keywords`）
+1. **这个仓库有哪些业务模块？**（`modules`）
+2. **每个业务模块管哪些代码？**（`include_*` / `exclude_*`）
+3. **每个业务模块要收哪些文档？**（`project_docs` / `yuque_sources` / `keywords`）
 
-**为什么必须人工填**：领域怎么分、代码归谁管，是业务判断。脚本和 Agent 不会替你决定，也不会在你填完后偷偷改它。
+**为什么必须人工填**：业务模块怎么分、代码归谁管，是业务判断。脚本和 Agent 不会替你决定，也不会在你填完后偷偷改它。
 
 ### 4.2 完整字段说明
 
@@ -190,13 +190,13 @@ Agent 起草 L0 的"服务身份"
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `schema_version` | ✅ | 固定写 `1` |
-| `domains` | ✅ | 领域列表，至少一个 |
+| `modules` | ✅ | 业务模块列表，至少一个 |
 
-每个领域有这些字段：
+每个业务模块有这些字段：
 
 | 字段 | 必填 | 填什么 | 示例 |
 | --- | --- | --- | --- |
-| `id` | ✅ | 领域唯一标识，**只能小写字母/数字/`_`/`-`** | `payment` |
+| `id` | ✅ | 业务模块唯一标识，**只能小写字母/数字/`_`/`-`** | `payment` |
 | `name` | 建议填 | 中文名，会显示在知识库里 | `支付` |
 | `status` | 建议填 | `active` 本轮处理；`inactive` 保留配置但不处理。默认 `active` | `active` |
 | `include_packages` | ⚠️二选一 | Java 包名，**递归包含子包** | `com.example.payment` |
@@ -241,7 +241,7 @@ com.example.payment.legacy
 com.example.refund
 ```
 
-这里 `com.example.payment` 就可以作为支付领域的 `include_packages`。注意 `com.example.payment.legacy` 是它的子包，**会被自动包含**；如果不想收，就写进 `exclude_packages`。
+这里 `com.example.payment` 就可以作为支付业务模块的 `include_packages`。注意 `com.example.payment.legacy` 是它的子包，**会被自动包含**；如果不想收，就写进 `exclude_packages`。
 
 **③ 找非 Java 项目的文件**
 
@@ -262,12 +262,12 @@ docs/refund/refund-design.md
 
 ### 4.4 一个完整可用的例子
 
-假设仓库有 `payment-api` 和 `refund-api` 两个模块，各有设计文档。把下面内容写进 `docs/kb/domain-scope.yaml`：
+假设仓库有 `payment-api` 和 `refund-api` 两个模块，各有设计文档。把下面内容写进 `docs/kb/module-scope.yaml`：
 
 ```yaml
 schema_version: 1
 
-domains:
+modules:
   - id: payment
     name: 支付
     status: active
@@ -305,7 +305,7 @@ domains:
 ```yaml
 schema_version: 1
 
-domains:
+modules:
   - id: payment
     name: 支付
     include_packages:
@@ -372,38 +372,38 @@ domains:
 
 | 报错 | 原因 | 怎么改 |
 | --- | --- | --- |
-| `domains 必须由人工填写且至少包含一个领域` | `domains: []` 是空骨架 | 至少写一个领域 |
-| `domains[0].id 必须使用小写字母、数字、_ 或 -` | id 写成 `Payment` 或含中文 | 改成 `payment` |
-| `领域 id 重复: payment` | 两个领域 id 一样 | 改成唯一 id |
-| `domains[0] 至少填写 include_packages 或 include_files` | 两个范围都没填 | 至少填一个 |
-| `domains[0].include_files 未找到: xxx` | 文件路径写错或文件不存在 | 用 `git ls-files \| grep xxx` 核对真实路径 |
-| `domains[0].project_docs 未找到: docs/missing.md` | 文档路径不存在 | 核对路径；不确定就先用 `git ls-files '*.md'` 查 |
-| `domains[0].include_files 必须是仓库内的相对路径: ../outside.md` | 写了仓库外的路径 | 只能填仓库内相对路径 |
-| `domains[0].status 必须是 active 或 inactive` | status 拼错，比如 `enabled` | 改成 `active` 或 `inactive` |
-| `domains[0].yuque_sources[0] 必须且只能填写 base_slug 或 document_url` | 两个都填了，或两个都没填 | 只留一个 |
-| `domains[0] 配置 base_slug 时必须填写 keywords` | 用了 `base_slug` 但 `keywords` 为空 | 补上关键词 |
+| `modules 必须由人工填写且至少包含一个业务模块` | `modules: []` 是空骨架 | 至少写一个业务模块 |
+| `modules[0].id 必须使用小写字母、数字、_ 或 -` | id 写成 `Payment` 或含中文 | 改成 `payment` |
+| `业务模块 id 重复: payment` | 两个业务模块 id 一样 | 改成唯一 id |
+| `modules[0] 至少填写 include_packages 或 include_files` | 两个范围都没填 | 至少填一个 |
+| `modules[0].include_files 未找到: xxx` | 文件路径写错或文件不存在 | 用 `git ls-files \| grep xxx` 核对真实路径 |
+| `modules[0].project_docs 未找到: docs/missing.md` | 文档路径不存在 | 核对路径；不确定就先用 `git ls-files '*.md'` 查 |
+| `modules[0].include_files 必须是仓库内的相对路径: ../outside.md` | 写了仓库外的路径 | 只能填仓库内相对路径 |
+| `modules[0].status 必须是 active 或 inactive` | status 拼错，比如 `enabled` | 改成 `active` 或 `inactive` |
+| `modules[0].yuque_sources[0] 必须且只能填写 base_slug 或 document_url` | 两个都填了，或两个都没填 | 只留一个 |
+| `modules[0] 配置 base_slug 时必须填写 keywords` | 用了 `base_slug` 但 `keywords` 为空 | 补上关键词 |
 | `schema_version 必须为 1` | 版本号写错 | 改成 `1` |
 
 **warning 不用慌**（不影响继续）：
 
 | 警告 | 含义 | 要不要处理 |
 | --- | --- | --- |
-| `domains[0] 包范围未匹配已跟踪文件: com.example.xxx` | 这个包名在仓库里找不到对应文件 | 检查包名是否拼错；确实没有就删掉 |
+| `modules[0] 包范围未匹配已跟踪文件: com.example.xxx` | 这个包名在仓库里找不到对应文件 | 检查包名是否拼错；确实没有就删掉 |
 
 ### 4.7 填完的检查清单
 
 - [ ] `schema_version: 1`
-- [ ] 每个领域的 `id` 唯一、全小写
-- [ ] 每个领域至少填了 `include_packages` 或 `include_files`
+- [ ] 每个业务模块的 `id` 唯一、全小写
+- [ ] 每个业务模块至少填了 `include_packages` 或 `include_files`
 - [ ] `project_docs` 里每个路径都真实存在
-- [ ] 用了 `base_slug` 的领域都填了 `keywords`
+- [ ] 用了 `base_slug` 的业务模块都填了 `keywords`
 - [ ] 每个 `yuque_sources` 项只填了一个字段
-- [ ] 领域顺序就是你想处理它们的顺序
+- [ ] 业务模块顺序就是你想处理它们的顺序
 - [ ] 跑 `scope-check.js` 输出 `"action": "validated"`
 
 ---
 
-## 5. 逐领域建设：你会经历什么
+## 5. 逐业务模块建设：你会经历什么
 
 ### 5.1 Agent 派子代理查代码（你只需要等）
 
@@ -413,7 +413,7 @@ Agent 会在你划定的范围内派一个只读子代理去看代码，然后�
 
 ### 5.2 确认语雀候选（你要做）
 
-Agent 会给你一个文件：`docs/kb/.review/<领域id>/yuque-candidates.yaml`
+Agent 会给你一个文件：`docs/kb/.review/<业务模块id>/yuque-candidates.yaml`
 
 打开它，你会看到：
 
@@ -450,7 +450,7 @@ candidates:
 
 ### 5.3 归档（你只需要等）
 
-Agent 会跑领域级归档，把该领域的项目文档和已批准的语雀文档处理成不可变快照。
+Agent 会跑业务模块级归档，把该业务模块的项目文档和已批准的语雀文档处理成不可变快照。
 
 这一步会调 MCP 生成摘要。如果 MCP 挂了，流程会停下来报错——**不会**拿旧归档冒充当前内容。
 
@@ -461,7 +461,7 @@ Agent 查完代码和归档后，会把证据组织成一棵"设计树"，然后
 每次提问长这样：
 
 ```md
-❓ Q1 - "对账"在本领域指什么？
+❓ Q1 - "对账"在本业务模块指什么？
 
 当前证据：代码里 ReconciliationService 同时出现在支付和结算两处……
 
@@ -475,16 +475,16 @@ Agent 查完代码和归档后，会把证据组织成一棵"设计树"，然后
 - Agent 一次会问一批（当前能问的都会问），答完它重算问题树，再问下一批
 - **问题数量不设上限**，问到问清楚为止。这是设计如此，不是它卡住了
 - 它不会问你能自己查到的事（那属于子代理的调查工作）
-- **确实没人知道答案的问题**，它会记进 `domain-questions.md` 然后继续——不会卡住整个领域
+- **确实没人知道答案的问题**，它会记进 `module-questions.md` 然后继续——不会卡住整个业务模块
 
 ### 5.5 审核 L1 内容（你要做）
 
-Agent 写完 `docs/kb/L1/<领域id>/README.md` 后，打开看一遍：
+Agent 写完 `docs/kb/L1/<业务模块id>/README.md` 后，打开看一遍：
 
 | 看哪节 | 检查什么 | 常见毛病 |
 | --- | --- | --- |
-| 领域上下文 | 说清了"这个领域为什么存在"吗 | 写成代码结构说明 |
-| 领域边界 | "不负责"一节有没有内容 | 空着 |
+| 业务模块上下文 | 说清了"这个业务模块为什么存在"吗 | 写成代码结构说明 |
+| 业务模块边界 | "不负责"一节有没有内容 | 空着 |
 | 术语 | 是不是**业务定义** | 抄了类名、字段清单 |
 | 已确认规则与不变量 | 是不是**你确认过的** | 混进了 Agent 的推测 |
 | 设计与决策 | ADR 链接点得开吗 | 链接失效 |
@@ -495,18 +495,18 @@ Agent 写完 `docs/kb/L1/<领域id>/README.md` 后，打开看一遍：
 
 ```yaml
 ---
-domain_id: payment
+module_id: payment
 layer: L1
 title: 支付
 status: draft        # ← 改成这个，Agent 才能继续改
 ---
 ```
 
-> ⚠️ 如果 `status` 是 `confirmed`、`review_required`、`stale` 或 `retired`，**Agent 不会直接改这个文件**。它会把差异写进 `.review/<领域id>/l1-changes.md` 交给你裁决。这是防止 AI 覆盖你的判断。
+> ⚠️ 如果 `status` 是 `confirmed`、`review_required`、`stale` 或 `retired`，**Agent 不会直接改这个文件**。它会把差异写进 `.review/<业务模块id>/l1-changes.md` 交给你裁决。这是防止 AI 覆盖你的判断。
 
 ### 5.6 审核 ADR（按需）
 
-ADR 是 `docs/kb/L1/<领域id>/adr/NNNN-*.md`，记录"当初为什么这么设计"。
+ADR 是 `docs/kb/L1/<业务模块id>/adr/NNNN-*.md`，记录"当初为什么这么设计"。
 
 打开核对：
 
@@ -516,27 +516,27 @@ ADR 是 `docs/kb/L1/<领域id>/adr/NNNN-*.md`，记录"当初为什么这么设�
 
 如果发现某个 ADR 记的其实是普通实现细节、或者只是 AI 猜的原因，**要求删掉**——ADR 只该记录"难以逆转、缺背景就会误解、且仍有维护价值"的设计。
 
-### 5.7 确认领域（你要做）
+### 5.7 确认业务模块（你要做）
 
-一个领域做完，Agent 会集中展示：L1、ADR、归档关联、未解决的问题。
+一个业务模块做完，Agent 会集中展示：L1、ADR、归档关联、未解决的问题。
 
-**你要做的**：明确说"这个领域可以了"。
+**你要做的**：明确说"这个业务模块可以了"。
 
 Agent 会跑：
 
 ```bash
-node <skill-dir>/scripts/workflow.js --confirm-domain payment
+node <skill-dir>/scripts/workflow.js --confirm-module payment
 ```
 
 脚本会先做结构检查（ADR 位置、文件名编号、`doc_id` 是否匹配），通过后把 L1 的 `status` 置为 `confirmed`。
 
-**然后才会进入下一个领域。** 当前领域不确认，流程不会往下走。
+**然后才会进入下一个业务模块。** 当前业务模块不确认，流程不会往下走。
 
 ---
 
 ## 6. 收尾
 
-所有领域确认完后：
+所有业务模块确认完后：
 
 ### 6.1 review L0（你要做）
 
@@ -577,7 +577,7 @@ node <skill-dir>/scripts/verify.js
 
 **② 看 Agent 的最终报告**，应该包含：
 
-- 每个领域的状态
+- 每个业务模块的状态
 - 新建 / 跳过了哪些归档
 - 生成了哪些 L1 和 ADR
 - `.review` 里还有哪些没解决的问题
@@ -587,7 +587,7 @@ node <skill-dir>/scripts/verify.js
 
 - 还有 `pending` 的语雀候选
 - 有脚本执行失败
-- 有没替换的模板占位符（文件里还有 `<领域名称>` 这种尖括号）
+- 有没替换的模板占位符（文件里还有 `<业务模块名称>` 这种尖括号）
 
 ---
 
@@ -595,13 +595,13 @@ node <skill-dir>/scripts/verify.js
 
 | 什么时候 | 你要做什么 | 属于 | 不做会怎样 |
 | --- | --- | --- | --- |
-| 首次启动后 | 填写 `domain-scope.yaml` | 介入 + 确认 | **流程停住** |
+| 首次启动后 | 填写 `module-scope.yaml` | 介入 + 确认 | **流程停住** |
 | 只有 keywords 时 | 从列表里选语雀知识库 | 介入 + 确认 | **流程停住** |
-| 每个领域 | 把候选 `decision` 改成 approved / rejected | 介入 + 确认 | 有 pending 就**停住** |
-| 每个领域 | 回答 Agent 的追问 | 介入 | 问题没答完**不结束** |
-| 每个领域 | 确认"达到共同理解" | 确认 | **不推进** |
-| 每个领域 | 审核 L1 内容、ADR | 审核 | 不阻塞，但知识质量没保证 |
-| 每个领域 | 确认该领域 | 确认 + 审核 | **不进下一个领域** |
+| 每个业务模块 | 把候选 `decision` 改成 approved / rejected | 介入 + 确认 | 有 pending 就**停住** |
+| 每个业务模块 | 回答 Agent 的追问 | 介入 | 问题没答完**不结束** |
+| 每个业务模块 | 确认"达到共同理解" | 确认 | **不推进** |
+| 每个业务模块 | 审核 L1 内容、ADR | 审核 | 不阻塞，但知识质量没保证 |
+| 每个业务模块 | 确认该业务模块 | 确认 + 审核 | **不进下一个业务模块** |
 | 收尾 | review L0 服务身份 | 审核 + 确认 | **不能算完成** |
 | 收尾 | 检查 verify 结果和报告 | 审核 | 有 error 必须修 |
 | 增量运行 | 裁决 `l1-changes.md` | 审核 | 已确认知识不会自动更新 |
@@ -611,7 +611,7 @@ node <skill-dir>/scripts/verify.js
 | 类型 | 含义 | 例子 |
 | --- | --- | --- |
 | **介入** | 流程停下来等你 | 填配置、回答问题 |
-| **确认** | 对事实或选择表示认可，才能继续 | 选知识库、确认领域 |
+| **确认** | 对事实或选择表示认可，才能继续 | 选知识库、确认业务模块 |
 | **审核** | 检查产物内容对不对，可以要求返工 | 看 L1、看 ADR、review L0 |
 
 ### 绝对不能做的事
@@ -621,7 +621,7 @@ node <skill-dir>/scripts/verify.js
 | 手改 `.meta/*.json` | 脚本生成，改了下轮就被覆盖 |
 | 手改 `archive/` 里的文件 | 归档是不可变快照 |
 | 手改 `scripts/` 下的脚本 | 是构建产物，重新构建会被清空 |
-| 让 Agent 帮你改 `domain-scope.yaml` | 领域划分是业务判断，必须人负责 |
+| 让 Agent 帮你改 `module-scope.yaml` | 业务模块划分是业务判断，必须人负责 |
 | 让 Agent 帮你决定候选去留 | 文档该不该收是业务判断 |
 | 为了"看起来完整"而批准不相关的候选 | 污染知识库 |
 
@@ -639,17 +639,17 @@ node <skill-dir>/scripts/verify.js
 
 | 情况 | 行为 |
 | --- | --- |
-| 领域划分配置变了 | 所有 `active` 领域重跑 |
-| 代码变了 | 只重跑受影响的领域（按 `git diff` 判断） |
-| 语雀文档更新了 | 配了 `keywords` 或 `yuque_sources` 的领域会重新检索 |
+| 业务模块划分配置变了 | 所有 `active` 业务模块重跑 |
+| 代码变了 | 只重跑受影响的业务模块（按 `git diff` 判断） |
+| 语雀文档更新了 | 配了 `keywords` 或 `yuque_sources` 的业务模块会重新检索 |
 | 来源没变 | 跳过，复用现有归档 |
 | 来源变了 | 新建归档快照，**旧快照保留** |
-| 该领域代码没变、也没新归档 | **直接跳过**，表示没东西要写 |
+| 该业务模块代码没变、也没新归档 | **直接跳过**，表示没东西要写 |
 
 ### 两个前提
 
 1. **开始前工作区要干净**——先 `git commit` 或 `git stash`，避免未提交的内容被混进版本基线
-2. 已确认的 L1 **不会被自动改写**：如果新证据和已确认内容冲突，Agent 会把差异写进 `.review/<领域id>/l1-changes.md`，**等你在"人工决策"一节里逐条裁决**
+2. 已确认的 L1 **不会被自动改写**：如果新证据和已确认内容冲突，Agent 会把差异写进 `.review/<业务模块id>/l1-changes.md`，**等你在"人工决策"一节里逐条裁决**
 
 ---
 
@@ -658,17 +658,17 @@ node <skill-dir>/scripts/verify.js
 **Q：中途退出了，要重头来吗？**
 不用。进度记在 `.meta/workflow-run.json`，再触发一次 Skill，Agent 会先问进度然后从断点继续。
 
-**Q：Agent 说要先填 `domain-scope.yaml`，但我不确定怎么分领域？**
-先按"业务上独立的职责单元"草草分几个，填完跑起来看效果。领域划分随时能改，改完重跑 `scope-check.js` 就行。
+**Q：Agent 说要先填 `module-scope.yaml`，但我不确定怎么分业务模块？**
+先按"业务上独立的职责单元"草草分几个，填完跑起来看效果。业务模块划分随时能改，改完重跑 `scope-check.js` 就行。
 
-**Q：领域可以随时增删吗？**
-可以。直接改 `domain-scope.yaml` 然后重跑 `scope-check.js`。新增的领域会按新的 `domain_order` 处理。
+**Q：业务模块可以随时增删吗？**
+可以。直接改 `module-scope.yaml` 然后重跑 `scope-check.js`。新增的业务模块会按新的 `module_order` 处理。
 
-**Q：为什么 Agent 反复追问同一个领域，问不完？**
+**Q：为什么 Agent 反复追问同一个业务模块，问不完？**
 追问的轮数不设上限——每轮答完它重算问题树，解决了一个问题可能带出新的下游问题。这是刻意的设计：**目标是问清楚，不是少问**。
 
-**Q：它说某个领域"直接跳过"了，是出错了吗？**
-不是。增量运行时，如果该领域代码没变、归档也没有新快照，脚本会判定"没有东西要写"并放行。
+**Q：它说某个业务模块"直接跳过"了，是出错了吗？**
+不是。增量运行时，如果该业务模块代码没变、归档也没有新快照，脚本会判定"没有东西要写"并放行。
 
 **Q：语雀候选里出现了完全无关的文档？**
 正常。候选是按关键词机械召回的，本来就允许误召回。标 `rejected` 就行，不相关的不影响任何东西。
@@ -679,5 +679,5 @@ node <skill-dir>/scripts/verify.js
 **Q：MCP 挂了怎么办？**
 流程会停下来报错。**不会**创建兜底候选，也不会拿旧归档冒充当前内容。修好 MCP 再重跑即可。不用语雀的话，把 `keywords` 和 `yuque_sources` 都清空就不会走到这一步。
 
-**Q：`domain-questions.md` 里的问题会阻塞流程吗？**
+**Q：`module-questions.md` 里的问题会阻塞流程吗？**
 不会。那些是"经过调查、你也没法解释"的问题，记录在案但不进 L1，也不影响其他知识生成。以后想起来了可以再补。

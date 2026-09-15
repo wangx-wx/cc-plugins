@@ -93,14 +93,14 @@ function unquote(value) {
 var INACTIVE_STATUSES = /* @__PURE__ */ new Set(["candidate", "stale", "retired"]);
 var L1_STATUSES = /* @__PURE__ */ new Set(["candidate", "draft", "confirmed", "review_required", "stale", "retired"]);
 var TEMPLATE_PLACEHOLDER_TOKENS = /* @__PURE__ */ new Set([
-  "domain_id",
+  "module_id",
   "capability_id",
   "symbol",
   "number",
   "name",
   "slug",
   "archive_id",
-  "domain",
+  "module",
   "repo/yuque",
   "YYYY-MM-DD"
 ]);
@@ -148,8 +148,8 @@ function relativePosix(from, to) {
 
 // src/verify.js
 var L0_REQUIRED = ["id", "layer", "title", "description"];
-var L1_REQUIRED = ["domain_id", "layer", "title", "description", "status"];
-var ADR_REQUIRED = ["doc_id", "layer", "domain", "title", "date"];
+var L1_REQUIRED = ["module_id", "layer", "title", "description", "status"];
+var ADR_REQUIRED = ["doc_id", "layer", "module", "title", "date"];
 var ARCHIVE_REQUIRED = ["type", "title", "keyTopics", "source_type", "source_ref", "source_hash", "archived_at", "status"];
 var HELP = `Usage: verify.js [--repo-root <path>] [--kb-root <path>]
 
@@ -161,8 +161,8 @@ function finding(code, file, message) {
 function missing(data, fields) {
   return fields.filter((field) => data[field] === void 0 || data[field] === null || data[field] === "" || Array.isArray(data[field]) && data[field].length === 0);
 }
-function validDomainMeta(value) {
-  return value && typeof value === "object" && !Array.isArray(value) && value.schema_version === 1 && typeof value.domain_id === "string" && value.domain_id.length > 0 && typeof value.source_commit === "string" && value.source_commit.length > 0 && value.scope && typeof value.scope === "object" && !Array.isArray(value.scope) && value.observed && typeof value.observed === "object" && !Array.isArray(value.observed) && Array.isArray(value.documents) && Array.isArray(value.candidates);
+function validModuleMeta(value) {
+  return value && typeof value === "object" && !Array.isArray(value) && value.schema_version === 1 && typeof value.module_id === "string" && value.module_id.length > 0 && typeof value.source_commit === "string" && value.source_commit.length > 0 && value.scope && typeof value.scope === "object" && !Array.isArray(value.scope) && value.observed && typeof value.observed === "object" && !Array.isArray(value.observed) && Array.isArray(value.documents) && Array.isArray(value.candidates);
 }
 function markdownDestinations(markdown) {
   const destinations = [];
@@ -210,8 +210,8 @@ async function main() {
       errors.push(finding("L0_PLACEHOLDER_REMAINS", relativePosix(repoRoot, l0Path), `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${l0Placeholders.join("\u3001")}`));
     }
   }
-  const domainsRoot = path2.join(kbRoot, "L1");
-  const l1Files = await listFiles(domainsRoot, (file) => path2.basename(file) === "README.md" && path2.relative(domainsRoot, file).split(path2.sep).length === 2);
+  const modulesRoot = path2.join(kbRoot, "L1");
+  const l1Files = await listFiles(modulesRoot, (file) => path2.basename(file) === "README.md" && path2.relative(modulesRoot, file).split(path2.sep).length === 2);
   const l1Items = await Promise.all(l1Files.map(readMarkdownFrontmatter));
   const ids = /* @__PURE__ */ new Map();
   for (const item of l1Items) {
@@ -220,7 +220,7 @@ async function main() {
     const absent = missing(item.data, L1_REQUIRED);
     if (absent.length) errors.push(finding("L1_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
     if (item.data.layer !== void 0 && item.data.layer !== "L1") errors.push(finding("L1_LAYER_INVALID", relative, "layer \u5FC5\u987B\u4E3A L1"));
-    if (item.data.domain_id && item.data.domain_id !== fileId) errors.push(finding("L1_DOMAIN_ID_MISMATCH", relative, `\u9886\u57DF\u76EE\u5F55 ${fileId} \u4E0E Markdown domain_id ${item.data.domain_id} \u4E0D\u4E00\u81F4`));
+    if (item.data.module_id && item.data.module_id !== fileId) errors.push(finding("L1_MODULE_ID_MISMATCH", relative, `\u4E1A\u52A1\u6A21\u5757\u76EE\u5F55 ${fileId} \u4E0E Markdown module_id ${item.data.module_id} \u4E0D\u4E00\u81F4`));
     if (item.data.status !== void 0 && !L1_STATUSES.has(String(item.data.status).toLowerCase())) {
       errors.push(finding("L1_STATUS_INVALID", relative, `status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`));
     }
@@ -228,20 +228,20 @@ async function main() {
     if (placeholders.length > 0) {
       errors.push(finding("L1_PLACEHOLDER_REMAINS", relative, `\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`));
     }
-    if (item.data.domain_id) {
-      const previous = ids.get(item.data.domain_id);
-      if (previous) errors.push(finding("L1_DOMAIN_ID_DUPLICATE", relative, `domain_id ${item.data.domain_id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
-      else ids.set(item.data.domain_id, relative);
+    if (item.data.module_id) {
+      const previous = ids.get(item.data.module_id);
+      if (previous) errors.push(finding("L1_MODULE_ID_DUPLICATE", relative, `module_id ${item.data.module_id} \u5DF2\u5728 ${previous} \u4F7F\u7528`));
+      else ids.set(item.data.module_id, relative);
     }
   }
-  const adrFiles = await listFiles(domainsRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
+  const adrFiles = await listFiles(modulesRoot, (file) => path2.basename(path2.dirname(file)) === "adr" && file.endsWith(".md"));
   const adrItems = await Promise.all(adrFiles.map(readMarkdownFrontmatter));
   const adrIds = /* @__PURE__ */ new Map();
   for (const item of adrItems) {
     const relative = relativePosix(repoRoot, item.file);
-    const relativeAdr = path2.relative(domainsRoot, item.file);
+    const relativeAdr = path2.relative(modulesRoot, item.file);
     const segments = relativeAdr.split(path2.sep);
-    const directoryDomain = segments.length === 3 && segments[1] === "adr" ? segments[0] : "";
+    const directoryModule = segments.length === 3 && segments[1] === "adr" ? segments[0] : "";
     const filename = path2.basename(item.file, ".md");
     const absent = missing(item.data, ADR_REQUIRED);
     if (absent.length) errors.push(finding("ADR_FRONTMATTER_REQUIRED", relative, `\u7F3A\u5C11\u5B57\u6BB5: ${absent.join(", ")}`));
@@ -249,11 +249,11 @@ async function main() {
     if (Object.hasOwn(item.data, "status")) errors.push(finding("ADR_STATUS_NOT_ALLOWED", relative, "ADR \u4E0D\u5141\u8BB8\u8BBE\u7F6E status"));
     const filenameMatch = filename.match(/^(\d{4})-.+/);
     if (!filenameMatch) errors.push(finding("ADR_FILENAME_INVALID", relative, "ADR \u6587\u4EF6\u540D\u5FC5\u987B\u4F7F\u7528\u56DB\u4F4D\u7F16\u53F7\u548C\u63CF\u8FF0\uFF0C\u4F8B\u5982 0001-use-snapshot.md"));
-    if (!directoryDomain || item.data.domain !== directoryDomain) {
-      errors.push(finding("ADR_DOMAIN_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E L1/<domain>/adr/ \u4E14 domain \u4E0E\u76EE\u5F55\u4E00\u81F4`));
+    if (!directoryModule || item.data.module !== directoryModule) {
+      errors.push(finding("ADR_MODULE_MISMATCH", relative, `ADR \u5FC5\u987B\u4F4D\u4E8E L1/<module>/adr/ \u4E14 module \u4E0E\u76EE\u5F55\u4E00\u81F4`));
     }
-    if (filenameMatch && directoryDomain && item.data.doc_id && item.data.doc_id !== `ADR-${directoryDomain}-${filenameMatch[1]}`) {
-      errors.push(finding("ADR_ID_MISMATCH", relative, `ADR doc_id \u5FC5\u987B\u4E3A ADR-${directoryDomain}-${filenameMatch[1]}`));
+    if (filenameMatch && directoryModule && item.data.doc_id && item.data.doc_id !== `ADR-${directoryModule}-${filenameMatch[1]}`) {
+      errors.push(finding("ADR_ID_MISMATCH", relative, `ADR doc_id \u5FC5\u987B\u4E3A ADR-${directoryModule}-${filenameMatch[1]}`));
     }
     if (item.data.doc_id) {
       const previous = adrIds.get(item.data.doc_id);
@@ -280,7 +280,7 @@ async function main() {
     } else {
       const nodeIds = /* @__PURE__ */ new Set();
       for (const node of catalog.nodes) {
-        const nodeId = node?.doc_id || node?.domain_id || node?.id;
+        const nodeId = node?.doc_id || node?.module_id || node?.id;
         if (!node || typeof node !== "object" || !node.kind || !nodeId) {
           errors.push(finding("KNOWLEDGE_BASE_NODE_INVALID", catalogRelative, "catalog \u8282\u70B9\u5FC5\u987B\u5305\u542B kind \u548C\u552F\u4E00\u6807\u8BC6\u5B57\u6BB5"));
           continue;
@@ -295,32 +295,32 @@ async function main() {
       }
     }
   }
-  const metaRoot = path2.join(kbRoot, ".meta", "domains");
+  const metaRoot = path2.join(kbRoot, ".meta", "modules");
   const metaFiles = jsonFiles.filter((file) => path2.dirname(file) === metaRoot);
   for (const file of metaFiles) {
     const relative = relativePosix(repoRoot, file);
     const value = jsonValues.get(file);
     if (!value) continue;
-    if (!validDomainMeta(value)) {
-      errors.push(finding("DOMAIN_META_SCHEMA_INVALID", relative, "\u5FC5\u987B\u5305\u542B schema_version=1\u3001domain_id\u3001source_commit\u3001scope\u3001observed\u3001documents \u548C candidates"));
+    if (!validModuleMeta(value)) {
+      errors.push(finding("MODULE_META_SCHEMA_INVALID", relative, "\u5FC5\u987B\u5305\u542B schema_version=1\u3001module_id\u3001source_commit\u3001scope\u3001observed\u3001documents \u548C candidates"));
       continue;
     }
     const fileId = path2.basename(file, ".json");
-    if (value.domain_id !== fileId) errors.push(finding("DOMAIN_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
+    if (value.module_id !== fileId) errors.push(finding("MODULE_ID_MISMATCH", relative, `\u6587\u4EF6\u540D ${fileId} \u4E0E module_id ${value.module_id} \u4E0D\u4E00\u81F4`));
     const markdown = l1Items.find((item) => path2.basename(path2.dirname(item.file)) === path2.basename(file, ".json"));
-    if (markdown && markdown.data.domain_id !== value.domain_id) {
-      errors.push(finding("DOMAIN_ID_MISMATCH", relative, `Markdown domain_id ${markdown.data.domain_id || "(\u7F3A\u5931)"} \u4E0E domain_id ${value.domain_id} \u4E0D\u4E00\u81F4`));
+    if (markdown && markdown.data.module_id !== value.module_id) {
+      errors.push(finding("MODULE_ID_MISMATCH", relative, `Markdown module_id ${markdown.data.module_id || "(\u7F3A\u5931)"} \u4E0E module_id ${value.module_id} \u4E0D\u4E00\u81F4`));
     }
     for (const document of value.documents) {
       if (!document || typeof document.path !== "string" || !document.path) {
-        errors.push(finding("DOMAIN_ARCHIVE_REFERENCE_INVALID", relative, "documents \u4E2D\u7684\u5F52\u6863\u5FC5\u987B\u5305\u542B path"));
+        errors.push(finding("MODULE_ARCHIVE_REFERENCE_INVALID", relative, "documents \u4E2D\u7684\u5F52\u6863\u5FC5\u987B\u5305\u542B path"));
         continue;
       }
       const archiveDirectory = path2.resolve(repoRoot, document.path);
       const archiveRelative = path2.relative(path2.join(kbRoot, "archive"), archiveDirectory);
       const summaryPath = path2.join(archiveDirectory, "summary.md");
       if (!archiveRelative || archiveRelative.startsWith("..") || path2.isAbsolute(archiveRelative) || !await pathExists(summaryPath)) {
-        errors.push(finding("DOMAIN_ARCHIVE_MISSING", relative, `\u9886\u57DF\u5F52\u6863\u4E0D\u5B58\u5728: ${document.path}`));
+        errors.push(finding("MODULE_ARCHIVE_MISSING", relative, `\u4E1A\u52A1\u6A21\u5757\u5F52\u6863\u4E0D\u5B58\u5728: ${document.path}`));
         continue;
       }
     }
@@ -347,15 +347,15 @@ async function main() {
   }
   const scopePath = path2.join(kbRoot, ".meta", "scope-resolved.json");
   const scope = jsonValues.get(scopePath);
-  if (scope && Array.isArray(scope.domains)) {
-    const domainIds = new Set(scope.domains.map((domain) => domain.id));
-    for (const domain of scope.domains) {
-      const metaPath = path2.join(metaRoot, `${domain.id}.json`);
-      if (!await pathExists(metaPath)) warnings.push(finding("DOMAIN_META_MISSING", relativePosix(repoRoot, metaPath), `\u9886\u57DF ${domain.id} \u7F3A\u5C11 domain meta`));
+  if (scope && Array.isArray(scope.modules)) {
+    const moduleIds = new Set(scope.modules.map((module) => module.id));
+    for (const module of scope.modules) {
+      const metaPath = path2.join(metaRoot, `${module.id}.json`);
+      if (!await pathExists(metaPath)) warnings.push(finding("MODULE_META_MISSING", relativePosix(repoRoot, metaPath), `\u4E1A\u52A1\u6A21\u5757 ${module.id} \u7F3A\u5C11 module meta`));
     }
     for (const item of adrItems) {
-      if (item.data.domain && !domainIds.has(item.data.domain)) {
-        errors.push(finding("ADR_DOMAIN_UNKNOWN", relativePosix(repoRoot, item.file), `ADR \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u9886\u57DF: ${item.data.domain}`));
+      if (item.data.module && !moduleIds.has(item.data.module)) {
+        errors.push(finding("ADR_MODULE_UNKNOWN", relativePosix(repoRoot, item.file), `ADR \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u4E1A\u52A1\u6A21\u5757: ${item.data.module}`));
       }
     }
   }

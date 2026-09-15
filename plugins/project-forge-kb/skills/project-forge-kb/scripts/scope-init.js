@@ -35,18 +35,18 @@ function printHelp(argv, help) {
 // src/scope-init.js
 var HELP = `Usage: scope-init.js [--repo-root <path>] [--output <path>]
 
-Create docs/kb/domain-scope.yaml as an empty, human-owned skeleton.
+Create docs/kb/module-scope.yaml as an empty, human-owned skeleton.
 Run from the target repository root unless --repo-root is provided.`;
-var TEMPLATE = `# \u672C\u6587\u4EF6\u7531 scope-init.js \u521B\u5EFA\u9AA8\u67B6\uFF0C\u9886\u57DF\u5185\u5BB9\u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u3002
-# \u811A\u672C\u548C Agent \u4E0D\u5F97\u81EA\u52A8\u65B0\u589E\u3001\u62C6\u5206\u3001\u5408\u5E76\u6216\u4FEE\u6539\u6B63\u5F0F\u9886\u57DF\u3002
+var TEMPLATE = `# \u672C\u6587\u4EF6\u7531 scope-init.js \u521B\u5EFA\u9AA8\u67B6\uFF0C\u4E1A\u52A1\u6A21\u5757\u5185\u5BB9\u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u3002
+# \u811A\u672C\u548C Agent \u4E0D\u5F97\u81EA\u52A8\u65B0\u589E\u3001\u62C6\u5206\u3001\u5408\u5E76\u6216\u4FEE\u6539\u6B63\u5F0F\u4E1A\u52A1\u6A21\u5757\u3002
 
 schema_version: 1
 
-domains: []
+modules: []
 
-# domains \u6BCF\u9879\u7ED3\u6784\uFF1A
-# - id: <\u9879\u76EE\u5185\u552F\u4E00\u9886\u57DF ID>
-#   name: <\u9886\u57DF\u540D\u79F0>
+# modules \u6BCF\u9879\u7ED3\u6784\uFF1A
+# - id: <\u9879\u76EE\u5185\u552F\u4E00\u4E1A\u52A1\u6A21\u5757 ID>
+#   name: <\u4E1A\u52A1\u6A21\u5757\u540D\u79F0>
 #   status: active
 #   include_packages: []
 #   include_files: []
@@ -61,7 +61,7 @@ domains: []
 # \u6216\uFF1A
 # - document_url: <\u8BED\u96C0\u6587\u6863 URL>
 #
-# \u586B\u5199\u8BF4\u660E\u548C\u5B8C\u6574\u793A\u4F8B\u89C1 Skill \u7684 references/domain-scope.md\u3002
+# \u586B\u5199\u8BF4\u660E\u548C\u5B8C\u6574\u793A\u4F8B\u89C1 Skill \u7684 references/module-scope.md\u3002
 `;
 async function exists(file) {
   try {
@@ -77,10 +77,10 @@ async function main() {
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
   const repoRoot = path.resolve(args.repoRoot || process.cwd());
-  const output = path.resolve(repoRoot, args.output || "docs/kb/domain-scope.yaml");
+  const output = path.resolve(repoRoot, args.output || "docs/kb/module-scope.yaml");
   const relative = path.relative(repoRoot, output);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("domain-scope.yaml \u5FC5\u987B\u521B\u5EFA\u5728\u76EE\u6807\u4ED3\u5E93\u5185");
+    throw new Error("module-scope.yaml \u5FC5\u987B\u521B\u5EFA\u5728\u76EE\u6807\u4ED3\u5E93\u5185");
   }
   if (await exists(output)) {
     printJson({ action: "skipped", path: output, reason: "already_exists" });

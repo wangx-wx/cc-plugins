@@ -6307,17 +6307,17 @@ async function trackedFiles(repoRoot) {
     return [];
   }
 }
-async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
+async function loadScope(repoRoot, scopePath = "docs/kb/module-scope.yaml") {
   const absolute = path.resolve(repoRoot, scopePath);
   const relative = path.relative(repoRoot, absolute);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
+    throw new Error("module-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
   }
   let value;
   try {
     value = parse(await readFile(absolute, "utf8"));
   } catch (error) {
-    if (error.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
+    if (error.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u4E1A\u52A1\u6A21\u5757\u914D\u7F6E: ${scopePath}`);
     throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error.message}`);
   }
   return { absolute, relative: relative.split(path.sep).join("/"), value };
@@ -6326,34 +6326,34 @@ async function validateScope(repoRoot, raw) {
   const errors = [];
   const warnings = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { errors: ["domain-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, domains: [] };
+    return { errors: ["module-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, modules: [] };
   }
   if (raw.schema_version !== 1) errors.push("schema_version \u5FC5\u987B\u4E3A 1");
-  if (!Array.isArray(raw.domains) || raw.domains.length === 0) {
-    errors.push("domains \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u9886\u57DF");
-    return { errors, warnings, domains: [] };
+  if (!Array.isArray(raw.modules) || raw.modules.length === 0) {
+    errors.push("modules \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u4E1A\u52A1\u6A21\u5757");
+    return { errors, warnings, modules: [] };
   }
   const files = await trackedFiles(repoRoot);
   const ids = /* @__PURE__ */ new Set();
-  const domains = [];
-  for (const [index, item] of raw.domains.entries()) {
-    const prefix = `domains[${index}]`;
+  const modules = [];
+  for (const [index, item] of raw.modules.entries()) {
+    const prefix = `modules[${index}]`;
     if (!item || typeof item !== "object" || Array.isArray(item)) {
       errors.push(`${prefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
       continue;
     }
     const id = typeof item.id === "string" ? item.id.trim() : "";
     if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) errors.push(`${prefix}.id \u5FC5\u987B\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ \u6216 -`);
-    if (ids.has(id)) errors.push(`\u9886\u57DF id \u91CD\u590D: ${id}`);
+    if (ids.has(id)) errors.push(`\u4E1A\u52A1\u6A21\u5757 id \u91CD\u590D: ${id}`);
     ids.add(id);
-    const domainErrors = [];
-    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, domainErrors);
-    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, domainErrors);
-    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, domainErrors);
-    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, domainErrors);
-    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, domainErrors);
-    const keywords = stringArray(item.keywords, `${prefix}.keywords`, domainErrors);
-    errors.push(...domainErrors);
+    const moduleErrors = [];
+    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, moduleErrors);
+    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, moduleErrors);
+    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, moduleErrors);
+    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, moduleErrors);
+    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, moduleErrors);
+    const keywords = stringArray(item.keywords, `${prefix}.keywords`, moduleErrors);
+    errors.push(...moduleErrors);
     if (includePackages.length === 0 && includeFiles.length === 0) {
       errors.push(`${prefix} \u81F3\u5C11\u586B\u5199 include_packages \u6216 include_files`);
     }
@@ -6400,7 +6400,7 @@ async function validateScope(repoRoot, raw) {
     if (!["active", "inactive"].includes(status)) {
       errors.push(`${prefix}.status \u5FC5\u987B\u662F active \u6216 inactive`);
     }
-    domains.push({
+    modules.push({
       id,
       name: typeof item.name === "string" ? item.name.trim() : id,
       status,
@@ -6413,34 +6413,34 @@ async function validateScope(repoRoot, raw) {
       yuque_sources: yuqueSources
     });
   }
-  return { errors, warnings, domains };
+  return { errors, warnings, modules };
 }
-var DOMAIN_WORKFLOW = [
+var MODULE_WORKFLOW = [
   "capture_source_commit",
   "delegate_code_fact_investigation",
-  "draft_domain_l1",
+  "draft_module_l1",
   "search_yuque",
   "await_yuque_confirmation",
-  "archive_domain_sources",
+  "archive_module_sources",
   "delegate_archive_fact_investigation",
-  "build_domain_question_frontier",
-  "await_domain_clarification",
-  "write_domain_l1_and_adrs",
+  "build_module_question_frontier",
+  "await_module_clarification",
+  "write_module_l1_and_adrs",
   "record_unresolved_questions",
-  "confirm_domain_output"
+  "confirm_module_output"
 ];
 
 // src/scope-check.js
 var HELP = `Usage: scope-check.js [--repo-root <path>] [--scope <path>] [--output <path>]
 
-Validate the human-owned domain scope and write the resolved machine snapshot.
+Validate the human-owned business module scope and write the resolved machine snapshot.
 Run from the target repository root unless --repo-root is provided.`;
 async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
-  const loaded = await loadScope(repoRoot, args.scope || "docs/kb/domain-scope.yaml");
+  const loaded = await loadScope(repoRoot, args.scope || "docs/kb/module-scope.yaml");
   const result = await validateScope(repoRoot, loaded.value);
   if (result.errors.length > 0) {
     printJson({ action: "invalid", scope_path: loaded.relative, ...result });
@@ -6451,9 +6451,9 @@ async function main() {
     schema_version: 1,
     scope_path: loaded.relative,
     generated_at: (/* @__PURE__ */ new Date()).toISOString(),
-    domains: result.domains,
-    domain_order: result.domains.filter((domain) => domain.status === "active").map((domain) => domain.id),
-    workflow: DOMAIN_WORKFLOW,
+    modules: result.modules,
+    module_order: result.modules.filter((module) => module.status === "active").map((module) => module.id),
+    workflow: MODULE_WORKFLOW,
     warnings: result.warnings
   };
   const output = path2.resolve(repoRoot, args.output || "docs/kb/.meta/scope-resolved.json");
@@ -6480,8 +6480,8 @@ async function main() {
     unchanged,
     scope_path: loaded.relative,
     resolved_path: relative.split(path2.sep).join("/"),
-    domain_order: resolved.domain_order,
-    workflow: DOMAIN_WORKFLOW,
+    module_order: resolved.module_order,
+    workflow: MODULE_WORKFLOW,
     warnings: result.warnings
   });
 }
