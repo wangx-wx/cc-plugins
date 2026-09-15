@@ -1,52 +1,52 @@
-# L1 提取规范
+# L1 业务模块知识提取规范
 
-仅在人工填写 `docs/kb/domain-scope.yaml` 且 `scope-check.js` 校验成功后执行。自动生成的空骨架不代表范围已经批准。首次扫描可以在文档归档前生成代码草稿；完整 L1 必须基于全部已选来源的已发布 archive。
+仅在人工填写 `docs/kb/module-scope.yaml` 且 `scope-check.js` 校验成功后执行。自动生成的空骨架不代表范围已经批准。首次扫描可以在文档归档前生成代码草稿；完整 L1 必须基于全部已选来源的已发布 archive。
 
-## 每个领域的提取步骤
+## 每个业务模块的提取步骤
 
-1. 读取领域的 include/exclude 范围、关键词、项目文档和语雀来源，并记录触发时的 Git `HEAD`；不提取所属团队或负责人。
-2. 把代码事实调查派发给一个限定范围的子代理。任务中必须写明当前 `domain_id`、代码基线、include/exclude 范围和只读要求。
+1. 读取业务模块的 include/exclude 范围、关键词、项目文档和语雀来源，并记录触发时的 Git `HEAD`；不提取所属团队或负责人。
+2. 把代码事实调查派发给一个限定范围的子代理。任务中必须写明当前 `module_id`、代码基线、include/exclude 范围和只读要求。
 3. 完成归档后，把归档事实调查派发给另一个限定范围的子代理。先读相关 `summary.md`，只有摘要表明相关或需要核验证据时才读 chunk。
-4. 子代理只能搜索人工 include 范围内的代码并应用全部 exclude。关键词只用于召回，不是领域归属证据。
-5. 子代理报告领域背景、术语候选、观察到的行为、可能的规则与不变量、能力、边界、少量有效代码锚点，以及 ADR 问题候选。子代理不得决定领域语义，也不得直接修改 L1、ADR 或 `.review`。
+4. 子代理只能搜索人工 include 范围内的代码并应用全部 exclude。关键词只用于召回，不是业务模块归属证据。
+5. 子代理报告业务模块背景、术语候选、观察到的行为、可能的规则与不变量、能力、边界、少量有效代码锚点，以及 ADR 问题候选。子代理不得决定业务语义，也不得直接修改 L1、ADR 或 `.review`。
 6. 主 Agent 合并代码、archive 和既有知识证据，并区分：
-   - `confirmed`：已经由人工确认的领域知识；
+   - `confirmed`：已经由人工确认的业务模块知识；
    - `observed`：代码或来源文档中直接存在的行为，只能描述为观察，不自动升级为业务规则；
    - `inferred`：解释或推断，写入候选并等待确认。
-7. 使用 `<skill-dir>/assets/L1.md` 生成或更新 `docs/kb/L1/<domain_id>/README.md`。新文件使用 `status: draft`。代码和文档扫描只能产生术语候选和 ADR 问题候选；未经领域追问确认，不得写入正式“术语”或创建 ADR。满足 ADR 准入后，使用 `<skill-dir>/assets/ADR.md` 写入 `docs/kb/L1/<domain_id>/adr/<四位编号>-<描述>.md`，并使用 `doc_id: ADR-<domain_id>-<编号>`。提交 `code-facts` 前确认所有模板占位符都已替换，脚本会拒绝仍含占位符的草稿。
-8. 流程脚本将代码基线、范围快照、语雀候选和 archive 引用写入 `docs/kb/.meta/domains/<domain_id>.json`；领域解释和必要证据写入 L1，Agent 不手动维护机器元数据。
-9. 按 [领域建模访谈](domain-questioning.md) 处理需要人工解释的术语、规则、边界和设计原因。
+7. 使用 `<skill-dir>/assets/L1.md` 生成或更新 `docs/kb/L1/<module_id>/README.md`。新文件使用 `status: draft`。代码和文档扫描只能产生术语候选和 ADR 问题候选；未经业务模块追问确认，不得写入正式“术语”或创建 ADR。满足 ADR 准入后，使用 `<skill-dir>/assets/ADR.md` 写入 `docs/kb/L1/<module_id>/adr/<四位编号>-<描述>.md`，并使用 `doc_id: ADR-<module_id>-<编号>`。提交 `code-facts` 前确认所有模板占位符都已替换，脚本会拒绝仍含占位符的草稿。
+8. 流程脚本将代码基线、范围快照、语雀候选和 archive 引用写入 `docs/kb/.meta/modules/<module_id>.json`；业务模块解释和必要证据写入 L1，Agent 不手动维护机器元数据。
+9. 按 [业务模块建模访谈](module-questioning.md) 处理需要人工解释的术语、规则、边界和设计原因。
 
 ## L1 内容边界
 
 L1 解释业务，不罗列完整类、方法、URL、DTO、枚举、表或消息主题。机器清单放入 `.meta`，L1 只保留理解能力或核验规则所需的少量锚点。
 
-“领域上下文”说明该领域为何存在、服务哪些角色或业务阶段，以及核心对象如何关联。代码和文档无法说明的背景只能在人工确认后写入。
+“业务模块上下文”说明该模块为何存在、服务哪些角色或业务阶段，以及核心对象如何关联。L1 不声称覆盖跨仓库的完整业务领域；代码和文档无法说明的背景只能在人工确认后写入。
 
 术语与规则必须分开：
 
-- “术语”只收录经过领域追问确认且满足 [领域建模访谈](domain-questioning.md) 准入条件的概念。
+- “术语”只收录经过业务模块追问确认且满足 [业务模块建模访谈](module-questioning.md) 准入条件的概念。
 - “已确认规则与不变量”回答在什么范围内必须成立什么，只写人工已经确认的约束、状态含义和例外。
 - 代码观察和 Agent 推断不得混入上述两节；无法确认的问题写入 `.review`。
 
 ## L1 编辑边界
 
-用户可以直接修改 `docs/kb/L1/<domain_id>/README.md` 的内容和 `status`。Agent 只能直接改写 `draft` 和 `candidate`；其余 status 都承载人工判断：
+用户可以直接修改 `docs/kb/L1/<module_id>/README.md` 的内容和 `status`。Agent 只能直接改写 `draft` 和 `candidate`；其余 status 都承载人工判断：
 
 - `confirmed`、`review_required`：人工确认过，或有明确的待复核判断；
 - `stale`、`retired`：人工判定过依据失效或已退役。这不是"还没写好的草稿"，就地覆盖会丢掉这个判断，而且无法从代码或后续调查重建。
 
-Agent 发现这些人工维护内容需要变化时，按 `<skill-dir>/assets/review-changes.md` 把差异写入 `docs/kb/.review/<domain_id>/l1-changes.md`，保留 README 原文，交给用户裁决。用户可以直接修改人工状态之间的状态，也可以改回 `draft` 或 `candidate` 后交由 Agent 继续完善。
+Agent 发现这些人工维护内容需要变化时，按 `<skill-dir>/assets/review-changes.md` 把差异写入 `docs/kb/.review/<module_id>/l1-changes.md`，保留 README 原文，交给用户裁决。用户可以直接修改人工状态之间的状态，也可以改回 `draft` 或 `candidate` 后交由 Agent 继续完善。
 
 `code-facts` 只校验 `status` 是否为上述六个合法值，并在机器元数据中记录当前状态；不持久化 L1 内容哈希，也不用哈希限制用户修改。Agent 不得为了绕过编辑边界而自行修改 `status`。
 
 ## 人工交接
 
-每个领域集中报告：
+每个业务模块集中报告：
 
-- 建议写入 L1 的领域上下文、术语、规则和边界；
+- 建议写入 L1 的业务模块上下文、术语、规则和边界；
 - 建议创建的 ADR 及其人工确认依据；
 - 冲突证据和 `.review` 中未解决的问题；
-- L1 路径、ADR 路径（必须是 `L1/<domain_id>/adr/<四位编号>-<描述>.md`）、代码基线及 L1 的 `draft` 状态。
+- L1 路径、ADR 路径（必须是 `L1/<module_id>/adr/<四位编号>-<描述>.md`）、代码基线及 L1 的 `draft` 状态。
 
-不得把 L1 改成 `confirmed`，也不得修改正式领域范围。
+不得把 L1 改成 `confirmed`，也不得修改正式业务模块范围。

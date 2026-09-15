@@ -6271,9 +6271,9 @@ function parse(src, reviver, options) {
 }
 
 // src/yuque-selection-data.js
-async function readYuqueSelection(repoRoot, domainId) {
-  if (!/^[a-z0-9][a-z0-9_-]*$/.test(domainId)) throw new Error("\u9886\u57DF ID \u683C\u5F0F\u65E0\u6548");
-  const file = path.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+async function readYuqueSelection(repoRoot, moduleId) {
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(moduleId)) throw new Error("\u4E1A\u52A1\u6A21\u5757 ID \u683C\u5F0F\u65E0\u6548");
+  const file = path.join(repoRoot, "docs", "kb", ".review", moduleId, "yuque-candidates.yaml");
   let value;
   try {
     value = parse(await readFile(file, "utf8"));
@@ -6281,7 +6281,7 @@ async function readYuqueSelection(repoRoot, domainId) {
     if (error.code === "ENOENT") throw new Error(`\u5019\u9009\u6587\u4EF6\u4E0D\u5B58\u5728: ${path.relative(repoRoot, file)}`);
     throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u5019\u9009\u6587\u4EF6: ${error.message}`);
   }
-  if (value?.domain_id !== domainId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u9886\u57DF\u4E0D\u5339\u914D");
+  if (value?.module_id !== moduleId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u4E1A\u52A1\u6A21\u5757\u4E0D\u5339\u914D");
   for (const [index, candidate] of value.candidates.entries()) {
     if (!["pending", "approved", "rejected"].includes(candidate?.decision)) {
       throw new Error(`candidates[${index}].decision \u5FC5\u987B\u662F pending\u3001approved \u6216 rejected`);
@@ -6291,7 +6291,7 @@ async function readYuqueSelection(repoRoot, domainId) {
   return {
     action: pending.length > 0 ? "awaiting_confirmation" : "confirmed",
     requires_human_input: pending.length > 0,
-    domain_id: domainId,
+    module_id: moduleId,
     pending_count: pending.length,
     approved: value.candidates.filter((candidate) => candidate.decision === "approved").map((candidate) => ({
       doc_id: candidate.doc_id || null,
@@ -6304,7 +6304,7 @@ async function readYuqueSelection(repoRoot, domainId) {
 }
 
 // src/yuque-selection.js
-var HELP = `Usage: yuque-selection.js --domain <domain_id> [--repo-root <path>]
+var HELP = `Usage: yuque-selection.js --module <module_id> [--repo-root <path>]
 
 Validate human candidate decisions and output approved Yuque documents.
 Run from the target repository root unless --repo-root is provided.`;
@@ -6312,8 +6312,8 @@ async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
-  if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
-  printJson(await readYuqueSelection(path2.resolve(args.repoRoot || process.cwd()), args.domain));
+  if (!args.module) throw new Error("\u5FC5\u987B\u6307\u5B9A --module");
+  printJson(await readYuqueSelection(path2.resolve(args.repoRoot || process.cwd()), args.module));
 }
 if (isMain(import.meta.url)) {
   main().catch((error) => {

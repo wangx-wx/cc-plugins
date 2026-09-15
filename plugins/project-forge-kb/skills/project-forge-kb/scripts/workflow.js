@@ -6330,14 +6330,14 @@ function unquote(value) {
 // src/artifacts.js
 var L1_STATUSES = /* @__PURE__ */ new Set(["candidate", "draft", "confirmed", "review_required", "stale", "retired"]);
 var TEMPLATE_PLACEHOLDER_TOKENS = /* @__PURE__ */ new Set([
-  "domain_id",
+  "module_id",
   "capability_id",
   "symbol",
   "number",
   "name",
   "slug",
   "archive_id",
-  "domain",
+  "module",
   "repo/yuque",
   "YYYY-MM-DD"
 ]);
@@ -6415,17 +6415,17 @@ async function trackedFiles(repoRoot) {
     return [];
   }
 }
-async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
+async function loadScope(repoRoot, scopePath = "docs/kb/module-scope.yaml") {
   const absolute = path2.resolve(repoRoot, scopePath);
   const relative = path2.relative(repoRoot, absolute);
   if (relative.startsWith("..") || path2.isAbsolute(relative)) {
-    throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
+    throw new Error("module-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
   }
   let value;
   try {
     value = parse(await readFile2(absolute, "utf8"));
   } catch (error) {
-    if (error.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
+    if (error.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u4E1A\u52A1\u6A21\u5757\u914D\u7F6E: ${scopePath}`);
     throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error.message}`);
   }
   return { absolute, relative: relative.split(path2.sep).join("/"), value };
@@ -6434,34 +6434,34 @@ async function validateScope(repoRoot, raw) {
   const errors = [];
   const warnings = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { errors: ["domain-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, domains: [] };
+    return { errors: ["module-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, modules: [] };
   }
   if (raw.schema_version !== 1) errors.push("schema_version \u5FC5\u987B\u4E3A 1");
-  if (!Array.isArray(raw.domains) || raw.domains.length === 0) {
-    errors.push("domains \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u9886\u57DF");
-    return { errors, warnings, domains: [] };
+  if (!Array.isArray(raw.modules) || raw.modules.length === 0) {
+    errors.push("modules \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u4E1A\u52A1\u6A21\u5757");
+    return { errors, warnings, modules: [] };
   }
   const files = await trackedFiles(repoRoot);
   const ids = /* @__PURE__ */ new Set();
-  const domains = [];
-  for (const [index, item] of raw.domains.entries()) {
-    const prefix = `domains[${index}]`;
+  const modules = [];
+  for (const [index, item] of raw.modules.entries()) {
+    const prefix = `modules[${index}]`;
     if (!item || typeof item !== "object" || Array.isArray(item)) {
       errors.push(`${prefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
       continue;
     }
     const id = typeof item.id === "string" ? item.id.trim() : "";
     if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) errors.push(`${prefix}.id \u5FC5\u987B\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ \u6216 -`);
-    if (ids.has(id)) errors.push(`\u9886\u57DF id \u91CD\u590D: ${id}`);
+    if (ids.has(id)) errors.push(`\u4E1A\u52A1\u6A21\u5757 id \u91CD\u590D: ${id}`);
     ids.add(id);
-    const domainErrors = [];
-    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, domainErrors);
-    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, domainErrors);
-    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, domainErrors);
-    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, domainErrors);
-    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, domainErrors);
-    const keywords = stringArray(item.keywords, `${prefix}.keywords`, domainErrors);
-    errors.push(...domainErrors);
+    const moduleErrors = [];
+    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, moduleErrors);
+    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, moduleErrors);
+    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, moduleErrors);
+    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, moduleErrors);
+    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, moduleErrors);
+    const keywords = stringArray(item.keywords, `${prefix}.keywords`, moduleErrors);
+    errors.push(...moduleErrors);
     if (includePackages.length === 0 && includeFiles.length === 0) {
       errors.push(`${prefix} \u81F3\u5C11\u586B\u5199 include_packages \u6216 include_files`);
     }
@@ -6508,7 +6508,7 @@ async function validateScope(repoRoot, raw) {
     if (!["active", "inactive"].includes(status)) {
       errors.push(`${prefix}.status \u5FC5\u987B\u662F active \u6216 inactive`);
     }
-    domains.push({
+    modules.push({
       id,
       name: typeof item.name === "string" ? item.name.trim() : id,
       status,
@@ -6521,22 +6521,22 @@ async function validateScope(repoRoot, raw) {
       yuque_sources: yuqueSources
     });
   }
-  return { errors, warnings, domains };
+  return { errors, warnings, modules };
 }
 
 // src/workflow.js
 var execFileAsync2 = promisify2(execFile2);
-var STEPS = ["code-facts", "yuque-candidates", "archives", "archive-facts", "domain-knowledge"];
+var STEPS = ["code-facts", "yuque-candidates", "archives", "archive-facts", "module-knowledge"];
 var HELP = `Usage:
   workflow.js [--repo-root <path>]
   workflow.js --start [--repo-root <path>]
-  workflow.js --complete-step <step> [--domain <domain_id>] [--repo-root <path>]
-  workflow.js --confirm-domain <domain_id> [--repo-root <path>]
+  workflow.js --complete-step <step> [--module <module_id>] [--repo-root <path>]
+  workflow.js --confirm-module <module_id> [--repo-root <path>]
   workflow.js --complete-run [--repo-root <path>]
 
 Drive one initialization or incremental knowledge-base run.
 
-Per-domain steps: ${STEPS.join(", ")}
+Per-module steps: ${STEPS.join(", ")}
 Repository steps: l0-review, then --complete-run`;
 async function exists2(file) {
   try {
@@ -6557,10 +6557,10 @@ function packageMatches(file, packageName) {
   const packagePath = packageName.replaceAll(".", "/");
   return file.startsWith(`${packagePath}/`) || file.includes(`/${packagePath}/`);
 }
-function domainMatches(domain, file) {
-  if (domain.project_docs.includes(file) || domain.include_files.includes(file)) return true;
-  if (domain.exclude_files.includes(file) || domain.exclude_packages.some((name) => packageMatches(file, name))) return false;
-  return domain.include_packages.some((name) => packageMatches(file, name));
+function moduleMatches(module, file) {
+  if (module.project_docs.includes(file) || module.include_files.includes(file)) return true;
+  if (module.exclude_files.includes(file) || module.exclude_packages.some((name) => packageMatches(file, name))) return false;
+  return module.include_packages.some((name) => packageMatches(file, name));
 }
 function runPath(repoRoot) {
   return path3.join(repoRoot, "docs", "kb", ".meta", "workflow-run.json");
@@ -6581,8 +6581,8 @@ async function writeRun(repoRoot, run) {
 `, "utf8");
   await rename(temporary, output);
 }
-async function updateDomainMeta(repoRoot, domainId, update) {
-  const output = path3.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
+async function updateModuleMeta(repoRoot, moduleId, update) {
+  const output = path3.join(repoRoot, "docs", "kb", ".meta", "modules", `${moduleId}.json`);
   const value = JSON.parse(await readFile3(output, "utf8"));
   update(value);
   const temporary = `${output}.${process.pid}.tmp`;
@@ -6590,39 +6590,39 @@ async function updateDomainMeta(repoRoot, domainId, update) {
 `, "utf8");
   await rename(temporary, output);
 }
-async function confirmL1Status(repoRoot, domainId) {
-  const file = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+async function confirmL1Status(repoRoot, moduleId) {
+  const file = path3.join(repoRoot, "docs", "kb", "L1", moduleId, "README.md");
   const markdown = await readFile3(file, "utf8");
   const updated = markdown.replace(/^(status\s*:\s*).*$/m, "$1confirmed");
-  if (updated === markdown) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 status: ${domainId}`);
+  if (updated === markdown) throw new Error(`\u4E1A\u52A1\u6A21\u5757\u6587\u6863\u7F3A\u5C11 status: ${moduleId}`);
   const temporary = `${file}.${process.pid}.tmp`;
   await writeFile(temporary, updated, "utf8");
   await rename(temporary, file);
 }
 async function checkedScope(repoRoot) {
-  const scopePath = path3.join(repoRoot, "docs", "kb", "domain-scope.yaml");
+  const scopePath = path3.join(repoRoot, "docs", "kb", "module-scope.yaml");
   if (!await exists2(scopePath)) return { missing: true };
   const loaded = await loadScope(repoRoot);
   const checked = await validateScope(repoRoot, loaded.value);
   return { ...checked, scopeHash: hash(await readFile3(scopePath, "utf8")) };
 }
-async function affectedDomains(repoRoot, checked, baseline) {
-  const active = checked.domains.filter((item) => item.status === "active");
-  if (!baseline || baseline.inputs?.domain_scope?.hash !== checked.scopeHash) {
-    return active.map((domain) => ({ domain, localChanges: true }));
+async function affectedModules(repoRoot, checked, baseline) {
+  const active = checked.modules.filter((item) => item.status === "active");
+  if (!baseline || baseline.inputs?.module_scope?.hash !== checked.scopeHash) {
+    return active.map((module) => ({ module, localChanges: true }));
   }
   const changed = (await git(repoRoot, ["diff", "--name-only", baseline.source_commit, "HEAD"])).split(/\r?\n/).filter(Boolean);
-  return active.map((domain) => ({
-    domain,
-    localChanges: changed.some((file) => domainMatches(domain, file))
-    // A keywords-only domain still searches Yuque, so it must stay selectable in
+  return active.map((module) => ({
+    module,
+    localChanges: changed.some((file) => moduleMatches(module, file))
+    // A keywords-only module still searches Yuque, so it must stay selectable in
     // incremental runs; otherwise Yuque updates are silently never picked up.
-  })).filter((item) => item.localChanges || requiresYuqueCandidates(item.domain));
+  })).filter((item) => item.localChanges || requiresYuqueCandidates(item.module));
 }
 async function startRun(repoRoot) {
   const checked = await checkedScope(repoRoot);
-  if (checked.missing) throw new Error("\u7F3A\u5C11 docs/kb/domain-scope.yaml\uFF1B\u5148\u8FD0\u884C scope-init.js \u5E76\u7531\u4EBA\u5DE5\u586B\u5199");
-  if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
+  if (checked.missing) throw new Error("\u7F3A\u5C11 docs/kb/module-scope.yaml\uFF1B\u5148\u8FD0\u884C scope-init.js \u5E76\u7531\u4EBA\u5DE5\u586B\u5199");
+  if (checked.errors.length > 0) throw new Error(`\u4E1A\u52A1\u6A21\u5757\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
   if (!await exists2(path3.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) {
     throw new Error("\u7F3A\u5C11 scope-resolved.json\uFF1B\u5148\u8FD0\u884C scope-check.js");
   }
@@ -6635,7 +6635,7 @@ async function startRun(repoRoot) {
     if (changes) throw new Error("\u589E\u91CF\u66F4\u65B0\u5F00\u59CB\u524D\u8981\u6C42\u5DE5\u4F5C\u533A\u5E72\u51C0\uFF1B\u8BF7\u5148\u63D0\u4EA4\u3001\u6E05\u7406\u6216\u6682\u5B58\u5F53\u524D\u53D8\u66F4");
     baseline = JSON.parse(await readFile3(baselinePath, "utf8"));
   }
-  const domains = await affectedDomains(repoRoot, checked, baseline);
+  const modules = await affectedModules(repoRoot, checked, baseline);
   const sourceCommit = await git(repoRoot, ["rev-parse", "HEAD"]);
   const run = {
     schema_version: 1,
@@ -6644,116 +6644,116 @@ async function startRun(repoRoot) {
     started_at: (/* @__PURE__ */ new Date()).toISOString(),
     source_commit: sourceCommit,
     scope_hash: checked.scopeHash,
-    domains: domains.map((item) => ({ id: item.domain.id, local_changes: item.localChanges, completed_steps: [], confirmed: false })),
-    l0_reviewed: Boolean(baseline && domains.length === 0)
+    modules: modules.map((item) => ({ id: item.module.id, local_changes: item.localChanges, completed_steps: [], confirmed: false })),
+    l0_reviewed: Boolean(baseline && modules.length === 0)
   };
   await writeRun(repoRoot, run);
-  return { action: "run_started", mode: run.mode, source_commit: sourceCommit, domain_order: run.domains.map((item) => item.id) };
+  return { action: "run_started", mode: run.mode, source_commit: sourceCommit, module_order: run.modules.map((item) => item.id) };
 }
-async function loadCandidates(repoRoot, domainId) {
-  const file = path3.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+async function loadCandidates(repoRoot, moduleId) {
+  const file = path3.join(repoRoot, "docs", "kb", ".review", moduleId, "yuque-candidates.yaml");
   if (!await exists2(file)) return null;
   const value = parse(await readFile3(file, "utf8"));
-  if (value?.domain_id !== domainId || !Array.isArray(value.candidates)) throw new Error("\u8BED\u96C0\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548");
+  if (value?.module_id !== moduleId || !Array.isArray(value.candidates)) throw new Error("\u8BED\u96C0\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548");
   return value;
 }
-function requiresYuqueCandidates(domain) {
-  return domain.yuque_sources.length > 0 || domain.keywords.length > 0;
+function requiresYuqueCandidates(module) {
+  return module.yuque_sources.length > 0 || module.keywords.length > 0;
 }
-function result(step, domain, nextAction, blockingReason = null) {
-  return { status: nextAction === "complete" ? "complete" : "action_required", domain, step, next_action: nextAction, blocking_reason: blockingReason };
+function result(step, module, nextAction, blockingReason = null) {
+  return { status: nextAction === "complete" ? "complete" : "action_required", module, step, next_action: nextAction, blocking_reason: blockingReason };
 }
 async function inspectWorkflow(repoRoot) {
   const checked = await checkedScope(repoRoot);
   if (checked.missing) return result("SCOPE_MISSING", null, "run_scope_init");
-  if (checked.errors.length > 0) return result("SCOPE_INVALID", null, "fix_domain_scope", checked.errors.join("; "));
+  if (checked.errors.length > 0) return result("SCOPE_INVALID", null, "fix_module_scope", checked.errors.join("; "));
   if (!await exists2(path3.join(repoRoot, "docs", "kb", ".meta", "scope-resolved.json"))) return result("SCOPE_CHECK_REQUIRED", null, "run_scope_check");
   const run = await readRun(repoRoot);
   if (!run || run.status === "complete") return result(run ? "UPDATE_READY" : "INITIALIZATION_READY", null, "run_workflow_start");
-  const domainState = run.domains.find((item) => !item.confirmed);
-  if (domainState) {
-    const domain = checked.domains.find((item) => item.id === domainState.id);
-    if (!domainState.completed_steps.includes("code-facts")) return result("DOMAIN_CODE_SCAN", domain.id, "delegate_code_fact_investigation");
-    if (requiresYuqueCandidates(domain) && !domainState.completed_steps.includes("yuque-candidates")) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
-    if (requiresYuqueCandidates(domain)) {
-      const review = await loadCandidates(repoRoot, domain.id);
-      if (!review) return result("YUQUE_CANDIDATES", domain.id, "run_yuque_candidates");
+  const moduleState = run.modules.find((item) => !item.confirmed);
+  if (moduleState) {
+    const module = checked.modules.find((item) => item.id === moduleState.id);
+    if (!moduleState.completed_steps.includes("code-facts")) return result("MODULE_CODE_SCAN", module.id, "delegate_code_fact_investigation");
+    if (requiresYuqueCandidates(module) && !moduleState.completed_steps.includes("yuque-candidates")) return result("YUQUE_CANDIDATES", module.id, "run_yuque_candidates");
+    if (requiresYuqueCandidates(module)) {
+      const review = await loadCandidates(repoRoot, module.id);
+      if (!review) return result("YUQUE_CANDIDATES", module.id, "run_yuque_candidates");
       const pending = review.candidates.filter((item) => item.decision === "pending").length;
-      if (pending > 0) return result("YUQUE_REVIEW", domain.id, "ask_user_edit_yaml", `${pending} \u4E2A\u8BED\u96C0\u5019\u9009\u4ECD\u4E3A pending`);
+      if (pending > 0) return result("YUQUE_REVIEW", module.id, "ask_user_edit_yaml", `${pending} \u4E2A\u8BED\u96C0\u5019\u9009\u4ECD\u4E3A pending`);
     }
-    if (!domainState.completed_steps.includes("archives")) return result("DOMAIN_ARCHIVE", domain.id, "run_domain_archive");
-    if (!domainState.completed_steps.includes("archive-facts")) return result("DOMAIN_ARCHIVE_FACTS", domain.id, "delegate_archive_fact_investigation");
-    if (!domainState.completed_steps.includes("domain-knowledge")) return result("DOMAIN_KNOWLEDGE", domain.id, "question_and_write_domain_knowledge");
-    return result("DOMAIN_ARTIFACT_REVIEW", domain.id, "review_and_confirm_domain");
+    if (!moduleState.completed_steps.includes("archives")) return result("MODULE_ARCHIVE", module.id, "run_module_archive");
+    if (!moduleState.completed_steps.includes("archive-facts")) return result("MODULE_ARCHIVE_FACTS", module.id, "delegate_archive_fact_investigation");
+    if (!moduleState.completed_steps.includes("module-knowledge")) return result("MODULE_KNOWLEDGE", module.id, "question_and_write_module_knowledge");
+    return result("MODULE_ARTIFACT_REVIEW", module.id, "review_and_confirm_module");
   }
-  if (run.mode === "incremental" && run.domains.length === 0) return result("NO_CHANGES", null, "complete_workflow_run");
+  if (run.mode === "incremental" && run.modules.length === 0) return result("NO_CHANGES", null, "complete_workflow_run");
   if (!run.l0_reviewed) return result("REPO_L0_REVIEW", null, "create_or_review_l0");
   return result("REPO_FINALIZE", null, "run_index_state_verify");
 }
-async function assertL1Complete(repoRoot, domainId) {
-  const l1Path = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
+async function assertL1Complete(repoRoot, moduleId) {
+  const l1Path = path3.join(repoRoot, "docs", "kb", "L1", moduleId, "README.md");
   const l1 = await readFile3(l1Path, "utf8");
-  for (const heading of ["## \u9886\u57DF\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
-    if (!l1.includes(heading)) throw new Error(`\u9886\u57DF\u6587\u6863\u7F3A\u5C11 ${heading}`);
+  for (const heading of ["## \u4E1A\u52A1\u6A21\u5757\u4E0A\u4E0B\u6587", "## \u672F\u8BED", "## \u5DF2\u786E\u8BA4\u89C4\u5219\u4E0E\u4E0D\u53D8\u91CF"]) {
+    if (!l1.includes(heading)) throw new Error(`\u4E1A\u52A1\u6A21\u5757\u6587\u6863\u7F3A\u5C11 ${heading}`);
   }
   const placeholders = findContentPlaceholders(l1);
   if (placeholders.length > 0) {
-    throw new Error(`\u9886\u57DF\u6587\u6863\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`);
+    throw new Error(`\u4E1A\u52A1\u6A21\u5757\u6587\u6863\u4ECD\u6709\u672A\u66FF\u6362\u7684\u6A21\u677F\u5360\u4F4D\u7B26: ${placeholders.join("\u3001")}`);
   }
 }
-async function assertDomainArtifacts(repoRoot, domainId) {
-  const domainRoot = path3.join(repoRoot, "docs", "kb", "L1", domainId);
-  const adrFiles = await listFiles(domainRoot, (file) => file.endsWith(".md") && path3.basename(file) !== "README.md");
+async function assertModuleArtifacts(repoRoot, moduleId) {
+  const moduleRoot = path3.join(repoRoot, "docs", "kb", "L1", moduleId);
+  const adrFiles = await listFiles(moduleRoot, (file) => file.endsWith(".md") && path3.basename(file) !== "README.md");
   for (const file of adrFiles) {
     const item = await readMarkdownFrontmatter(file);
     if (item.data.layer !== "ADR") continue;
-    const relative = path3.relative(domainRoot, file).split(path3.sep);
+    const relative = path3.relative(moduleRoot, file).split(path3.sep);
     if (relative.length !== 2 || relative[0] !== "adr") {
-      throw new Error(`ADR \u5FC5\u987B\u4F4D\u4E8E docs/kb/L1/${domainId}/adr/ \u76EE\u5F55: ${path3.relative(repoRoot, file)}`);
+      throw new Error(`ADR \u5FC5\u987B\u4F4D\u4E8E docs/kb/L1/${moduleId}/adr/ \u76EE\u5F55: ${path3.relative(repoRoot, file)}`);
     }
     const filename = path3.basename(file, ".md");
     const match = filename.match(/^(\d{4})-.+$/);
     if (!match) throw new Error(`ADR \u6587\u4EF6\u540D\u5FC5\u987B\u4F7F\u7528\u56DB\u4F4D\u7F16\u53F7\u548C\u63CF\u8FF0: ${path3.relative(repoRoot, file)}`);
-    const expected = `ADR-${domainId}-${match[1]}`;
+    const expected = `ADR-${moduleId}-${match[1]}`;
     if (item.data.doc_id !== expected) throw new Error(`ADR doc_id \u5FC5\u987B\u4E3A ${expected}: ${path3.relative(repoRoot, file)}`);
   }
 }
-async function completeStep(repoRoot, step, domainId) {
+async function completeStep(repoRoot, step, moduleId) {
   const run = await readRun(repoRoot);
   if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
   if (step === "l0-review") {
-    if (run.domains.some((item) => !item.confirmed)) throw new Error("\u4ECD\u6709\u672A\u786E\u8BA4\u9886\u57DF\uFF0C\u4E0D\u80FD\u786E\u8BA4 L0");
+    if (run.modules.some((item) => !item.confirmed)) throw new Error("\u4ECD\u6709\u672A\u786E\u8BA4\u4E1A\u52A1\u6A21\u5757\uFF0C\u4E0D\u80FD\u786E\u8BA4 L0");
     run.l0_reviewed = true;
     await writeRun(repoRoot, run);
     return { action: "step_completed", step };
   }
   if (!STEPS.includes(step)) throw new Error(`\u672A\u77E5\u6B65\u9AA4: ${step}`);
-  const current = run.domains.find((item) => !item.confirmed);
-  if (!current || current.id !== domainId) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u5B8C\u6210\u9886\u57DF ${domainId || "(\u672A\u6307\u5B9A)"}`);
+  const current = run.modules.find((item) => !item.confirmed);
+  if (!current || current.id !== moduleId) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u5B8C\u6210\u4E1A\u52A1\u6A21\u5757 ${moduleId || "(\u672A\u6307\u5B9A)"}`);
   const checked = await checkedScope(repoRoot);
-  const domain = checked.domains.find((item) => item.id === domainId);
+  const module = checked.modules.find((item) => item.id === moduleId);
   let expected = STEPS.find((item) => !current.completed_steps.includes(item));
-  if (expected === "yuque-candidates" && !requiresYuqueCandidates(domain)) {
+  if (expected === "yuque-candidates" && !requiresYuqueCandidates(module)) {
     current.completed_steps.push("yuque-candidates");
     expected = "archives";
   }
   if (step !== expected) throw new Error(`\u5F53\u524D\u5E94\u5B8C\u6210\u6B65\u9AA4 ${expected}\uFF0C\u4E0D\u80FD\u6807\u8BB0 ${step}`);
   if (step === "code-facts") {
-    const l1Path = path3.join(repoRoot, "docs", "kb", "L1", domainId, "README.md");
-    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u9886\u57DF\u8349\u7A3F: docs/kb/L1/${domainId}/README.md`);
+    const l1Path = path3.join(repoRoot, "docs", "kb", "L1", moduleId, "README.md");
+    if (!await exists2(l1Path)) throw new Error(`\u7F3A\u5C11\u4E1A\u52A1\u6A21\u5757\u8349\u7A3F: docs/kb/L1/${moduleId}/README.md`);
     const l1Markdown = await readFile3(l1Path, "utf8");
     const l1 = parseFrontmatter(l1Markdown);
-    if (l1.data.domain_id !== domainId || l1.data.layer !== "L1") throw new Error("\u9886\u57DF\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u9886\u57DF\u4E0D\u5339\u914D");
-    const metaPath = path3.join(repoRoot, "docs", "kb", ".meta", "domains", `${domainId}.json`);
+    if (l1.data.module_id !== moduleId || l1.data.layer !== "L1") throw new Error("\u4E1A\u52A1\u6A21\u5757\u8349\u7A3F frontmatter \u4E0E\u5F53\u524D\u4E1A\u52A1\u6A21\u5757\u4E0D\u5339\u914D");
+    const metaPath = path3.join(repoRoot, "docs", "kb", ".meta", "modules", `${moduleId}.json`);
     const currentStatus = String(l1.data.status || "").toLowerCase();
     if (!L1_STATUSES.has(currentStatus)) {
-      throw new Error(`\u9886\u57DF ${domainId} \u7684 status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`);
+      throw new Error(`\u4E1A\u52A1\u6A21\u5757 ${moduleId} \u7684 status \u5FC5\u987B\u662F ${[...L1_STATUSES].join("\u3001")}`);
     }
     const meta = {
       schema_version: 1,
-      domain_id: domainId,
+      module_id: moduleId,
       source_commit: run.source_commit,
-      scope: domain,
+      scope: module,
       observed: {},
       documents: [],
       candidates: [],
@@ -6766,23 +6766,23 @@ async function completeStep(repoRoot, step, domainId) {
     await rename(temporary, metaPath);
   }
   if (step === "yuque-candidates") {
-    const review = await loadCandidates(repoRoot, domainId);
+    const review = await loadCandidates(repoRoot, moduleId);
     if (!review) throw new Error("\u8BED\u96C0\u5019\u9009\u5C1A\u672A\u751F\u6210");
-    if (domain.yuque_sources.length === 0 && (typeof review.confirmed_book_slug !== "string" || !review.confirmed_book_slug.trim())) {
-      throw new Error("\u5F53\u524D\u9886\u57DF\u53EA\u6709 keywords\uFF0C\u5FC5\u987B\u7531\u7528\u6237\u901A\u8FC7 --book-slug <slug> --confirm-book \u786E\u8BA4\u8BED\u96C0\u77E5\u8BC6\u5E93");
+    if (module.yuque_sources.length === 0 && (typeof review.confirmed_book_slug !== "string" || !review.confirmed_book_slug.trim())) {
+      throw new Error("\u5F53\u524D\u4E1A\u52A1\u6A21\u5757\u53EA\u6709 keywords\uFF0C\u5FC5\u987B\u7531\u7528\u6237\u901A\u8FC7 --book-slug <slug> --confirm-book \u786E\u8BA4\u8BED\u96C0\u77E5\u8BC6\u5E93");
     }
-    await updateDomainMeta(repoRoot, domainId, (meta) => {
+    await updateModuleMeta(repoRoot, moduleId, (meta) => {
       meta.candidates = review.candidates;
     });
   }
   if (step === "archives") {
-    const receiptPath = path3.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
-    if (!await exists2(receiptPath)) throw new Error("\u5F53\u524D\u9886\u57DF\u5C1A\u672A\u6267\u884C\u9886\u57DF\u7EA7\u5F52\u6863");
+    const receiptPath = path3.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${moduleId}.json`);
+    if (!await exists2(receiptPath)) throw new Error("\u5F53\u524D\u4E1A\u52A1\u6A21\u5757\u5C1A\u672A\u6267\u884C\u4E1A\u52A1\u6A21\u5757\u7EA7\u5F52\u6863");
     const receipt = JSON.parse(await readFile3(receiptPath, "utf8"));
-    if (receipt.domain_id !== domainId || receipt.action !== "domain_archived" || receipt.checked_at < run.started_at) {
-      throw new Error("\u9886\u57DF\u5F52\u6863\u7ED3\u679C\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8FD0\u884C");
+    if (receipt.module_id !== moduleId || receipt.action !== "module_archived" || receipt.checked_at < run.started_at) {
+      throw new Error("\u4E1A\u52A1\u6A21\u5757\u5F52\u6863\u7ED3\u679C\u4E0D\u5C5E\u4E8E\u5F53\u524D\u8FD0\u884C");
     }
-    await updateDomainMeta(repoRoot, domainId, (meta) => {
+    await updateModuleMeta(repoRoot, moduleId, (meta) => {
       meta.documents = receipt.results.map((item) => ({
         kind: item.kind || "archive",
         archive_id: item.archive_id || path3.basename(item.path),
@@ -6792,34 +6792,34 @@ async function completeStep(repoRoot, step, domainId) {
       }));
     });
     if (run.mode === "incremental" && !current.local_changes && receipt.created_count === 0) {
-      await assertL1Complete(repoRoot, domainId);
-      current.completed_steps.push("archives", "archive-facts", "domain-knowledge");
+      await assertL1Complete(repoRoot, moduleId);
+      current.completed_steps.push("archives", "archive-facts", "module-knowledge");
       current.confirmed = true;
       await writeRun(repoRoot, run);
-      return { action: "domain_unchanged", domain_id: domainId };
+      return { action: "module_unchanged", module_id: moduleId };
     }
   }
-  if (step === "domain-knowledge") {
-    await assertL1Complete(repoRoot, domainId);
+  if (step === "module-knowledge") {
+    await assertL1Complete(repoRoot, moduleId);
   }
   current.completed_steps.push(step);
   await writeRun(repoRoot, run);
-  return { action: "step_completed", domain_id: domainId, step };
+  return { action: "step_completed", module_id: moduleId, step };
 }
-async function confirmDomain(repoRoot, domainId) {
+async function confirmModule(repoRoot, moduleId) {
   const run = await readRun(repoRoot);
   if (!run || run.status !== "active") throw new Error("\u6CA1\u6709\u8FDB\u884C\u4E2D\u7684\u77E5\u8BC6\u5E93\u8FD0\u884C");
-  const current = run.domains.find((item) => !item.confirmed);
-  if (!current || current.id !== domainId || !current.completed_steps.includes("domain-knowledge")) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u786E\u8BA4\u9886\u57DF ${domainId}`);
-  await assertDomainArtifacts(repoRoot, domainId);
-  await confirmL1Status(repoRoot, domainId);
+  const current = run.modules.find((item) => !item.confirmed);
+  if (!current || current.id !== moduleId || !current.completed_steps.includes("module-knowledge")) throw new Error(`\u5F53\u524D\u4E0D\u80FD\u786E\u8BA4\u4E1A\u52A1\u6A21\u5757 ${moduleId}`);
+  await assertModuleArtifacts(repoRoot, moduleId);
+  await confirmL1Status(repoRoot, moduleId);
   current.confirmed = true;
   await writeRun(repoRoot, run);
-  return { action: "domain_confirmed", domain_id: domainId };
+  return { action: "module_confirmed", module_id: moduleId };
 }
 async function completeRun(repoRoot) {
   const run = await readRun(repoRoot);
-  if (!run || run.status !== "active" || run.domains.some((item) => !item.confirmed) || !run.l0_reviewed) throw new Error("\u5F53\u524D\u8FD0\u884C\u5C1A\u672A\u8FBE\u5230\u5B8C\u6210\u6761\u4EF6");
+  if (!run || run.status !== "active" || run.modules.some((item) => !item.confirmed) || !run.l0_reviewed) throw new Error("\u5F53\u524D\u8FD0\u884C\u5C1A\u672A\u8FBE\u5230\u5B8C\u6210\u6761\u4EF6");
   run.status = "complete";
   run.completed_at = (/* @__PURE__ */ new Date()).toISOString();
   await writeRun(repoRoot, run);
@@ -6831,8 +6831,8 @@ async function main() {
   const args = parseArgs(argv);
   const repoRoot = path3.resolve(args.repoRoot || process.cwd());
   if (args.start) return printJson(await startRun(repoRoot));
-  if (args.completeStep) return printJson(await completeStep(repoRoot, args.completeStep, args.domain));
-  if (args.confirmDomain) return printJson(await confirmDomain(repoRoot, args.confirmDomain));
+  if (args.completeStep) return printJson(await completeStep(repoRoot, args.completeStep, args.module));
+  if (args.confirmModule) return printJson(await confirmModule(repoRoot, args.confirmModule));
   if (args.completeRun) return printJson(await completeRun(repoRoot));
   printJson(await inspectWorkflow(repoRoot));
 }

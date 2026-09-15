@@ -1,7 +1,7 @@
 ---
-doc_id: ADR-<domain_id>-<number>
+doc_id: ADR-<module_id>-<number>
 layer: ADR
-domain: <domain_id>
+module: <module_id>
 title: <设计决策标题>
 date: <YYYY-MM-DD>
 ---
@@ -10,11 +10,11 @@ date: <YYYY-MM-DD>
 
 ## 背景
 
-<说明触发追问的领域场景、约束或风险。>
+<说明触发追问的业务模块场景、约束或风险。>
 
 ## 决策
 
-<说明当前采用的领域设计。>
+<说明当前采用的业务模块设计。>
 
 ## 为什么这样设计
 
@@ -30,7 +30,7 @@ date: <YYYY-MM-DD>
 
 ## 证据
 
-- 相关 L1：[<领域名称>](../README.md)
+- 相关 L1：[<业务模块名称>](../README.md)
 - 代码锚点：`<symbol>`
 - 归档资料：[<文档标题>](../../../archive/<archive_id>/summary.md)；没有则删除。
 

@@ -1,6 +1,6 @@
-# 领域范围配置
+# 业务模块范围配置
 
-`docs/kb/domain-scope.yaml` 由人工填写，是领域归属和文档来源的唯一权威输入。脚本和 Agent 只能校验、读取，不能替人工修改。
+`docs/kb/module-scope.yaml` 由人工填写，是仓库内业务模块归属和文档来源的唯一权威输入；脚本和 Agent 只能校验、读取，不能替人工修改。
 
 ## 数组写法
 
@@ -27,7 +27,7 @@ project_docs:
 ```yaml
 schema_version: 1
 
-domains:
+modules:
   - id: payment
     name: 支付
     status: active
@@ -65,12 +65,12 @@ domains:
 
 每个 `yuque_sources` 元素必须且只能选择一种形式：
 
-- `base_slug`：在指定知识库内使用本领域 `keywords` 搜索；slug 使用 `yuque-books.js` 返回值，不得猜测。
+- `base_slug`：在指定知识库内使用本业务模块 `keywords` 搜索；slug 使用 `yuque-books.js` 返回值，不得猜测。
 - `document_url`：将确定的单篇文档加入待人工确认候选。
 
 只要填写了 `keywords`，语雀候选阶段就不能跳过。未配置 `yuque_sources` 时，流程会先通过 `yuque-books.js` 展示可用知识库，再要求用户使用 `--book-slug <slug> --confirm-book` 明确选择本次检索的知识库。只有 `keywords` 和 `yuque_sources` 都为空时才不检索语雀。
 
-`status: active` 的领域进入 `domain_order`；`inactive` 保留配置但本轮不处理。领域顺序就是 `domains` 的书写顺序。
+`status: active` 的业务模块进入 `module_order`；`inactive` 保留配置但本轮不处理。业务模块顺序就是 `modules` 的书写顺序。
 
 ## 写完后的校验
 
@@ -82,8 +82,8 @@ node <skill-dir>/scripts/scope-check.js
 
 以下问题会作为 error 阻止继续：
 
-- `schema_version` 不是 `1`，或 `domains` 为空；
-- 领域 ID 格式错误或重复；
+- `schema_version` 不是 `1`，或 `modules` 为空；
+- 业务模块 ID 格式错误或重复；
 - 没有填写 `include_packages` 和 `include_files` 中的任何一种；
 - 非空数组中包含空值或非字符串；
 - `include_files`、`project_docs` 指向不存在的路径；
@@ -91,4 +91,4 @@ node <skill-dir>/scripts/scope-check.js
 - 使用 `base_slug` 却没有填写 `keywords`；
 - `status` 不是 `active` 或 `inactive`。
 
-未匹配到文件的包范围、缺失的排除路径会作为 warning 报告，但不会阻止继续。校验成功后生成 `docs/kb/.meta/scope-resolved.json`，并输出按人工书写顺序排列的 `domain_order`。
+未匹配到文件的包范围、缺失的排除路径会作为 warning 报告，但不会阻止继续。校验成功后生成 `docs/kb/.meta/scope-resolved.json`，并输出按人工书写顺序排列的 `module_order`。

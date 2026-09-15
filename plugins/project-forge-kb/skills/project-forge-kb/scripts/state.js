@@ -165,9 +165,9 @@ function packageMatches(file, packageName) {
   const packagePath = packageName.replaceAll(".", "/");
   return file.startsWith(`${packagePath}/`) || file.includes(`/${packagePath}/`);
 }
-function filesForDomain(files, domain) {
-  const included = files.filter((file) => (domain.include_files || []).includes(file) || (domain.include_packages || []).some((packageName) => packageMatches(file, packageName)));
-  return included.filter((file) => !(domain.exclude_files || []).includes(file) && !(domain.exclude_packages || []).some((packageName) => packageMatches(file, packageName)));
+function filesForModule(files, module) {
+  const included = files.filter((file) => (module.include_files || []).includes(file) || (module.include_packages || []).some((packageName) => packageMatches(file, packageName)));
+  return included.filter((file) => !(module.exclude_files || []).includes(file) && !(module.exclude_packages || []).some((packageName) => packageMatches(file, packageName)));
 }
 async function main() {
   const argv = process.argv.slice(2);
@@ -175,16 +175,16 @@ async function main() {
   const args = parseArgs(argv);
   const repoRoot = path2.resolve(args.repoRoot || process.cwd());
   const kbRoot = path2.resolve(repoRoot, args.kbRoot || "docs/kb");
-  const scopePath = path2.join(kbRoot, "domain-scope.yaml");
+  const scopePath = path2.join(kbRoot, "module-scope.yaml");
   const resolvedPath = path2.join(kbRoot, ".meta", "scope-resolved.json");
   const output = path2.join(kbRoot, ".meta", "source-state.json");
   await ensureCleanForIncremental(repoRoot, output, kbRoot);
   const resolved = JSON.parse(await readFile2(resolvedPath, "utf8"));
-  if (!Array.isArray(resolved.domains)) throw new Error("scope-resolved.json \u7F3A\u5C11 domains");
-  const domainMetaRoot = path2.join(kbRoot, ".meta", "domains");
-  const domainMetaFiles = await listFiles(domainMetaRoot, (file) => file.endsWith(".json"));
-  const domainMeta = await Promise.all(domainMetaFiles.map(async (file) => ({
-    domain_id: path2.basename(file, ".json"),
+  if (!Array.isArray(resolved.modules)) throw new Error("scope-resolved.json \u7F3A\u5C11 modules");
+  const moduleMetaRoot = path2.join(kbRoot, ".meta", "modules");
+  const moduleMetaFiles = await listFiles(moduleMetaRoot, (file) => file.endsWith(".json"));
+  const moduleMeta = await Promise.all(moduleMetaFiles.map(async (file) => ({
+    module_id: path2.basename(file, ".json"),
     path: relativePosix(repoRoot, file),
     hash: await hashFile(file)
   })));
@@ -193,7 +193,7 @@ async function main() {
     const item = await readMarkdownFrontmatter(file);
     return {
       doc_id: item.data.doc_id,
-      domain: item.data.domain,
+      module: item.data.module,
       path: relativePosix(repoRoot, file),
       hash: await hashFile(file)
     };
@@ -213,10 +213,10 @@ async function main() {
   }));
   const tracked = (await git(repoRoot, ["ls-files"])).split(/\r?\n/).filter(Boolean);
   const codeFiles = [];
-  for (const domain of resolved.domains) {
-    for (const file of filesForDomain(tracked, domain).sort()) {
+  for (const module of resolved.modules) {
+    for (const file of filesForModule(tracked, module).sort()) {
       codeFiles.push({
-        domain_id: domain.id,
+        module_id: module.id,
         path: file,
         hash: await hashFile(path2.join(repoRoot, file))
       });
@@ -227,10 +227,10 @@ async function main() {
     scanned_at: (/* @__PURE__ */ new Date()).toISOString(),
     source_commit: await git(repoRoot, ["rev-parse", "HEAD"]),
     inputs: {
-      domain_scope: { path: relativePosix(repoRoot, scopePath), hash: await hashFile(scopePath) },
+      module_scope: { path: relativePosix(repoRoot, scopePath), hash: await hashFile(scopePath) },
       scope_resolved: { path: relativePosix(repoRoot, resolvedPath), hash: await hashFile(resolvedPath) }
     },
-    domain_meta: domainMeta,
+    module_meta: moduleMeta,
     adrs,
     archives,
     code_files: codeFiles
@@ -244,7 +244,7 @@ async function main() {
     action: "baseline_written",
     path: relativePosix(repoRoot, output),
     source_commit: state.source_commit,
-    domain_meta_count: domainMeta.length,
+    module_meta_count: moduleMeta.length,
     adr_count: adrs.length,
     archive_count: archives.length,
     code_file_count: codeFiles.length

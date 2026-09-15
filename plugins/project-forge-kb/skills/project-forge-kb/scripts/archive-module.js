@@ -7287,7 +7287,7 @@ var require_content_type = __commonJS({
   }
 });
 
-// src/archive-domain.js
+// src/archive-module.js
 import path5 from "node:path";
 import { mkdir as mkdir2, rename as rename2, writeFile as writeFile3 } from "node:fs/promises";
 
@@ -13600,17 +13600,17 @@ async function trackedFiles(repoRoot) {
     return [];
   }
 }
-async function loadScope(repoRoot, scopePath = "docs/kb/domain-scope.yaml") {
+async function loadScope(repoRoot, scopePath = "docs/kb/module-scope.yaml") {
   const absolute = path.resolve(repoRoot, scopePath);
   const relative = path.relative(repoRoot, absolute);
   if (relative.startsWith("..") || path.isAbsolute(relative)) {
-    throw new Error("domain-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
+    throw new Error("module-scope.yaml \u5FC5\u987B\u4F4D\u4E8E\u76EE\u6807\u4ED3\u5E93\u5185");
   }
   let value;
   try {
     value = parse(await readFile(absolute, "utf8"));
   } catch (error2) {
-    if (error2.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u9886\u57DF\u914D\u7F6E: ${scopePath}`);
+    if (error2.code === "ENOENT") throw new Error(`\u7F3A\u5C11\u4E1A\u52A1\u6A21\u5757\u914D\u7F6E: ${scopePath}`);
     throw new Error(`\u65E0\u6CD5\u89E3\u6790 ${scopePath}: ${error2.message}`);
   }
   return { absolute, relative: relative.split(path.sep).join("/"), value };
@@ -13619,34 +13619,34 @@ async function validateScope(repoRoot, raw) {
   const errors = [];
   const warnings = [];
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    return { errors: ["domain-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, domains: [] };
+    return { errors: ["module-scope.yaml \u9876\u5C42\u5FC5\u987B\u662F\u5BF9\u8C61"], warnings, modules: [] };
   }
   if (raw.schema_version !== 1) errors.push("schema_version \u5FC5\u987B\u4E3A 1");
-  if (!Array.isArray(raw.domains) || raw.domains.length === 0) {
-    errors.push("domains \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u9886\u57DF");
-    return { errors, warnings, domains: [] };
+  if (!Array.isArray(raw.modules) || raw.modules.length === 0) {
+    errors.push("modules \u5FC5\u987B\u7531\u4EBA\u5DE5\u586B\u5199\u4E14\u81F3\u5C11\u5305\u542B\u4E00\u4E2A\u4E1A\u52A1\u6A21\u5757");
+    return { errors, warnings, modules: [] };
   }
   const files = await trackedFiles(repoRoot);
   const ids = /* @__PURE__ */ new Set();
-  const domains = [];
-  for (const [index, item] of raw.domains.entries()) {
-    const prefix = `domains[${index}]`;
+  const modules = [];
+  for (const [index, item] of raw.modules.entries()) {
+    const prefix = `modules[${index}]`;
     if (!item || typeof item !== "object" || Array.isArray(item)) {
       errors.push(`${prefix} \u5FC5\u987B\u662F\u5BF9\u8C61`);
       continue;
     }
     const id = typeof item.id === "string" ? item.id.trim() : "";
     if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) errors.push(`${prefix}.id \u5FC5\u987B\u4F7F\u7528\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001_ \u6216 -`);
-    if (ids.has(id)) errors.push(`\u9886\u57DF id \u91CD\u590D: ${id}`);
+    if (ids.has(id)) errors.push(`\u4E1A\u52A1\u6A21\u5757 id \u91CD\u590D: ${id}`);
     ids.add(id);
-    const domainErrors = [];
-    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, domainErrors);
-    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, domainErrors);
-    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, domainErrors);
-    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, domainErrors);
-    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, domainErrors);
-    const keywords = stringArray(item.keywords, `${prefix}.keywords`, domainErrors);
-    errors.push(...domainErrors);
+    const moduleErrors = [];
+    const includePackages = stringArray(item.include_packages, `${prefix}.include_packages`, moduleErrors);
+    const excludePackages = stringArray(item.exclude_packages, `${prefix}.exclude_packages`, moduleErrors);
+    const includeFiles = stringArray(item.include_files, `${prefix}.include_files`, moduleErrors);
+    const excludeFiles = stringArray(item.exclude_files, `${prefix}.exclude_files`, moduleErrors);
+    const projectDocs = stringArray(item.project_docs, `${prefix}.project_docs`, moduleErrors);
+    const keywords = stringArray(item.keywords, `${prefix}.keywords`, moduleErrors);
+    errors.push(...moduleErrors);
     if (includePackages.length === 0 && includeFiles.length === 0) {
       errors.push(`${prefix} \u81F3\u5C11\u586B\u5199 include_packages \u6216 include_files`);
     }
@@ -13693,7 +13693,7 @@ async function validateScope(repoRoot, raw) {
     if (!["active", "inactive"].includes(status)) {
       errors.push(`${prefix}.status \u5FC5\u987B\u662F active \u6216 inactive`);
     }
-    domains.push({
+    modules.push({
       id,
       name: typeof item.name === "string" ? item.name.trim() : id,
       status,
@@ -13706,15 +13706,15 @@ async function validateScope(repoRoot, raw) {
       yuque_sources: yuqueSources
     });
   }
-  return { errors, warnings, domains };
+  return { errors, warnings, modules };
 }
 
 // src/yuque-selection-data.js
 import { readFile as readFile2 } from "node:fs/promises";
 import path2 from "node:path";
-async function readYuqueSelection(repoRoot, domainId) {
-  if (!/^[a-z0-9][a-z0-9_-]*$/.test(domainId)) throw new Error("\u9886\u57DF ID \u683C\u5F0F\u65E0\u6548");
-  const file = path2.join(repoRoot, "docs", "kb", ".review", domainId, "yuque-candidates.yaml");
+async function readYuqueSelection(repoRoot, moduleId) {
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(moduleId)) throw new Error("\u4E1A\u52A1\u6A21\u5757 ID \u683C\u5F0F\u65E0\u6548");
+  const file = path2.join(repoRoot, "docs", "kb", ".review", moduleId, "yuque-candidates.yaml");
   let value;
   try {
     value = parse(await readFile2(file, "utf8"));
@@ -13722,7 +13722,7 @@ async function readYuqueSelection(repoRoot, domainId) {
     if (error2.code === "ENOENT") throw new Error(`\u5019\u9009\u6587\u4EF6\u4E0D\u5B58\u5728: ${path2.relative(repoRoot, file)}`);
     throw new Error(`\u65E0\u6CD5\u8BFB\u53D6\u5019\u9009\u6587\u4EF6: ${error2.message}`);
   }
-  if (value?.domain_id !== domainId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u9886\u57DF\u4E0D\u5339\u914D");
+  if (value?.module_id !== moduleId || !Array.isArray(value?.candidates)) throw new Error("\u5019\u9009\u6587\u4EF6\u7ED3\u6784\u65E0\u6548\u6216\u4E1A\u52A1\u6A21\u5757\u4E0D\u5339\u914D");
   for (const [index, candidate] of value.candidates.entries()) {
     if (!["pending", "approved", "rejected"].includes(candidate?.decision)) {
       throw new Error(`candidates[${index}].decision \u5FC5\u987B\u662F pending\u3001approved \u6216 rejected`);
@@ -13732,7 +13732,7 @@ async function readYuqueSelection(repoRoot, domainId) {
   return {
     action: pending.length > 0 ? "awaiting_confirmation" : "confirmed",
     requires_human_input: pending.length > 0,
-    domain_id: domainId,
+    module_id: moduleId,
     pending_count: pending.length,
     approved: value.candidates.filter((candidate) => candidate.decision === "approved").map((candidate) => ({
       doc_id: candidate.doc_id || null,
@@ -22942,29 +22942,29 @@ async function publishStaging(stagingPath) {
   return { action: "created", path: finalPath, archive_id: manifest.archive_id };
 }
 
-// src/archive-domain.js
+// src/archive-module.js
 var HELP = `Usage:
-  archive-domain.js --domain <domain_id> [--repo-root <path>]
+  archive-module.js --module <module_id> [--repo-root <path>]
 
-Archive all project and approved Yuque documents for one domain.
+Archive all project and approved Yuque documents for one business module.
 The script handles source checks, incremental skips, summarization, validation, and publication.`;
-async function domainSources(repoRoot, domainId) {
+async function moduleSources(repoRoot, moduleId) {
   const loaded = await loadScope(repoRoot);
   const checked = await validateScope(repoRoot, loaded.value);
-  if (checked.errors.length > 0) throw new Error(`\u9886\u57DF\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
-  const domain = checked.domains.find((item) => item.id === domainId && item.status === "active");
-  if (!domain) throw new Error(`\u672A\u627E\u5230 active \u9886\u57DF: ${domainId}`);
-  const sources = domain.project_docs.map((file) => ({ mode: "repo", value: file }));
-  if (domain.yuque_sources.length > 0 || domain.keywords.length > 0) {
-    const selection = await readYuqueSelection(repoRoot, domainId);
+  if (checked.errors.length > 0) throw new Error(`\u4E1A\u52A1\u6A21\u5757\u914D\u7F6E\u65E0\u6548: ${checked.errors.join("; ")}`);
+  const module = checked.modules.find((item) => item.id === moduleId && item.status === "active");
+  if (!module) throw new Error(`\u672A\u627E\u5230 active \u4E1A\u52A1\u6A21\u5757: ${moduleId}`);
+  const sources = module.project_docs.map((file) => ({ mode: "repo", value: file }));
+  if (module.yuque_sources.length > 0 || module.keywords.length > 0) {
+    const selection = await readYuqueSelection(repoRoot, moduleId);
     if (selection.pending_count > 0) throw new Error(`\u8BED\u96C0\u5019\u9009\u4ECD\u6709 ${selection.pending_count} \u4E2A pending\uFF1B\u5148\u5B8C\u6210\u4EBA\u5DE5\u786E\u8BA4`);
     sources.push(...selection.approved.map((item) => ({ mode: "yuque", value: item })));
   }
   return sources;
 }
-async function archiveDomain({ repoRoot, domainId, summarize }) {
+async function archiveModule({ repoRoot, moduleId, summarize }) {
   const archiveRoot = path5.join(repoRoot, "docs", "kb", "archive");
-  const sources = await domainSources(repoRoot, domainId);
+  const sources = await moduleSources(repoRoot, moduleId);
   const results = [];
   for (const item of sources) {
     const source = item.mode === "repo" ? await loadRepoDocument(repoRoot, item.value) : await loadYuqueDocument({ docId: item.value.doc_id, documentUrl: item.value.document_url });
@@ -22988,15 +22988,15 @@ async function archiveDomain({ repoRoot, domainId, summarize }) {
     path: item.path ? path5.relative(repoRoot, item.path).split(path5.sep).join("/") : null
   }));
   const result = {
-    action: "domain_archived",
-    domain_id: domainId,
+    action: "module_archived",
+    module_id: moduleId,
     checked_at: (/* @__PURE__ */ new Date()).toISOString(),
     processed_count: results.length,
     created_count: results.filter((item) => item.action === "created").length,
     skipped_count: results.filter((item) => item.action === "skipped").length,
     results: portableResults
   };
-  const receipt = path5.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${domainId}.json`);
+  const receipt = path5.join(repoRoot, "docs", "kb", ".meta", "archive-runs", `${moduleId}.json`);
   await mkdir2(path5.dirname(receipt), { recursive: true });
   const temporary = `${receipt}.${process.pid}.tmp`;
   await writeFile3(temporary, `${JSON.stringify(result, null, 2)}
@@ -23008,22 +23008,22 @@ async function main() {
   const argv = process.argv.slice(2);
   if (printHelp(argv, HELP)) return;
   const args = parseArgs(argv);
-  if (!args.domain) throw new Error("\u5FC5\u987B\u6307\u5B9A --domain");
-  printJson(await archiveDomain({
+  if (!args.module) throw new Error("\u5FC5\u987B\u6307\u5B9A --module");
+  printJson(await archiveModule({
     repoRoot: path5.resolve(args.repoRoot || process.cwd()),
-    domainId: args.domain
+    moduleId: args.module
   }));
 }
 if (isMain(import.meta.url)) {
   main().catch((error2) => {
-    process.stderr.write(`[archive-domain] ${error2.message}
+    process.stderr.write(`[archive-module] ${error2.message}
 `);
     process.exitCode = 1;
   });
 }
 export {
-  archiveDomain,
-  domainSources
+  archiveModule,
+  moduleSources
 };
 /*! Bundled license information:
 
